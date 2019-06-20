@@ -1,0 +1,2 @@
+# Pakistan-Poverty-from-Sky
+Develop machine learning models to estimate poverty levels in Pakistan using satellite imagery. The models combine daytime and nighttime imagery with granular sources of administrative data on poverty levels. We will test the accuracy of a number of machine learning techniques and explore what variables the models create to predict poverty (ie, vegetation, orderliness of streets or buildings, etc). 

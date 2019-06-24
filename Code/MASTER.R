@@ -17,21 +17,15 @@ library(dplyr)
 library(data.table)
 library(raster)
 library(leaflet)
-
-# Run Scripts ------------------------------------------------------------------
-
-# 1. Create Union Council Level Survey Dataset (csv) from Raw NSER data. 
-# Averages variables within union councils and calculates number of observations 
-# within each union council.
-# NOTE: Need access to raw NSER data for this script; can skip if Union Council
-#       level dataset is already created.
-source(file.path(project_file_path, "Code", "create_uc_level_survey_dataset.R"))
-
-# 2. Create Union Council Level Survey Shapefile 
-# Merges union council level csv file with union council shapefile. Cleans 
-# shapefile so that tehsil and union council names match with those from the
-# survey data
-source(file.path(project_file_path, "Code", "merge_survey_with_pak_boundary.R"))
+library(rgdal)
+library(readstata13)
+library(dplyr)
+library(raster)
+library(stringdist)
+library(tmaptools)
+library(stringr)
+library(doBy)
+library(sf)
 
 
 

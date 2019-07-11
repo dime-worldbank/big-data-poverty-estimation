@@ -10,6 +10,9 @@ if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Ban
 if(Sys.info()[["user"]] == "WB521633") nser_pitb_file_path <- "C:/Users/wb521633/Dropbox/NSER from PITB"
 if(Sys.info()[["user"]] == "robmarty") nser_pitb_file_path <- "~/Dropbox/NSER from PITB"
 
+final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
+
+
 # Packages ---------------------------------------------------------------------
 library(rgdal)
 library(readstata13)
@@ -17,8 +20,18 @@ library(dplyr)
 library(data.table)
 library(raster)
 library(leaflet)
+library(rgdal)
+library(readstata13)
+library(dplyr)
+library(raster)
+library(stringdist)
+library(tmaptools)
+library(stringr)
+library(doBy)
+library(sf)
 
 # Run Scripts ------------------------------------------------------------------
+if(F){
 
 # 1. Create Union Council Level Survey Dataset (csv) from Raw NSER data. 
 # Averages variables within union councils and calculates number of observations 
@@ -32,6 +45,6 @@ source(file.path(project_file_path, "Code", "create_uc_level_survey_dataset.R"))
 # shapefile so that tehsil and union council names match with those from the
 # survey data
 source(file.path(project_file_path, "Code", "merge_survey_with_pak_boundary.R"))
-
+}
 
 

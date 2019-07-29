@@ -18,14 +18,14 @@ ee.Initialize()
 # Setup -----------------------------------------------------------------------
 # Filepaths
 project_file_path = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/'
-data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/unstacked/'
+data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2011/unstacked/'
 
 bisp_coordinates_filepath = '/Users/robmarty/Desktop/'
 
 # Parameters
 buffer_radius = 1/111.12
-begin_date = '2016-01-01'
-end_date = '2016-12-31'
+begin_date = '2011-01-01'
+end_date = '2011-12-31'
 cloud_cover_filter = 15
 resolution = 30
 

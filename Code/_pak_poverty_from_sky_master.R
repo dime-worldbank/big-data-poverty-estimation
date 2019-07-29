@@ -5,10 +5,16 @@
 if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 
+rawdata_file_path <- file.path(project_file_path, "Data", "RawData")
+
 # File path for NSER raw data (kept in separate folder than project file path for
 # for data confidentialty). The raw data is only needed for: create_uc_level_survey_dataset.R. 
 if(Sys.info()[["user"]] == "WB521633") nser_pitb_file_path <- "C:/Users/wb521633/Dropbox/NSER from PITB"
 if(Sys.info()[["user"]] == "robmarty") nser_pitb_file_path <- "~/Dropbox/NSER from PITB"
+
+# File path for BISP Geocodes
+if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "" # ONEDRIVE FILE PATH
+if(Sys.info()[["user"]] == "robmarty") bisp_geocodes_file_path <- "~/Desktop/NO NAME/"
 
 final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 

@@ -5,4 +5,4 @@
 *.Rda
 .Rproj.user
 
-Data/*
+Data

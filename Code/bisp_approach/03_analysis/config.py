@@ -15,6 +15,14 @@ BISP_PATH = os.path.join(DATA_PATH, 'bisp_hh_income.csv')
 SAT_PATH = os.path.join(DATA_PATH, 'bisp_satellite_data.csv')
 CLEAN_DATA_PATH = os.path.join(DATA_PATH, 'bisp_sat_inc_data.csv')
 
+LABEL = 'hhinc_2011'
+
+######################
+# 2. PREPROCESS DATA #
+######################
+
+TEST_SIZE = 0.3
+
 #########################
 # 4. FEATURE GENERATION #
 #########################
@@ -153,7 +161,7 @@ GRID_MAIN = {
         {'n_estimators': n_estimators, 'max_features': max_features,
         'random_state': 0, 'n_jobs': -1} \
         for n_estimators in (100, 1000, 10000) \
-        for max_features in (1, 5, 10, 20)
+        for max_features in (0.3, 0.5, 1.0)
     ],
     'GradientBoostingRegressor': [
         {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,

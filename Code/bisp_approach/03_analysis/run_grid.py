@@ -19,7 +19,9 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import (BaggingRegressor,
                               GradientBoostingRegressor,
                               RandomForestRegressor)
-from sklearn.metrics import r2_score
+from sklearn.metrics import (r2_score,
+                             mean_squared_error,
+                             max_error)
 
 import config as cf
 from ml_utils import TrainedRegressor
@@ -81,45 +83,6 @@ def create_features(df):
     return df
 
 
-def train_models(params, features, labels, feature_sets):
-    '''
-    Input:  params - dictionary of model parameters
-            features - dataframe of feature data
-            labels - dataframe of labels
-            feature_sets - dictionary of string lists of feature names
-    Output: list of trained TrainedRegressor objects
-    '''
-
-    trained_list = []
-    error_df = pd.DataFrame()
-    count = 0
-
-    # Loop over models, hyperparameter combinations, and feature sets
-    for i in params['regressors']:
-        for j in params[i]:
-            for k in feature_sets:
-
-                count += 1
-                print(f'Model {count}: Training {i} on {k} with params {str(j)}')
-
-                try:
-                    # Initialize regressor, fit data, then append TrainedRegressor object to list
-                    regressor = eval(i)(**j)
-                    selected_features = feature_sets[k]
-                    trained = regressor.fit(features[selected_features], labels)
-                    trained_list.append(TrainedRegressor(i, str(j), k, trained))
-                except Exception as e:
-                    print(f"    ERROR: {str(e)}")
-                    error_df.append({
-                        'regressor': i,
-                        'params': str(j),
-                        'features': k,
-                        'error_message': str(e)
-                    }, ignore_index=True)
-
-    return trained_list, error_df
-
-
 def save_to_file(obj, path):
 
     # Save passed obj as a pickle to given filepath
@@ -132,26 +95,88 @@ def save_to_file(obj, path):
     return None
 
 
-def evaluate_models(models_list, test_features, test_labels, feature_sets):
+def train_models(params, features, labels, feature_sets):
+    '''
+    Saves a .pkl file of TrainedRegressor objects for each model type, as
+    AWS free tier server will usually not hold all 800+ objects in memory.
+
+    Input:  params - dictionary of model parameters
+            features - dataframe of feature data
+            labels - dataframe of labels
+            feature_sets - dictionary of string lists of feature names
+    Output: dataframe of training errors
+            Also saves a .pkl file of TrainedRegressor objects for each model
+    '''
+
+    training_error_df = pd.DataFrame()
+    count = 0
+
+    # Loop over models, hyperparameter combinations, and feature sets
+    # Save one set of trained models for each regressor
+    for i in params['regressors']:
+        models = []
+        for j in params[i]:
+            for k in feature_sets:
+
+                count += 1
+                print(f'Model {count}: Training {i} on {k} with params {str(j)}')
+
+                try:
+                    # Initialize regressor, fit data, then append model to list
+                    regressor = eval(i)(**j)
+                    selected_features = feature_sets[k]
+                    trained = regressor.fit(features[selected_features], labels)
+                    models.append(TrainedRegressor(i, str(j), k, trained))
+                except Exception as e:
+                    print(f"    ERROR: {str(e)}")
+                    training_error_df.append({
+                        'regressor': i,
+                        'params': str(j),
+                        'features': k,
+                        'error_message': str(e)
+                    }, ignore_index=True)
+        save_to_file(models, os.path.join('output', i + '_trained.pkl'))
+
+    return training_error_df
+
+
+def evaluate_models(obj_list, test_features, test_labels, feature_sets):
+    '''
+    Input:  obj_list - string list of file names in .pkl form. Each .pkl file
+                unpacks into a list of TrainedRegressor objects.
+            test_features - pd DataFrame of features for test data
+            test_labels - pd DataFrame of labels for test data
+            feature_sets - dictionary of lists of feature string names
+    '''
 
     results_df = pd.DataFrame()
-    for i in models_list:
+    for obj in obj_list:
 
-        # Get predicted results from test data
-        features = feature_sets[i.features]
-        pred_labels = i.regressor.predict(test_features[features])
+        obj_path = os.path.join('output', obj)
+        with open(obj_path, 'rb') as f:
+            model_list = pickle.load(f)
 
-        # Append results to dataframe and sort by R^2
-        pred_dict = {
-            'regressor': i.method,
-            'features': i.features,
-            'params': i.params,
-            'r2': r2_score(y_true=test_labels, y_pred=pred_labels)
-        }
+        for i in model_list:
 
-        results_df = results_df.append(pred_dict, ignore_index=True) \
-            .sort_values(by='r2', ascending=False, axis=0) \
-            [['regressor', 'params', 'features', 'r2']]
+            # Get predicted results from test data
+            features = feature_sets[i.features]
+            pred_labels = i.regressor.predict(test_features[features])
+
+            # Append results to dataframe
+            pred_dict = {
+                'regressor': i.method,
+                'params': i.params,
+                'features': i.features,
+                'r2': r2_score(y_true=test_labels, y_pred=pred_labels),
+                'mse': mean_squared_error(y_true=test_labels, y_pred=pred_labels),
+                'max_err': max_error(y_true=test_labels, y_pred=pred_labels)
+            }
+
+            results_df = results_df.append(pred_dict, ignore_index=True)
+            results_df = results_df.reindex(
+                ['regressor', 'params', 'features', 'r2', 'mse', 'max_err'],
+                axis=1
+            )
 
     return results_df
 
@@ -188,13 +213,13 @@ def main():
 
     # TRAIN MODELS AND EXPORT ERRORS
     parameters = cf.GRID_MAIN
-    trained_list, training_errors = train_models(parameters, x_train, y_train, feature_dict)
-    save_to_file(trained_list, os.path.join('output', 'trained_models.pkl'))
+    training_errors = train_models(parameters, x_train, y_train, feature_dict)
     training_errors.to_csv(os.path.join('output', 'errors.csv'))
 
     # PREDICT LABELS AND EVALUATE RESULTS
-    results_df = evaluate_models(trained_list, x_test, y_test, feature_dict)
-    save_to_file(results_df, os.path.join('output', 'results_data.pkl'))
+    trained_obj_list = [f for f in os.listdir('output') if f.endswith('_trained.pkl')]
+    results_df = evaluate_models(trained_obj_list, x_test, y_test, feature_dict)
+    # save_to_file(results_df, os.path.join('output', 'results_data.pkl'))
     results_df.to_csv(os.path.join('output', 'results.csv'))
 
 

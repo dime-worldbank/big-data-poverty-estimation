@@ -164,10 +164,9 @@ GRID_MAIN = {
         for max_features in (0.3, 0.5, 1.0)
     ],
     'GradientBoostingRegressor': [
-        {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,
+        {'learning_rate': rate, 'n_estimators': n_estimators,
         'criterion': criterion, 'max_features': max_features,
         'random_state': 0} \
-        for loss in ('ls', 'lad', 'huber') \
         for rate in (1e-4, 1e-3, 1e-2, 1e-1)
         for n_estimators in (100, 1000, 10000) \
         for criterion in ('mse', 'friedman_mse', 'mae') \
@@ -177,7 +176,7 @@ GRID_MAIN = {
         {'n_estimators': n_estimators, 'criterion': criterion,
         'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
         'random_state': 0} \
-        for n_estimators in (100, 1000, 10000) \
+        for n_estimators in (10, 100, 1000) \
         for criterion in ('mse', 'mae') \
         for max_depth in (1, 5, 10, 20) \
         for max_features in ('sqrt', 'log2', None)

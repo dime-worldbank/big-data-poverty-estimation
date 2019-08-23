@@ -7,6 +7,7 @@
 import os
 import math
 import pickle
+import datetime
 import numpy as np
 import pandas as pd
 
@@ -90,7 +91,7 @@ def save_to_file(obj, path):
         pickle.dump(obj=obj,
                     file=f,
                     protocol=pickle.HIGHEST_PROTOCOL)
-    print(f"Saving data to {path}")
+    print(f"{datetime.datetime.now()} Saving data to {path}")
 
     return None
 
@@ -119,7 +120,7 @@ def train_models(params, features, labels, feature_sets):
             for k in feature_sets:
 
                 count += 1
-                print(f'Model {count}: Training {i} on {k} with params {str(j)}')
+                print(f'{datetime.datetime.now()} Model {count}: Training {i} on {k} with params {str(j)}')
 
                 try:
                     # Initialize regressor, fit data, then append model to list
@@ -128,7 +129,7 @@ def train_models(params, features, labels, feature_sets):
                     trained = regressor.fit(features[selected_features], labels)
                     models.append(TrainedRegressor(i, str(j), k, trained))
                 except Exception as e:
-                    print(f"    ERROR: {str(e)}")
+                    print(f"{datetime.datetime.now()}    ERROR: {str(e)}")
                     training_error_df.append({
                         'regressor': i,
                         'params': str(j),
@@ -152,6 +153,7 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
     results_df = pd.DataFrame()
     for obj in obj_list:
 
+        print(f"{datetime.datetime.now()}    Evaluating {obj}")
         obj_path = os.path.join('output', obj)
         with open(obj_path, 'rb') as f:
             model_list = pickle.load(f)
@@ -219,7 +221,6 @@ def main():
     # PREDICT LABELS AND EVALUATE RESULTS
     trained_obj_list = [f for f in os.listdir('output') if f.endswith('_trained.pkl')]
     results_df = evaluate_models(trained_obj_list, x_test, y_test, feature_dict)
-    # save_to_file(results_df, os.path.join('output', 'results_data.pkl'))
     results_df.to_csv(os.path.join('output', 'results.csv'))
 
 

@@ -1,3 +1,6 @@
+# Create HH Clusters to Extract Landsat
+
+# Use clusters so don't have to extract area for each household. 
 
 near_crash_thresh_meters <- 500
 near_anycrash_in_cluster_thresh_meters <- 1000
@@ -72,8 +75,6 @@ hh_coords <- hh_coords %>%
 write.csv(hh_coords, file.path(rawdata_file_path, "Landsat", "bisp_households", "bisp_hh_cluster_id_crosswalk.csv"), row.names = F)
 write.csv(hh_clusters, file.path(rawdata_file_path, "Landsat", "bisp_households", "bisp_cluster_coords.csv"), row.names = F)
 
-max(hh_clusters$dist_max * 111.12)
-nrow(hh_clusters)
 
 
 

@@ -1,3 +1,9 @@
+# Extract Satellite Data to HH Coordinates
+
+# DESCRIPTION
+# Buffer HH coordinates and extract average satellite values.
+
+BUFFER_KM <- 1
 
 # Load and Prep HH Data --------------------------------------------------------------------
 hh_cluster <- read.csv(file.path(rawdata_file_path, "Landsat", "bisp_households", "bisp_hh_cluster_id_crosswalk.csv"))
@@ -19,6 +25,7 @@ get_lat_long <- function(number) {
   
   return(degree)
 }
+
 hh_coords <- hh_coords %>%
   mutate(lat = get_lat_long(GPSN),
          long = get_lat_long(GPSE))
@@ -37,7 +44,7 @@ hh_coords <- hh_coords %>%
 # Convert to Spatial Buffer ----------------------------------------------------
 hh_coords_sp <- hh_coords
 coordinates(hh_coords_sp) <- ~long+lat
-hh_coords_sp <- gBuffer(hh_coords_sp, width=1/111.12, byid=T)
+hh_coords_sp <- gBuffer(hh_coords_sp, width=BUFFER_KM/111.12, byid=T)
 crs(hh_coords_sp) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
 # Extract VIIRS ----------------------------------------------------------------
@@ -89,12 +96,11 @@ hh_coords_sp@data <- merge(hh_coords_sp@data, l7_2013_df, by="uid")
 # Export -----------------------------------------------------------------------
 hh_coords_df <- hh_coords_sp@data %>%
   dplyr::select(-cluster_id)
-saveRDS(hh_coords_df, file.path(final_data_file_path, "BISP", "bisp_satellite_data.Rds"))
+saveRDS(hh_coords_df, file.path(final_data_file_path, "BISP", paste0("bisp_satellite_data_buffer_",BUFFER_KM,"km.Rds")))
 
 
 
 
 
-hh_coords_df <- readRDS(file.path(final_data_file_path, "BISP", "bisp_satellite_data.Rds"))
 
 

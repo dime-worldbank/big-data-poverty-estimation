@@ -1,5 +1,4 @@
-# Merge Satellite Data with BISP Survey Data
-
+# Stack Landsat Data
 
 # First just try loading landsat to make sure folder isn't empty
 unstacked_2011_file_path <- file.path(project_file_path, "Data", "RawData", "Landsat", "bisp_households", "2011", "unstacked")

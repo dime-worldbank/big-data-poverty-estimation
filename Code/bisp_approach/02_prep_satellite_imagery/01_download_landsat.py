@@ -18,14 +18,14 @@ ee.Initialize()
 # Setup -----------------------------------------------------------------------
 # Filepaths
 project_file_path = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/'
-data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2011/unstacked/'
+data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2013/unstacked/'
 
 bisp_coordinates_filepath = '/Users/robmarty/Desktop/'
 
 # Parameters
-buffer_radius = 1/111.12
-begin_date = '2011-01-01'
-end_date = '2011-12-31'
+buffer_radius = 1.5/111.12
+begin_date = '2013-01-01'
+end_date = '2013-12-31'
 cloud_cover_filter = 15
 resolution = 30
 
@@ -53,24 +53,42 @@ def get_download_path():
         return os.path.join(os.path.expanduser('~'), 'downloads')
 
 # Load and Prep BISP HH Coordinates ---------------------------------------------
-bisp_coords_df = pd.read_stata(bisp_coordinates_filepath + 'GPS_uid_crosswalk.dta')
-bisp_coords_df['id'] = np.arange(bisp_coords_df.shape[0]) + 1
-bisp_coords_df = bisp_coords_df.dropna()
+##### Individual
+#bisp_coords_df = pd.read_stata(bisp_coordinates_filepath + 'GPS_uid_crosswalk.dta')
+#bisp_coords_df['id'] = np.arange(bisp_coords_df.shape[0]) + 1
+#bisp_coords_df = bisp_coords_df.dropna()
 
-bisp_coords_df['lat'] = get_lat_lon_vec(bisp_coords_df['GPSN'])
-bisp_coords_df['lon'] = get_lat_lon_vec(bisp_coords_df['GPSE'])
+#bisp_coords_df['lat'] = get_lat_lon_vec(bisp_coords_df['GPSN'])
+#bisp_coords_df['lon'] = get_lat_lon_vec(bisp_coords_df['GPSE'])
 
+# bisp_coords_df['max_dist'] = 0
+
+##### Clusters
+bisp_coords_df = pd.read_csv(project_file_path + 'Data/RawData/Landsat/bisp_households/bisp_cluster_coords.csv')
+bisp_coords_df['lat'] = bisp_coords_df['latitude']
+bisp_coords_df['lon'] = bisp_coords_df['longitude']
+bisp_coords_df['id'] = bisp_coords_df['cluster_id']
+
+#bisp_coords_df['id'][1078:2000]
+#bisp_coords_df['id'][110:2000]
 # Loop Through Households; Extract/Download Imagery ------------------------
-for i in np.arange(bisp_coords_df.shape[0]):
+# bisp_coords_df['id']
+#bisp_coords_df['id'][100:2000]
+#bisp_coords_df['id'][420:2000]
+bisp_coords_df['id'][1487:2000]
+# 4990
+for hh_id in bisp_coords_df['id'][1487:2000]:
 
-    # Create Buffer Around Household
-    bisp_coords_df_i = bisp_coords_df.iloc[i]
-    hh_id = bisp_coords_df_i['id']
+    print(hh_id)
 
-    hh_buffer = ee.Geometry.Rectangle([bisp_coords_df_i['lon'] - buffer_radius, 
-                                  bisp_coords_df_i['lat'] - buffer_radius, 
-                                  bisp_coords_df_i['lon'] + buffer_radius, 
-                                  bisp_coords_df_i['lat'] + buffer_radius])
+    bisp_coords_df_i = bisp_coords_df[bisp_coords_df.id == hh_id]
+
+    buffer_radius_i = float(bisp_coords_df_i['dist_max']) + buffer_radius
+
+    hh_buffer = ee.Geometry.Rectangle([float(bisp_coords_df_i['lon'] - buffer_radius_i), 
+                                  float(bisp_coords_df_i['lat'] - buffer_radius_i), 
+                                  float(bisp_coords_df_i['lon'] + buffer_radius_i), 
+                                  float(bisp_coords_df_i['lat'] + buffer_radius_i)])
 
     # Load and Filter Images By Region, Date and Cloud Cover
     image = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR')

@@ -5,7 +5,7 @@
 if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 
-rawdata_file_path <- file.path(project_file_path, "Data", "RawData")
+raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
 final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 
 # File path for NSER raw data (kept in separate folder than project file path for

@@ -1,3 +1,5 @@
+# Python 3
+
 # https://geoscripting-wur.github.io/Earth_Engine/
 
 import ee
@@ -18,14 +20,14 @@ ee.Initialize()
 # Setup -----------------------------------------------------------------------
 # Filepaths
 project_file_path = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/'
-data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2011/unstacked/'
+data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2014/unstacked/'
 
 bisp_coordinates_filepath = '/Users/robmarty/Desktop/'
 
 # Parameters
 buffer_radius = 1/111.12
-begin_date = '2011-01-01'
-end_date = '2011-12-31'
+begin_date = '2014-01-01'
+end_date = '2014-12-31'
 cloud_cover_filter = 15
 resolution = 30
 
@@ -37,7 +39,7 @@ def get_lat_lon(number):
   degree = deg + (min / 60) + (sec / 3600)
 
   return(degree)
-get_lat_lon_vec = np.vectorize(get_lat_lon)  
+get_lat_lon_vec = np.vectorize(get_lat_lon)
 
 # https://stackoverflow.com/questions/35851281/python-finding-the-users-downloads-folder
 def get_download_path():
@@ -67,9 +69,9 @@ for i in np.arange(bisp_coords_df.shape[0]):
     bisp_coords_df_i = bisp_coords_df.iloc[i]
     hh_id = bisp_coords_df_i['id']
 
-    hh_buffer = ee.Geometry.Rectangle([bisp_coords_df_i['lon'] - buffer_radius, 
-                                  bisp_coords_df_i['lat'] - buffer_radius, 
-                                  bisp_coords_df_i['lon'] + buffer_radius, 
+    hh_buffer = ee.Geometry.Rectangle([bisp_coords_df_i['lon'] - buffer_radius,
+                                  bisp_coords_df_i['lat'] - buffer_radius,
+                                  bisp_coords_df_i['lon'] + buffer_radius,
                                   bisp_coords_df_i['lat'] + buffer_radius])
 
     # Load and Filter Images By Region, Date and Cloud Cover

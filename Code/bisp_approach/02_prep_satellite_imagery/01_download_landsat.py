@@ -1,3 +1,6 @@
+# Python 3
+#### MOVE TO MAIN FOLDER
+
 # https://geoscripting-wur.github.io/Earth_Engine/
 
 import ee
@@ -18,14 +21,14 @@ ee.Initialize()
 # Setup -----------------------------------------------------------------------
 # Filepaths
 project_file_path = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/'
-data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2013/unstacked/'
+data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2014/unstacked/'
 
 bisp_coordinates_filepath = '/Users/robmarty/Desktop/'
 
 # Parameters
 buffer_radius = 1.5/111.12
-begin_date = '2013-01-01'
-end_date = '2013-12-31'
+begin_date = '2014-01-01'
+end_date = '2014-12-31'
 cloud_cover_filter = 15
 resolution = 30
 
@@ -37,7 +40,7 @@ def get_lat_lon(number):
   degree = deg + (min / 60) + (sec / 3600)
 
   return(degree)
-get_lat_lon_vec = np.vectorize(get_lat_lon)  
+get_lat_lon_vec = np.vectorize(get_lat_lon)
 
 # https://stackoverflow.com/questions/35851281/python-finding-the-users-downloads-folder
 def get_download_path():
@@ -75,9 +78,10 @@ bisp_coords_df['id'] = bisp_coords_df['cluster_id']
 # bisp_coords_df['id']
 #bisp_coords_df['id'][100:2000]
 #bisp_coords_df['id'][420:2000]
-bisp_coords_df['id'][1487:2000]
+#bisp_coords_df['id'][1487:2000]
 # 4990
-for hh_id in bisp_coords_df['id'][1487:2000]:
+#bisp_coords_df['id']
+for hh_id in bisp_coords_df['id'][1169:2000]:
 
     print(hh_id)
 
@@ -85,9 +89,9 @@ for hh_id in bisp_coords_df['id'][1487:2000]:
 
     buffer_radius_i = float(bisp_coords_df_i['dist_max']) + buffer_radius
 
-    hh_buffer = ee.Geometry.Rectangle([float(bisp_coords_df_i['lon'] - buffer_radius_i), 
-                                  float(bisp_coords_df_i['lat'] - buffer_radius_i), 
-                                  float(bisp_coords_df_i['lon'] + buffer_radius_i), 
+    hh_buffer = ee.Geometry.Rectangle([float(bisp_coords_df_i['lon'] - buffer_radius_i),
+                                  float(bisp_coords_df_i['lat'] - buffer_radius_i),
+                                  float(bisp_coords_df_i['lon'] + buffer_radius_i),
                                   float(bisp_coords_df_i['lat'] + buffer_radius_i)])
 
     # Load and Filter Images By Region, Date and Cloud Cover

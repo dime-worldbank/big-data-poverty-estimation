@@ -36,4 +36,18 @@ bisp_df <- bisp_df %>%
   group_by(uid, period) %>%
   summarize(hh_inc = sum(CQ12, na.rm = TRUE))
 
+# Merge in poverty
+poverty_df <- read_dta(file.path(raw_data_file_path, "BISP", "BISP - Deidentified", "UID_pscores.dta"))
+
+bisp_df$uid <- bisp_df$uid %>% as.character
+poverty_df$uid <- poverty_df$uid %>% as.character
+
+poverty_df$period <- poverty_df$period %>% as.numeric
+poverty_df$period[poverty_df$period %in% 0] <- 2011
+poverty_df$period[poverty_df$period %in% 1] <- 2013
+poverty_df$period[poverty_df$period %in% 2] <- 2014
+poverty_df$period[poverty_df$period %in% 3] <- 2016
+
+bisp_df <- merge(bisp_df, poverty_df, by=c("uid", "period"))
+
 bisp_df %>% write_csv(BISP_OUTPUT_PATH)

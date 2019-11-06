@@ -19,6 +19,7 @@ if(Sys.info()[["user"]] == "WB521633") bisp_rawdata_file_path <- "C:/Users/wb521
 
 # Packages ---------------------------------------------------------------------
 library(rgdal)
+library(viridis)
 library(readstata13)
 library(dplyr)
 library(data.table)
@@ -33,6 +34,7 @@ library(stringr)
 library(doBy)
 library(rgeos)
 library(haven)
+library(ggmap)
 library(velox)
 library(sf)
 library(tidyverse)

@@ -81,7 +81,7 @@ bisp_coords_df['id'] = bisp_coords_df['cluster_id']
 #bisp_coords_df['id'][1487:2000]
 # 4990
 #bisp_coords_df['id']
-for hh_id in bisp_coords_df['id'][1169:2000]:
+for hh_id in bisp_coords_df['id'][1640:2000]:
 
     print(hh_id)
 

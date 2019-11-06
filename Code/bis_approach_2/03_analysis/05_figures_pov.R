@@ -39,52 +39,136 @@ geo_coords <- as.data.frame(geo_coords)
 
 # Load Data --------------------------------------------------------------------
 #data <- read.csv(file.path(final_data_file_path, "Data with Predicted Income", "testdata_with_predictions.csv"))
-data <- read.csv(file.path(final_data_file_path, "Data with Predicted Income", "opm_data_with_predictions_testdatamodel_alldatapredict.csv"))
+data <- read.csv(file.path(final_data_file_path, "Data with Predicted Income", "pov_opm_data_with_predictions_testdatamodel_alldatapredict.csv"))
 
 data <- merge(data, geo_coords, by="uid")
 
 # Predicted vs Actual Map: Points ----------------------------------------------
 pak_adm0_simp <- gSimplify(pak_adm0, tol=.035)
 data$y_true_f <- data$y_true %>% as.character()
-data$y_true_f[data$y_true_f == "0"] <- "Low"
-data$y_true_f[data$y_true_f == "1"] <- "Medium"
-data$y_true_f[data$y_true_f == "2"] <- "High"
+data$y_true_f[data$y_true_f == "True"] <- "Yes"
+data$y_true_f[data$y_true_f == "False"] <- "No"
 
-data$y_predict_f <- data$y_predict_49 %>% as.character()
-data$y_predict_f[data$y_predict_f == "0"] <- "Low"
-data$y_predict_f[data$y_predict_f == "1"] <- "Medium"
-data$y_predict_f[data$y_predict_f == "2"] <- "High"
+data$y_predict_f <- data$y_predict_21 %>% as.character()
+data$y_predict_f[data$y_predict_f == "True"] <- "Yes"
+data$y_predict_f[data$y_predict_f == "False"] <- "No"
 
-data$y_true_f <- data$y_true_f %>% factor(levels=c("Low", "Medium", "High"))
-data$y_predict_f <- data$y_predict_f %>% factor(levels=c("Low", "Medium", "High"))
+data$y_true_f <- data$y_true_f %>% factor(levels=c("Yes", "No"))
+data$y_predict_f <- data$y_predict_f %>% factor(levels=c("Yes", "No"))
 
 # FULL MAP
 pmap <- ggplot() +
-  geom_polygon(data=pak_adm0_simp, aes(x=long, y=lat, group=group), fill="peachpuff3", color="gray10") +
+  geom_polygon(data=pak_adm0_simp, aes(x=long, y=lat, group=group), fill="gray75", color="gray10") +
   geom_point(data=data, aes(x=longitude, y=latitude, color=y_true_f)) +
   theme_void() +
-  scale_colour_viridis(discrete=T) +
-  labs(color = "Household\nIncome") +
+  scale_colour_manual(values=c("darkorange1", "dodgerblue3")) +
+  labs(color = "BISP\nBeneficiary") +
   coord_quickmap()
-ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_true.png")), height=6, width=6)
+ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_true.png")), height=6, width=6)
 
 pmap <- ggplot() +
-  geom_polygon(data=pak_adm0_simp, aes(x=long, y=lat, group=group), fill="peachpuff3", color="gray10") +
+  geom_polygon(data=pak_adm0_simp, aes(x=long, y=lat, group=group), fill="gray75", color="gray10") +
   geom_point(data=data, aes(x=longitude, y=latitude, color=y_predict_f)) +
   theme_void() +
-  scale_colour_viridis(discrete=T) +
-  labs(color = "Household\nIncome\nLevel") +
+  scale_colour_manual(values=c("darkorange1", "dodgerblue3")) +
+  labs(color = "BISP\nBeneficiary") +
   coord_quickmap()
-ggsave(p_map, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points.png")), height=6, width=6)
+ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_predicted.png")), height=6, width=6)
+
+# Restricted Map
+center <- data.frame(id = 1,
+                     lat = 34.009802,
+                     lon = 72.310956)
+coordinates(center) <- ~lon+lat
+center_buff <- gBuffer(center, width=7/111.12)
+#center_buff@bbox
+
+basemap <- get_stamenmap(bbox = c(
+  left = center_buff@bbox[1,1] - 3.5/111.12,
+  right = center_buff@bbox[1,2] + 3.5/111.12,
+  bottom = center_buff@bbox[2,1],
+  top = center_buff@bbox[2,2]),
+  zoom = 13,
+  maptype = "terrain")
+
+pmap <- ggmap(basemap) +
+  geom_point(data=data, aes(x=longitude, y=latitude, fill=y_true_f), size=2, pch=21, color="black") +
+  theme_void() +
+  scale_fill_manual(values=c("darkorange1", "dodgerblue3")) +
+  labs(fill = "BISP\nBeneficiary") +
+  coord_quickmap()
+pmap
+ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_true_RESTRICT.png")), height=6, width=6)
+
+pmap <- ggmap(basemap) +
+  geom_point(data=data, aes(x=longitude, y=latitude, fill=y_predict_f), size=2, pch=21, color="black") +
+  theme_void() +
+  scale_fill_manual(values=c("darkorange1", "dodgerblue3")) +
+  labs(fill = "BISP\nBeneficiary") +
+  coord_quickmap()
+ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_predicted_RESTRICT.png")), height=6, width=6)
 
 
+
+
+get_stamenmap(bbox = c(left = -95.80204, bottom = 29.38048, right =
+                         -94.92313, top = 30.14344), zoom = 10, maptype = c("terrain",
+                                                                            "terrain-background", "terrain-labels", "terrain-lines", "toner",
+                                                                            "toner-2010", "toner-2011", "toner-background", "toner-hybrid",
+                                                                            "toner-labels", "toner-lines", "toner-lite", "watercolor"),
+              crop = TRUE, messaging = FALSE, urlonly = FALSE,
+              color = c("color", "bw"), force = FALSE, where = tempdir(), ...)
+
+
+leaflet() %>%
+  addTiles() %>%
+  addCircles(data=data, lng=~longitude, lat=~latitude)
+
+
+
+
+data_long <- bind_rows(
+  data[,c("uid", "y_predict_f")] %>% mutate(type = "Predictions") %>% dplyr::rename(value = y_predict_f),
+  data[,c("uid", "y_true_f")] %>% mutate(type = "OPM Data") %>% dplyr::rename(value = y_true_f)
+)
+
+
+
+
+# Bar Map
+p <- ggplot() +
+  geom_bar(data=data_long, aes(x=value,
+                               group=type,
+                               fill=type),
+           position = "dodge", color="black") +
+  scale_fill_manual(values=c("navajowhite3", "lightskyblue"),
+                    guide = guide_legend(reverse = TRUE)) +
+  labs(x="BISP\nBeneficiary",
+       title = "Number of Households\nClassified as BISP Beneficiaries",
+       fill = "",
+       y="") +
+  theme_minimal() +
+  theme(axis.title.y = element_text(angle=0, vjust=.5, face="bold", size=13),
+        plot.title = element_text(face="bold", hjust=.5, size=13),
+        axis.text = element_text(size=13),
+        legend.text = element_text(size=13)) +
+  coord_flip() 
+p
+ggsave(p, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_fig.png")), height=3, width=6)
+
+
+#
 
 # Judge Accuracy ---------------------------------------------------------------
 accuracy_score <- function(values1, values2){
   return(mean(values1 == values2))
 }
 
-acc_df <- lapply(1:70, function(i){
+acc_df <- lapply(1:48, function(i){
+  print(i)
+  data$y_true <- data$y_true %>% as.character
+  data[[paste0("y_predict_", i)]] <- data[[paste0("y_predict_", i)]] %>% as.character
+  
   df_out <- data.frame(i = i,
                        acc = accuracy_score(data$y_true, data[[paste0("y_predict_", i)]]))
   

@@ -8,14 +8,13 @@ if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Ban
 raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
 final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 
-# File path for NSER raw data (kept in separate folder than project file path for
-# for data confidentialty). The raw data is only needed for: create_uc_level_survey_dataset.R. 
-if(Sys.info()[["user"]] == "WB521633") nser_pitb_file_path <- "C:/Users/wb521633/Dropbox/NSER from PITB"
-if(Sys.info()[["user"]] == "robmarty") nser_pitb_file_path <- "~/Dropbox/NSER from PITB"
+# Code File Path
+if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
+if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Gitub/Pakistan-Poverty-from-Sky/Code/bisp_approach/_functions/"
 
 # File path for BISP Geocodes
 if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "C:/Users/wb521633/WBG/Alice Duhaut - Pakistan" # ONEDRIVE FILE PATH
-if(Sys.info()[["user"]] == "WB521633") bisp_rawdata_file_path <- "C:/Users/wb521633/WBG/Alice Duhaut - Pakistan/Data/RawData" # ONEDRIVE FILE PATH
+if(Sys.info()[["user"]] == "robmarty") bisp_geocodes_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky/BISP/"
 
 # Packages ---------------------------------------------------------------------
 library(rgdal)
@@ -38,6 +37,7 @@ library(ggmap)
 library(velox)
 library(sf)
 library(tidyverse)
+source(file.path(code_file_path, "functions.R"))
 
 # Run Scripts ------------------------------------------------------------------
 if(F){

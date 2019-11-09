@@ -10,7 +10,7 @@ final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 
 # Code File Path
 if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
-if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Gitub/Pakistan-Poverty-from-Sky/Code/bisp_approach/_functions/"
+if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky/Code/bisp_approach/_functions"
 
 # File path for BISP Geocodes
 if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "C:/Users/wb521633/WBG/Alice Duhaut - Pakistan" # ONEDRIVE FILE PATH

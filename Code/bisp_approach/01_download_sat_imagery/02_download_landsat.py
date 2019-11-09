@@ -21,14 +21,14 @@ ee.Initialize()
 # Setup -----------------------------------------------------------------------
 # Filepaths
 project_file_path = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/'
-data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2011/unstacked/'
+data_directory = project_file_path + 'Data/RawData/Landsat/bisp_households/2016/unstacked/'
 
 bisp_geocodes_file_path = "/Users/robmarty/Documents/World Bank/Pakistan Poverty from Sky/BISP/"
 
 # Parameters
 buffer_radius_extra = 2/111.12
-begin_date = '2011-01-01'
-end_date = '2011-12-31'
+begin_date = '2016-01-01'
+end_date = '2016-12-31'
 cloud_cover_filter = 15
 resolution = 30
 
@@ -63,7 +63,7 @@ bisp_coords_df['lon'] = bisp_coords_df['longitude']
 bisp_coords_df['id'] = bisp_coords_df['cluster_id']
 
 # Loop Through Households; Extract/Download Imagery ------------------------
-for hh_id in bisp_coords_df['id'][543:700]:
+for hh_id in bisp_coords_df['id'][648:700]:
 
     print(hh_id)
 

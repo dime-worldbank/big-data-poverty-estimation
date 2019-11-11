@@ -33,6 +33,7 @@ bisp_df <- bisp_df %>%
 
 # Export -----------------------------------------------------------------------
 write.csv(bisp_df, file = file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_socioeconomic.csv"), row.names=F)
+saveRDS(bisp_df, file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_socioeconomic.Rds"))
 
 
 

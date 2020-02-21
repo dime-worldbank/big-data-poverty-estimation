@@ -1,7 +1,7 @@
 # Alluvial Diagram of Poverty Over Time
 
 # Load Data --------------------------------------------------------------------
-bisp_df <- read.csv(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_socioeconomic.csv"))
+bisp_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_socioeconomic.Rds"))
 
 bisp_wide_df <- bisp_df %>% 
   dplyr::select(uid, year, pscores) %>%
@@ -29,15 +29,4 @@ alluvial(bisp_wide_freq[,1:4], freq=bisp_wide_freq$Freq,
 )
 dev.off()
 
-##
-
-ggplot(bisp_wide_freq,
-       aes(y = Freq,
-           axis1 = `2011`, axis2 = `2013`, axis3 = `2014`, axis4 = `2016`)) +
-  geom_flow(aes(fill = `2011`)) +
-  geom_stratum() + 
-  scale_x_discrete(limits = c("2011", "2013", "2014", "2016")) +
-
-  geom_text(stat = "stratum", label.strata = TRUE) #+
-  theme_void()
 

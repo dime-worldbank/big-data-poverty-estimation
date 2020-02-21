@@ -9,12 +9,15 @@ raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
 final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 
 # Code File Path
-if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
+if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky/Code"
 if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky/Code/bisp_approach/_functions"
 
 # File path for BISP Geocodes
 if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data/BISP" # ONEDRIVE FILE PATH
 if(Sys.info()[["user"]] == "robmarty") bisp_geocodes_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky/BISP/"
+
+# Parameters -------------------------------------------------------------------
+PAK_UTM_PROJ <- "+init=epsg:24313"
 
 # Packages ---------------------------------------------------------------------
 library(rgdal)
@@ -33,11 +36,13 @@ library(stringr)
 library(doBy)
 library(rgeos)
 library(haven)
+library(alluvial)
 library(ggmap)
 library(velox)
 library(sf)
 library(tidyverse)
-source(file.path(code_file_path, "functions.R"))
+source(file.path(code_file_path, "02_bisp_approach", "_functions", "functions.R"))
+source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
 
 # Run Scripts ------------------------------------------------------------------
 if(F){

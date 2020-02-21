@@ -16,10 +16,12 @@ bisp_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets"
 
 landsat_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_landsat.Rds"))
 viirs_all_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_viirs.Rds"))
+osm_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_osm_roads.Rds"))
 
 bisp_df$uid <- bisp_df$uid %>% as.character() %>% as.numeric
 landsat_df$uid <- landsat_df$uid %>% as.character() %>% as.numeric
 viirs_all_df$uid <- viirs_all_df$uid %>% as.character() %>% as.numeric
+osm_df$uid <- osm_df$uid %>% as.character() %>% as.numeric
 
 # Prep HH Data -----------------------------------------------------------------
 bisp_df$survey_round <- NA
@@ -113,16 +115,25 @@ viirs_panel$year <- NULL
 
 bisp_satdata_df <- merge(bisp_df, landsat_indicie_df, by=c("uid", "survey_round"), all.x=T,all.y=F)
 bisp_satdata_df <- merge(bisp_satdata_df, viirs_panel, by=c("uid", "survey_round"), all.x=T,all.y=F)
+bisp_satdata_df <- merge(bisp_satdata_df, osm_df, by=c("uid"), all.x=T,all.y=F)
 
 # Keep Observations where have satellite data ----------------------------------
 # For some households coordinate values were NA. (ie, coordinate values in
 # GPS_uid_crosswalk.dta were NA)
 
-bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("viirs_", names(bisp_satdata_df))], 1, sum)),]
-bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("b1", names(bisp_satdata_df))], 1, sum)),]
-bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("pscores", names(bisp_satdata_df))], 1, sum)),]
+bisp_satdata_df$viirs_NA <- is.na(apply(bisp_satdata_df[grepl("viirs_", names(bisp_satdata_df))], 1, sum))
+bisp_satdata_df$landsat_NA <- is.na(apply(bisp_satdata_df[grepl("b1", names(bisp_satdata_df))], 1, sum))
+bisp_satdata_df$pscores_NA <- is.na(apply(bisp_satdata_df[grepl("pscores", names(bisp_satdata_df))], 1, sum))
 
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_satdata_df, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full.Rds"))
 write.csv(bisp_satdata_df, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full.csv"), row.names=F)
+
+#### Export removing NAs
+bisp_satdata_df_noNA <- bisp_satdata_df %>%
+  filter(!viirs_NA & !landsat_NA & !pscores_NA)
+saveRDS(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.Rds"))
+write.csv(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.csv"), row.names=F)
+
+
 

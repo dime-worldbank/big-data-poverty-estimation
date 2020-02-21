@@ -1,5 +1,21 @@
 # to test feasibility of approach...
 
+# Changes Histogram ------------------------------------------------------------
+bisp_satdata_df_firstdiff <- read.csv(file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_firstdiff_r13.csv"))
+
+p <- ggplot() +
+  geom_histogram(data=bisp_satdata_df_firstdiff[bisp_satdata_df_firstdiff$pscores >= 0,], aes(x=pscores), fill="darkolivegreen3",color="darkgreen",binwidth=1,size=.1) +
+  geom_histogram(data=bisp_satdata_df_firstdiff[bisp_satdata_df_firstdiff$pscores < 0.15,], aes(x=pscores), fill="goldenrod1",color="goldenrod4",binwidth=1,size=.1) +
+  theme_minimal() +
+  labs(x="Change in Poverty Score",
+       y="Number\nof\nHouseholds",
+       title="Change in Poverty Score from 2011 - 2014") +
+  scale_x_continuous(limits=c(-50,50)) +
+  theme(axis.title.y = element_text(angle = 0, vjust=.5),
+        plot.title = element_text(face="bold",size=12, hjust=.5))
+ggsave(p, filename = file.path(project_file_path, "Outputs", "Results", "Figures","pscore_changes_r13.png"), height=3, width=5)
+
+
 # Prep Geocoords ---------------------------------------------------------------
 pak_adm0 <- getData('GADM', country='PAK', level=0)
 pak_adm <- getData('GADM', country='PAK', level=3)

@@ -1,7 +1,19 @@
 # Merge Data and Prepare Final Dataset
 # Produce _WIDE and _LONG dataset
 
+# DESCRIPTION
+# This script merges BISP HH data with spatial datasets extract to BISP HHs, 
+# including landsat and VIIRS. 
+
+# 1. Load data and prep HH Survey Data
+# 2. Convert VIIRs to Panel
+# 3. Create panel for landsat
+  # 3.1 Create indices from landsat
+# 4. Merge datasets & export 
+
+# Load Data --------------------------------------------------------------------
 bisp_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_socioeconomic.Rds"))
+
 landsat_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_landsat.Rds"))
 viirs_all_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_viirs.Rds"))
 
@@ -17,11 +29,19 @@ bisp_df$survey_round[bisp_df$year %in% 2014] <- 3
 bisp_df$survey_round[bisp_df$year %in% 2016] <- 4
 
 # Create Panel for VIIRS -------------------------------------------------------
+# VIIRS is in a _wide format, where we want to create a panel in a _long format.
+# Here, the unit is the household where a variable is, for example: 
+# viirs_rad_buffer_1km_2016_m5_mean, where:
+#  []km refers to the buffer size where NTL values were extracted
+#  m[] refers to the month that was extracted.
+# Across montns, we take both the average and standard deviation
+
 viirs_panel <- lapply(c(2012, 2013, 2014, 2016), function(year){
   viirs_annual_all <- viirs_all_df %>%
     dplyr::select(uid)
   for(stat in c("mean", "max", "min", "sd")){
     for(buffer in c("1km", "2km", "3km", "5km", "10km")){
+
       vec_mean <- viirs_all_df[,grepl(year, names(viirs_all_df)) & grepl(buffer, names(viirs_all_df)) & grepl(stat, names(viirs_all_df))] %>% apply(1, mean)
       vec_sd <- viirs_all_df[,grepl(year, names(viirs_all_df)) & grepl(buffer, names(viirs_all_df)) & grepl(stat, names(viirs_all_df))] %>% apply(1, sd)
       
@@ -41,6 +61,9 @@ viirs_panel$survey_round[viirs_panel$year %in% 2014] <- 3
 viirs_panel$survey_round[viirs_panel$year %in% 2016] <- 4
 
 # Create Panel for Landsat -----------------------------------------------------
+# Here, we convert landsat to a panel. An example variable is: 
+# b2_2016_buff_2km_min
+
 landsat_panel <- lapply(c(2011, 2013, 2014, 2016), function(year){
   landsat_df_yyyy <- landsat_df[,c("uid",
                                     names(landsat_df)[grepl(year, names(landsat_df))] )]  
@@ -85,13 +108,16 @@ landsat_indicie_df$year <- landsat_panel$year
 landsat_indicie_df$survey_round <- landsat_panel$survey_round
 
 # Merge ------------------------------------------------------------------------
+landsat_indicie_df$year <- NULL
+viirs_panel$year <- NULL
+
 bisp_satdata_df <- merge(bisp_df, landsat_indicie_df, by=c("uid", "survey_round"), all.x=T,all.y=F)
 bisp_satdata_df <- merge(bisp_satdata_df, viirs_panel, by=c("uid", "survey_round"), all.x=T,all.y=F)
-bisp_satdata_df$year <- NULL
-bisp_satdata_df$year.x <- NULL
-bisp_satdata_df$year.y <- NULL
 
 # Keep Observations where have satellite data ----------------------------------
+# For some households coordinate values were NA. (ie, coordinate values in
+# GPS_uid_crosswalk.dta were NA)
+
 bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("viirs_", names(bisp_satdata_df))], 1, sum)),]
 bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("b1", names(bisp_satdata_df))], 1, sum)),]
 bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("pscores", names(bisp_satdata_df))], 1, sum)),]
@@ -99,5 +125,4 @@ bisp_satdata_df <- bisp_satdata_df[!is.na(apply(bisp_satdata_df[grepl("pscores",
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_satdata_df, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full.Rds"))
 write.csv(bisp_satdata_df, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full.csv"), row.names=F)
-
 

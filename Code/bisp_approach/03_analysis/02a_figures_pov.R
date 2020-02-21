@@ -62,18 +62,20 @@ pmap <- ggplot() +
   geom_point(data=data, aes(x=longitude, y=latitude, color=y_true_f)) +
   theme_void() +
   scale_colour_manual(values=c("darkorange1", "dodgerblue3")) +
-  labs(color = "BISP\nBeneficiary") +
+  labs(color = "BISP\nBeneficiary",title="From Survey Data") +
+  theme(plot.title = element_text(hjust=.5, face="bold")) +
   coord_quickmap()
-ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_true.png")), height=6, width=6)
+ggsave(pmap, filename=file.path(file.path(project_file_path, "Outputs", "Results", "Figures", "poverty_3level_actual_predicted_map_points_true.png")), height=5, width=5)
 
 pmap <- ggplot() +
   geom_polygon(data=pak_adm0_simp, aes(x=long, y=lat, group=group), fill="gray75", color="gray10") +
   geom_point(data=data, aes(x=longitude, y=latitude, color=y_predict_f)) +
   theme_void() +
   scale_colour_manual(values=c("darkorange1", "dodgerblue3")) +
-  labs(color = "BISP\nBeneficiary") +
+  labs(color = "BISP\nBeneficiary", title="Predicted from Satellite Imagery") +
+  theme(plot.title = element_text(hjust=.5, face="bold")) +
   coord_quickmap()
-ggsave(pmap, filename=file.path(file.path(project_file_path, "Results", "Figures", "poverty_3level_actual_predicted_map_points_predicted.png")), height=6, width=6)
+ggsave(pmap, filename=file.path(file.path(project_file_path, "Outputs", "Results", "Figures", "poverty_3level_actual_predicted_map_points_predicted.png")), height=5, width=5)
 
 # Restricted Map
 center <- data.frame(id = 1,

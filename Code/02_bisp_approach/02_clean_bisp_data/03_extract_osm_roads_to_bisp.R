@@ -14,8 +14,6 @@ bisp_coords$uid <- bisp_coords$uid %>% as.numeric()
 bisp_coords <- bisp_coords[(bisp_coords$latitude < 37) & (bisp_coords$latitude > 23),]
 bisp_coords <- bisp_coords[(bisp_coords$longitude < 81) & (bisp_coords$longitude > 65),]
 
-summary(bisp_coords$latitude)
-
 coordinates(bisp_coords) <- ~longitude+latitude
 crs(bisp_coords) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 

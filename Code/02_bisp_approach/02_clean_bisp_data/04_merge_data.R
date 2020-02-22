@@ -117,6 +117,9 @@ bisp_satdata_df <- merge(bisp_df, landsat_indicie_df, by=c("uid", "survey_round"
 bisp_satdata_df <- merge(bisp_satdata_df, viirs_panel, by=c("uid", "survey_round"), all.x=T,all.y=F)
 bisp_satdata_df <- merge(bisp_satdata_df, osm_df, by=c("uid"), all.x=T,all.y=F)
 
+# Create Variables -------------------------------------------------------------
+bisp_satdata_df$pscores_poor <- bisp_satdata_df$pscores <= 16.17
+
 # Keep Observations where have satellite data ----------------------------------
 # For some households coordinate values were NA. (ie, coordinate values in
 # GPS_uid_crosswalk.dta were NA)

@@ -6,6 +6,13 @@
 # RESOURCES
 # https://github.com/SofiaG1l/Using_Facebook_API
 
+# TODO
+# 1. Time Range
+   # https://developers.facebook.com/docs/marketing-api/insights/
+   # 'time_range={"since":"2015-03-01","until":"2015-03-31"}'
+   # "'time_range':{'since':'",parameters_df_i$date_start,"',",
+   # "'until':'",parameters_df_i$date_end,"'},",
+
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
@@ -48,6 +55,8 @@ version <- api_keys$Key[api_keys$Account %in% "version"]
 parameters_df <- data.frame(
   radius_km = 5,
   gender = c("1,2","1","2"),
+  date_start = "2015-03-01",
+  date_end = "2015-08-01",
   age_min = 13,
   age_max = 65,
   facebook_positions = "'feed','instant_article','instream_video','marketplace'",

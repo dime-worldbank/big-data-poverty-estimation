@@ -1,21 +1,6 @@
-# Useful functions for project
-
-get_lat_lon <- function(number){
-  
-  deg = floor(number / 100)
-  min = floor(number - (100 * deg))
-  sec = 100 * (number - (100 * deg) - min)
-  degree = deg + (min / 60) + (sec / 3600)
-  
-  return(degree)
-}
-
-
-
-
 # Function to CLuster Unique Crashes into Crash 
 
-create_clusters <- function(crashes_df,
+create_crash_clusters <- function(crashes_df,
                                   lat_var,
                                   lon_var,
                                   near_crash_thresh_meters,
@@ -33,7 +18,7 @@ create_clusters <- function(crashes_df,
   # lon_var: Name of variable indicating longitude
   # near_crash_thresh_meters: Grab all crashes within this distance.
   # near_anycrash_in_cluster_thresh_meters: Don't allow distance between any
-  # points in crash cluster to go beyond this.
+    # points in crash cluster to go beyond this.
   
   crashes_df$longitude <- crashes_df[[lon_var]]
   crashes_df$latitude <- crashes_df[[lat_var]]

@@ -34,8 +34,6 @@ cluster_coords <- bisp_coords_cluster %>%
 uid_clusterid_crosswalk <- bisp_coords_cluster %>%
   dplyr::select(uid, cluster_id)
 
-nrow(cluster_coords)
-
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",
@@ -65,8 +63,8 @@ make_query_location_i <- function(loc_i, coords_df, coords_id_name, parameters_d
                   "/act_",creation_act,
                   "/delivery_estimate?access_token=",token,
                   "&include_headers=false&method=get&pretty=0&suppress_http_code=1&method=get&optimization_goal=REACH&pretty=0&suppress_http_code=1&targeting_spec={",
-                  "'geo_locations':{'custom_locations':[{'latitude':",coords_df$latitude[loc_i],",",
-                  "'longitude':",coords_df$longitude[loc_i],",",
+                  "'geo_locations':{'custom_locations':[{'latitude':",coords_df$latitude[loc_i] %>% substring(1,7),",",
+                  "'longitude':",coords_df$longitude[loc_i] %>% substring(1,7),",",
                   "'radius':",parameters_df_i$radius_km,",",
                   "'distance_unit':'kilometer'}]},",
                   "'genders':[",parameters_df_i$gender,"],",
@@ -79,22 +77,32 @@ make_query_location_i <- function(loc_i, coords_df, coords_id_name, parameters_d
                   "}")
   
   query_val <- url(query) %>% fromJSON
-  query_val_df <- query_val$data
-  query_val_df$daily_outcomes_curve <- NULL
   
-  for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
-  query_val_df[[coords_id_name]] <- coords_df[[coords_id_name]][loc_i]
-  query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
-  
-  print(paste0(loc_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
-  Sys.sleep(20)
-  
+  # If there is no error
+  if(is.null(query_val$error)){
+    query_val_df <- query_val$data
+    query_val_df$daily_outcomes_curve <- NULL
+    
+    for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
+    query_val_df[[coords_id_name]] <- coords_df[[coords_id_name]][loc_i]
+    query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
+    
+    print(paste0(loc_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
+    Sys.sleep(19)
+    
+  # If there is an error, print the error and make output null  
+  } else{
+    print(paste(loc_i, "-----------------------------------------------------"))
+    print(query_val)
+    query_val_df <- NULL
+  }
+
   return(query_val_df)
 }
 
 queries_all_df_1 <- lapply(1:nrow(cluster_coords), make_query_location_i, cluster_coords, "cluster_id", parameters_df[1,], version, creation_act, token) %>% bind_rows()
-#queries_all_df_2 <- lapply(1:nrow(bisp_coords), make_query_location_i, bisp_coords, parameters_df[2,], version, creation_act, token) %>% bind_rows()
-#queries_all_df_3 <- lapply(1:nrow(bisp_coords), make_query_location_i, bisp_coords, parameters_df[3,], version, creation_act, token) %>% bind_rows()
+#queries_all_df_2 <- lapply(1:nrow(cluster_coords), make_query_location_i, bisp_coords, parameters_df[2,], version, creation_act, token) %>% bind_rows()
+#queries_all_df_3 <- lapply(1:nrow(cluster_coords), make_query_location_i, bisp_coords, parameters_df[3,], version, creation_act, token) %>% bind_rows()
 
 #queries_all_df <- bind_rows(queries_all_df_1, queries_all_df_2, queries_all_df_3)
 

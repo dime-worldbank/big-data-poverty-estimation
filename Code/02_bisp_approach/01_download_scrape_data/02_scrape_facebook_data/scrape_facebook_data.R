@@ -17,6 +17,7 @@ library(tidyverse)
 library(lubridate)
 library(jsonlite)
 library(httr)
+library(curl)
 
 # Load HH Coordinates ----------------------------------------------------------
 bisp_coords <- read_dta(file.path(bisp_geocodes_file_path, "GPS_uid_crosswalk.dta"))
@@ -68,56 +69,79 @@ parameters_df <- data.frame(
 
 make_query_location_i <- function(loc_i, coords_df, coords_id_name, parameters_df_i, version, creation_act, token){
 
-  query <- paste0("https://graph.facebook.com/",version,
-                  "/act_",creation_act,
-                  "/delivery_estimate?access_token=",token,
-                  "&include_headers=false&method=get&pretty=0&suppress_http_code=1&method=get&optimization_goal=REACH&pretty=0&suppress_http_code=1&targeting_spec={",
-                  "'geo_locations':{'custom_locations':[{'latitude':",coords_df$latitude[loc_i] %>% substring(1,7),",",
-                  "'longitude':",coords_df$longitude[loc_i] %>% substring(1,7),",",
-                  "'radius':",parameters_df_i$radius_km,",",
-                  "'distance_unit':'kilometer'}]},",
-                  "'genders':[",parameters_df_i$gender,"],",
-                  "'age_min':",parameters_df_i$age_min,",",
-                  "'age_max':",parameters_df_i$age_max, #",",
-                  #"'facebook_positions':[",parameters_df_i$facebook_positions,"],",
-                  #"'device_platforms':[",parameters_df_i$device_platforms,"],",
-                  #"'publisher_platforms':[",parameters_df_i$publisher_platforms,"],",
-                  #"'messenger_positions':[",parameters_df_i$messenger_positions,"]",
-                  "}")
+  # Stall if not connected to internet
+  while(!curl::has_internet()){ Sys.sleep(30); print("Looking for internet") }
   
-  query_val <- url(query) %>% fromJSON
+  query_val_df <- tryCatch({
+
+    query <- paste0("https://graph.facebook.com/",version,
+                    "/act_",creation_act,
+                    "/delivery_estimate?access_token=",token,
+                    "&include_headers=false&method=get&pretty=0&suppress_http_code=1&method=get&optimization_goal=REACH&pretty=0&suppress_http_code=1&targeting_spec={",
+                    "'geo_locations':{'custom_locations':[{'latitude':",coords_df$latitude[loc_i] %>% substring(1,7),",",
+                    "'longitude':",coords_df$longitude[loc_i] %>% substring(1,7),",",
+                    "'radius':",parameters_df_i$radius_km,",",
+                    "'distance_unit':'kilometer'}]},",
+                    "'genders':[",parameters_df_i$gender,"],",
+                    "'age_min':",parameters_df_i$age_min,",",
+                    "'age_max':",parameters_df_i$age_max, #",",
+                    #"'facebook_positions':[",parameters_df_i$facebook_positions,"],",
+                    #"'device_platforms':[",parameters_df_i$device_platforms,"],",
+                    #"'publisher_platforms':[",parameters_df_i$publisher_platforms,"],",
+                    #"'messenger_positions':[",parameters_df_i$messenger_positions,"]",
+                    "}")
+    
+    query_val <- url(query) %>% fromJSON
+    
+    # If there is no error
+    if(is.null(query_val$error) | query %in% "error"){
+      query_val_df <- query_val$data
+      query_val_df$daily_outcomes_curve <- NULL
+      
+      for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
+      query_val_df[[coords_id_name]] <- coords_df[[coords_id_name]][loc_i]
+      query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
+      
+      print(paste0(loc_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
+      Sys.sleep(18)
+      
+      # If there is an error, print the error and make output null  
+    } else{
+      print(paste(loc_i, "-----------------------------------------------------"))
+      print(query_val)
+      query_val_df <- NULL
+    }
+    
+    query_val_df
   
-  # If there is no error
-  if(is.null(query_val$error)){
-    query_val_df <- query_val$data
-    query_val_df$daily_outcomes_curve <- NULL
-    
-    for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
-    query_val_df[[coords_id_name]] <- coords_df[[coords_id_name]][loc_i]
-    query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
-    
-    print(paste0(loc_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
-    Sys.sleep(19)
-    
-  # If there is an error, print the error and make output null  
-  } else{
-    print(paste(loc_i, "-----------------------------------------------------"))
-    print(query_val)
-    query_val_df <- NULL
-  }
+  },error = function(e){
+    print("ERROR")
+    Sys.sleep(120)
+    return(NULL)
+  })
+  
 
   return(query_val_df)
 }
 
-queries_all_df_1 <- lapply(1:nrow(cluster_coords), make_query_location_i, cluster_coords, "cluster_id", parameters_df[1,], version, creation_act, token) %>% bind_rows()
 #queries_all_df_2 <- lapply(1:nrow(cluster_coords), make_query_location_i, bisp_coords, parameters_df[2,], version, creation_act, token) %>% bind_rows()
 #queries_all_df_3 <- lapply(1:nrow(cluster_coords), make_query_location_i, bisp_coords, parameters_df[3,], version, creation_act, token) %>% bind_rows()
 
 #queries_all_df <- bind_rows(queries_all_df_1, queries_all_df_2, queries_all_df_3)
 
 # Export -----------------------------------------------------------------------
-saveRDS(queries_all_df_1, file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract.Rds"))
 saveRDS(uid_clusterid_crosswalk, file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_clusterid_crosswalk.Rds"))
+
+#queries_all_df_1 <- lapply(1:nrow(cluster_coords), make_query_location_i, cluster_coords, "cluster_id", parameters_df[1,], version, creation_act, token) %>% bind_rows()
+#saveRDS(queries_all_df_1, file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_1.Rds"))
+
+queries_all_df_3 <- lapply(1:nrow(cluster_coords), make_query_location_i, cluster_coords, "cluster_id", parameters_df[3,], version, creation_act, token) %>% bind_rows()
+saveRDS(queries_all_df_3, file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_3.Rds"))
+
+queries_all_df_2 <- lapply(1:nrow(cluster_coords), make_query_location_i, cluster_coords, "cluster_id", parameters_df[2,], version, creation_act, token) %>% bind_rows()
+saveRDS(queries_all_df_2, file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_2.Rds"))
+
+
 
 
 

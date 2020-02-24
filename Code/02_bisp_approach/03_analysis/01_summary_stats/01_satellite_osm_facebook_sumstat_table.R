@@ -4,12 +4,13 @@
 bisp_df <- readRDS(file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.Rds"))
 bisp_df <- bisp_df[bisp_df$year %in% 2014,]
 
-
 ROUND_NUM <- 2
 
 bisp_df_sum <- lapply(c("viirs_spatialmean_monthlymean_buff_2km",
          "b25_buff_2km_min",
-         "estimate_dau",
+         "estimate_dau_all",
+         "estimate_dau_male",
+         "estimate_dau_female",
          "dist_osm_fclass_residential_kms"), function(var){
   data.frame(
     var = var,
@@ -21,7 +22,9 @@ bisp_df_sum <- lapply(c("viirs_spatialmean_monthlymean_buff_2km",
 }) %>% bind_rows()
 bisp_df_sum
 
-bisp_df_sum$var[bisp_df_sum$var %in% "estimate_dau"] <- "Facebook: Daily Active Users"
+bisp_df_sum$var[bisp_df_sum$var %in% "estimate_dau_all"] <- "Facebook: All Daily Active Users"
+bisp_df_sum$var[bisp_df_sum$var %in% "estimate_dau_male"] <- "Facebook: Male Daily Active Users"
+bisp_df_sum$var[bisp_df_sum$var %in% "estimate_dau_female"] <- "Facebook: Female Daily Active Users"
 bisp_df_sum$var[bisp_df_sum$var %in% "viirs_spatialmean_monthlymean_buff_2km"] <- "Nighttime Lights: Average"
 bisp_df_sum$var[bisp_df_sum$var %in% "b25_buff_2km_min"] <- "Daytime Imagery: Indice with Bands 2 and 5"
 bisp_df_sum$var[bisp_df_sum$var %in% "dist_osm_fclass_residential_kms"] <- "OSM: Kilometers to Residential Road"

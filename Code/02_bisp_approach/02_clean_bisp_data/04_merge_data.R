@@ -144,16 +144,22 @@ bisp_satdata_df_noNA <- bisp_satdata_df %>%
   filter(!viirs_NA & !landsat_NA & !pscores_NA)
 
 # For now, just replace NAs with default values for facebook
-bisp_satdata_df_noNA$estimate_dau[is.na(bisp_satdata_df_noNA$estimate_dau_all)] <- 0
-bisp_satdata_df_noNA$estimate_dau[is.na(bisp_satdata_df_noNA$estimate_dau_male)] <- 0
-bisp_satdata_df_noNA$estimate_dau[is.na(bisp_satdata_df_noNA$estimate_dau_female)] <- 0
+bisp_satdata_df_noNA$estimate_dau_all[is.na(bisp_satdata_df_noNA$estimate_dau_all)] <- 0
+bisp_satdata_df_noNA$estimate_dau_male[is.na(bisp_satdata_df_noNA$estimate_dau_male)] <- 0
+bisp_satdata_df_noNA$estimate_dau_female[is.na(bisp_satdata_df_noNA$estimate_dau_female)] <- 0
 
-bisp_satdata_df_noNA$estimate_mau[is.na(bisp_satdata_df_noNA$estimate_mau_all)] <- 1000
-bisp_satdata_df_noNA$estimate_mau[is.na(bisp_satdata_df_noNA$estimate_mau_male)] <- 1000
-bisp_satdata_df_noNA$estimate_mau[is.na(bisp_satdata_df_noNA$estimate_mau_female)] <- 1000
+bisp_satdata_df_noNA$estimate_mau_all[is.na(bisp_satdata_df_noNA$estimate_mau_all)] <- 1000
+bisp_satdata_df_noNA$estimate_mau_male[is.na(bisp_satdata_df_noNA$estimate_mau_male)] <- 1000
+bisp_satdata_df_noNA$estimate_mau_female[is.na(bisp_satdata_df_noNA$estimate_mau_female)] <- 1000
 
 saveRDS(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.Rds"))
 write.csv(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.csv"), row.names=F)
 
+# Check for NAs
+for(var in names(bisp_satdata_df_noNA)){
+  if(TRUE %in% is.na(bisp_satdata_df_noNA[[var]])){
+    print(var)
+  }
+}
 
 

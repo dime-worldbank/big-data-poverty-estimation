@@ -18,6 +18,7 @@ library(lubridate)
 library(jsonlite)
 library(httr)
 library(curl)
+library(haven)
 
 # Load HH Coordinates ----------------------------------------------------------
 bisp_coords <- read_dta(file.path(bisp_geocodes_file_path, "GPS_uid_crosswalk.dta"))
@@ -103,7 +104,7 @@ make_query_location_i <- function(loc_i, coords_df, coords_id_name, parameters_d
       query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
       
       print(paste0(loc_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
-      Sys.sleep(18)
+      #Sys.sleep(18)
       
       # If there is an error, print the error and make output null  
     } else{

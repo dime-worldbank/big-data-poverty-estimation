@@ -155,6 +155,21 @@ bisp_satdata_df_noNA$estimate_mau_female[is.na(bisp_satdata_df_noNA$estimate_mau
 saveRDS(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.Rds"))
 write.csv(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved.csv"), row.names=F)
 
+# One HH train
+bisp_satdata_df_noNA <- bisp_satdata_df_noNA %>%
+  group_by(uid) %>%
+  mutate(N_uid = n()) %>%
+  ungroup()
+
+bisp_satdata_df_noNA$keep <- bisp_satdata_df_noNA$year %in% 2014
+bisp_satdata_df_noNA$keep[bisp_satdata_df_noNA$N_uid %in% 1] <- TRUE 
+bisp_satdata_df_noNA <- bisp_satdata_df_noNA[bisp_satdata_df_noNA$keep %in% T,]
+
+saveRDS(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.Rds"))
+write.csv(bisp_satdata_df_noNA, file.path(final_data_file_path, "BISP", "Merged Datasets", "bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv"), row.names=F)
+
+
+
 # Check for NAs
 for(var in names(bisp_satdata_df_noNA)){
   if(TRUE %in% is.na(bisp_satdata_df_noNA[[var]])){

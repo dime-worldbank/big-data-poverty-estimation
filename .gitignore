@@ -1,0 +1,13 @@
+# Ignore Files
+*.csv
+*.dta
+*.Rds
+*.Rda
+.Rproj.user
+
+Data
+*__pycache__
+*.DS_Store
+*.Rhistory
+*.Rapp.history
+*.ipynb_checkpoints

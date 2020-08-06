@@ -82,7 +82,6 @@ def map_DTL_NTL(NTL_gdf, directory):
         if DTL:
             # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)
             rv.append(DTL)
-            rv_uid[row['uid']] = DTL
         else:
             # remove corresponding obs from NTL data (targets)
             gdf = gdf.drop([index])

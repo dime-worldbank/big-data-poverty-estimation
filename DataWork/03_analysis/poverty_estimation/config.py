@@ -218,10 +218,12 @@ GRID_TEST_CLASS = {
         {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,
         'criterion': criterion, 'max_features': max_features,
         'random_state': 0} \
-        for loss in ('ls', ) \
-        for rate in (1e-4, )
+        #for loss in ('ls', ) \
+        for loss in ('deviance', ) \
+        for rate in (1e-4, ) \
         for n_estimators in (100, ) \
-        for criterion in ('gini', ) \
+        #for criterion in ('gini', ) \
+        for criterion in ('friedman_mse', ) \
         for max_features in ('sqrt', ) \
     ],
     'RandomForestClassifier': [
@@ -229,7 +231,8 @@ GRID_TEST_CLASS = {
         'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
         'random_state': 0} \
         for n_estimators in (100, ) \
-        for criterion in ('mse', ) \
+        #for criterion in ('mse', ) \
+        for criterion in ('gini', ) \
         for max_depth in (1, ) \
         for max_features in ('sqrt', )
     ]

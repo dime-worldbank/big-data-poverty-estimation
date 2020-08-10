@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
+
+# For Regression Models
 from sklearn.linear_model import (LinearRegression,
                                   Lasso,
                                   Ridge)
@@ -23,6 +25,19 @@ from sklearn.ensemble import (BaggingRegressor,
 from sklearn.metrics import (r2_score,
                              mean_squared_error,
                              max_error)
+
+# For Classification Models
+from sklearn.svm import LinearSVC, SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import (BaggingClassifier,
+                              AdaBoostClassifier, 
+                              GradientBoostingClassifier, 
+                              RandomForestClassifier)
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import (accuracy_score,
+                             average_precision_score,
+                             recall_score,
+                             classification_report)
 
 import config as cf
 from ml_utils import TrainedRegressor
@@ -96,7 +111,7 @@ def save_to_file(obj, path):
     return None
 
 
-def train_models(params, features, labels, feature_sets):
+def train_models(params, features, labels, feature_sets, verbose=False):
     '''
     Saves a .pkl file of TrainedRegressor objects for each model type, as
     AWS free tier server will usually not hold all 800+ objects in memory.
@@ -120,7 +135,8 @@ def train_models(params, features, labels, feature_sets):
             for k in feature_sets:
 
                 count += 1
-                print(f'{datetime.datetime.now()} Model {count}: Training {i} on {k} with params {str(j)}')
+                if verbose:
+                    print(f'{datetime.datetime.now()} Model {count}: Training {i} on {k} with params {str(j)}')
 
                 try:
                     # Initialize regressor, fit data, then append model to list
@@ -163,8 +179,10 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
             # Get predicted results from test data
             features = feature_sets[i.features]
             pred_labels = i.regressor.predict(test_features[features])
+            pred_labels_bins = pred_labels.round() # Convert pred_labels from continuous to bins
 
             # Append results to dataframe
+            '''
             pred_dict = {
                 'regressor': i.method,
                 'params': i.params,
@@ -178,6 +196,24 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
             results_df = results_df.reindex(
                 ['regressor', 'params', 'features', 'r2', 'mse', 'max_err'],
                 axis=1
+            )
+            '''
+            target_names = ['Poverty Level %01d' %i for i in range(1,6)] 
+
+            pred_dict = {
+                'regressor': i.method,
+                'params': i.params,
+                'features': i.features,
+                'accuracy_score': accuracy_score(y_true=test_labels, y_pred=pred_labels_bins),
+                'recall_score': recall_score(test_labels, pred_labels_bins, average='weighted'),
+                'classification_report': classification_report(test_labels, pred_labels_bins, 
+                                                               target_names=target_names)
+            }
+    
+            results_df = results_df.append(pred_dict, ignore_index=True)
+            results_df = results_df.reindex(
+                ['regressor', 'params', 'features', 'accuracy_score',
+                 'recall_score', 'classification_report'], axis=1
             )
 
     return results_df

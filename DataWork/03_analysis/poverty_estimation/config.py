@@ -233,7 +233,7 @@ GRID_MAIN_REG = {
 
 
 GRID_MAIN_CLASS = {
-    'regressors': ['LinearSVC', 'SVC', 'DecisionTreeClassifier', 'BaggingClassifier',
+    'regressors': ['LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
                    'AdaBoostClassifier', 'KNeighborsClassifier', 'RandomForestClassifier', 
                    'GradientBoostingClassifier'],
     'LinearSVC': [
@@ -244,13 +244,13 @@ GRID_MAIN_CLASS = {
         for loss in ('epsilon_insensitive','squared_hinge', ) \
         for max_iter in (1e1, )
     ],
-    'SVC': [
-        {'kernel': kernel, 'C': C, 'class_weight': class_weight,         
-        'random_state': 0} \
-        for C in (1e-2,1,2) \
-        for class_weight in (None, 'balanced',) \
-        for kernel in ('linear','poly','rbf','sigmoid', ) \
-    ],
+    #'SVC': [
+    #    {'kernel': kernel, 'C': C, 'class_weight': class_weight,         
+    #    'random_state': 0} \
+    #    for C in (1e-2,1,2) \
+    #    for class_weight in (None, 'balanced',) \
+    #    for kernel in ('linear','poly','rbf','sigmoid', ) \
+    #],
     'DecisionTreeClassifier': [
         {'criterion': criterion, 'splitter': splitter, 'max_depth': max_depth,
         'max_features': max_features, 'random_state': 0} \

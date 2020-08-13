@@ -152,7 +152,7 @@ def train_models(params, features, labels, feature_sets, verbose=False):
                         'features': k,
                         'error_message': str(e)
                     }, ignore_index=True)
-        save_to_file(models, os.path.join('output', i + '_trained.pkl'))
+        save_to_file(models, os.path.join('output', i + str(count) + '_trained.pkl'))
 
     return training_error_df
 
@@ -205,15 +205,15 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
                 'params': i.params,
                 'features': i.features,
                 'accuracy_score': accuracy_score(y_true=test_labels, y_pred=pred_labels_bins),
-                'recall_score': recall_score(test_labels, pred_labels_bins, average='weighted'),
-                'classification_report': classification_report(test_labels, pred_labels_bins, 
-                                                               target_names=target_names)
+                'recall_score': recall_score(test_labels, pred_labels_bins, average='weighted')
+                #'classification_report': classification_report(test_labels, pred_labels_bins, 
+                #                                               target_names=target_names)
             }
     
             results_df = results_df.append(pred_dict, ignore_index=True)
             results_df = results_df.reindex(
                 ['regressor', 'params', 'features', 'accuracy_score',
-                 'recall_score', 'classification_report'], axis=1
+                 'recall_score'], axis=1
             )
 
     return results_df

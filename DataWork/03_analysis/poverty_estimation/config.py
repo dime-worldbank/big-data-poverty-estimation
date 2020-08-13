@@ -123,7 +123,8 @@ GRID_TEST_REG = {
 # Test grid to make sure everything works - limited models and parameters (classification)
 GRID_TEST_CLASS = {
     'regressors': ['LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
-                    'GradientBoostingClassifier', 'RandomForestClassifier'],
+                    'GradientBoostingClassifier', 'RandomForestClassifier',
+                     'AdaBoostClassifier', 'KNeighborsClassifier'],
     'LinearSVC': [
         {'penalty': penalty, 'C': C, 'loss': loss, 'class_weight': class_weight,
         'random_state': 0} \
@@ -164,7 +165,20 @@ GRID_TEST_CLASS = {
         for criterion in ('gini', ) \
         for max_depth in (1, ) \
         for max_features in ('sqrt', )
-    ]
+    ],
+    'AdaBoostClassifier': [
+        {'n_estimators': n_estimators, 
+         'base_estimator': base_estimator,
+        'random_state': 0} \
+        for n_estimators in (5, 10) \
+        for base_estimator in (None, 
+                                DecisionTreeClassifier(max_depth=2), 
+                                DecisionTreeClassifier(max_depth=5))
+    ],
+    'KNeighborsClassifier': [
+        {'n_neighbors': n_neighbors} \
+        for n_neighbors in (2,5,10) 
+    ],
 }
 
 # Main grid - most exhaustive option (regression)

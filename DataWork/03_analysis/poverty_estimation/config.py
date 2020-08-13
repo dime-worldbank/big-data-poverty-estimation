@@ -55,7 +55,7 @@ ALL_FEATURES = ['dmspols_2011', 'viirs_2012',
 # 5. BUILD CLASSIFIER #
 #######################
 
-# Test grid to make sure everything works - limited models and parameters
+# Test grid to make sure everything works - limited models and parameters (regression)
 GRID_TEST_REG = {
     'regressors': ['LinearRegression', 'Lasso', 'Ridge', 'LinearSVR',
                     'DecisionTreeRegressor', 'BaggingRegressor',
@@ -120,14 +120,14 @@ GRID_TEST_REG = {
     ]
 }
 
-# Test grid to make sure everything works - limited models and parameters
+# Test grid to make sure everything works - limited models and parameters (classification)
 GRID_TEST_CLASS = {
     'regressors': ['LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
                     'GradientBoostingClassifier', 'RandomForestClassifier'],
     'LinearSVC': [
         {'penalty': penalty, 'C': C, 'loss': loss, 'class_weight': class_weight,
         'random_state': 0} \
-        for penalty in ('l2', ) \
+        for penalty in ('l2', 'l1') \
         for C in (1e-2, ) \
         for loss in ('squared_hinge', ) \
         for class_weight in ('balanced',)
@@ -167,7 +167,7 @@ GRID_TEST_CLASS = {
     ]
 }
 
-# Main grid - most exhaustive option
+# Main grid - most exhaustive option (regression)
 GRID_MAIN_REG = {
     'regressors': ['LinearRegression', 'Lasso', 'Ridge', 'LinearSVR',
                     'DecisionTreeRegressor', 'BaggingRegressor',
@@ -231,7 +231,7 @@ GRID_MAIN_REG = {
     ]
 }
 
-
+# Main grid - most exhaustive option (classification)
 GRID_MAIN_CLASS = {
     'regressors': ['LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
                    'AdaBoostClassifier', 'KNeighborsClassifier', 'RandomForestClassifier', 
@@ -244,13 +244,6 @@ GRID_MAIN_CLASS = {
         for loss in ('epsilon_insensitive','squared_hinge', ) \
         for max_iter in (1e1, )
     ],
-    #'SVC': [
-    #    {'kernel': kernel, 'C': C, 'class_weight': class_weight,         
-    #    'random_state': 0} \
-    #    for C in (1e-2,1,2) \
-    #    for class_weight in (None, 'balanced',) \
-    #    for kernel in ('linear','poly','rbf','sigmoid', ) \
-    #],
     'DecisionTreeClassifier': [
         {'criterion': criterion, 'splitter': splitter, 'max_depth': max_depth,
         'max_features': max_features, 'random_state': 0} \

@@ -122,16 +122,16 @@ GRID_TEST_REG = {
 
 # Test grid to make sure everything works - limited models and parameters (classification)
 GRID_TEST_CLASS = {
-    'regressors': ['LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
+    'regressors': ['GaussianNB', 'LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
                     'GradientBoostingClassifier', 'RandomForestClassifier',
                      'AdaBoostClassifier', 'KNeighborsClassifier'],
     'LinearSVC': [
         {'penalty': penalty, 'C': C, 'loss': loss, 'class_weight': class_weight,
         'random_state': 0} \
-        for penalty in ('l2', 'l1') \
+        for penalty in ('l2', ) \
         for C in (1e-2, ) \
         for loss in ('squared_hinge', ) \
-        for class_weight in ('balanced',)
+        for class_weight in ('balanced', )
     ],
     'DecisionTreeClassifier': [
         {'criterion': criterion, 'splitter': splitter, 'max_depth': max_depth,
@@ -173,13 +173,22 @@ GRID_TEST_CLASS = {
         for n_estimators in (5, 10) \
         for base_estimator in (None, 
                                 DecisionTreeClassifier(max_depth=2), 
-                                DecisionTreeClassifier(max_depth=5))
+                                DecisionTreeClassifier(max_depth=5),
+                                DecisionTreeClassifier(max_depth=6),
+                              	DecisionTreeClassifier(max_depth=10),
+                              	DecisionTreeClassifier(max_depth=15))
     ],
     'KNeighborsClassifier': [
         {'n_neighbors': n_neighbors} \
-        for n_neighbors in (2,5,10) 
+        for n_neighbors in (2,5,10,15, ) 
     ],
+    'GaussianNB': [
+        {'priors': priors, 'var_smoothing': var_smoothing} \
+        for priors in (None, ) \
+        for var_smoothing in (1e-9, )
+    ]
 }
+
 
 # Main grid - most exhaustive option (regression)
 GRID_MAIN_REG = {
@@ -249,7 +258,7 @@ GRID_MAIN_REG = {
 GRID_MAIN_CLASS = {
     'regressors': ['LinearSVC', 'DecisionTreeClassifier', 'BaggingClassifier',
                    'AdaBoostClassifier', 'KNeighborsClassifier', 'RandomForestClassifier', 
-                   'GradientBoostingClassifier'],
+                   'GradientBoostingClassifier', 'GaussianNB'],
     'LinearSVC': [
         {'penalty': penalty, 'C': C, 'loss': loss, 'max_iter': max_iter,
         'random_state': 0} \
@@ -306,5 +315,10 @@ GRID_MAIN_CLASS = {
         for n_estimators in (100, ) \
         for criterion in ('friedman_mse', ) \
         for max_features in ('sqrt', ) \
+    ],
+    'GaussianNB': [
+        {'priors': priors, 'var_smoothing': var_smoothing} \
+        for priors in (None, ) \
+        for var_smoothing in (1e-9, )
     ]
 }

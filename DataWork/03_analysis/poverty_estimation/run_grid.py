@@ -34,8 +34,10 @@ from sklearn.ensemble import (BaggingClassifier,
                               GradientBoostingClassifier, 
                               RandomForestClassifier)
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score,
                              average_precision_score,
+                             precision_score,
                              recall_score,
                              classification_report)
 
@@ -152,7 +154,7 @@ def train_models(params, features, labels, feature_sets, verbose=False):
                         'features': k,
                         'error_message': str(e)
                     }, ignore_index=True)
-        save_to_file(models, os.path.join('output', i + str(count) + '_trained.pkl'))
+        save_to_file(models, os.path.join('output', i + '_trained.pkl'))
 
     return training_error_df
 
@@ -165,7 +167,6 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
             test_labels - pd DataFrame of labels for test data
             feature_sets - dictionary of lists of feature string names
     '''
-
     results_df = pd.DataFrame()
     for obj in obj_list:
 
@@ -179,7 +180,6 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
             # Get predicted results from test data
             features = feature_sets[i.features]
             pred_labels = i.regressor.predict(test_features[features])
-            pred_labels_bins = pred_labels.round() # Convert pred_labels from continuous to bins
 
             # Append results to dataframe
             '''
@@ -198,22 +198,38 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
                 axis=1
             )
             '''
-            target_names = ['Poverty Level %01d' %i for i in range(1,6)] 
+            target_names = ['not_pov', 'pov']
+
+            cr = classification_report(test_labels, pred_labels, 
+                                        target_names=target_names,
+                                        output_dict=True)
+            recall_nonpoverty = cr['not_pov']['recall']
+            recall_poverty = cr['pov']['recall']
+            recall_diff = abs(recall_poverty - recall_nonpoverty)
 
             pred_dict = {
                 'regressor': i.method,
                 'params': i.params,
                 'features': i.features,
-                'accuracy_score': accuracy_score(y_true=test_labels, y_pred=pred_labels_bins),
-                'recall_score': recall_score(test_labels, pred_labels_bins, average='weighted')
-                #'classification_report': classification_report(test_labels, pred_labels_bins, 
-                #                                               target_names=target_names)
+                'accuracy_score': accuracy_score(test_labels, pred_labels),
+                'recall_score': recall_score(test_labels, pred_labels),
+                'precision_score': precision_score(test_labels, pred_labels),
+                'nonpoverty_class': cr['not_pov'],
+                'poverty_class': cr['pov'],
+                'recall_nonpoverty': recall_nonpoverty,
+                'recall_poverty': recall_poverty,
+                'score': max(recall_nonpoverty, recall_poverty) - recall_diff
             }
     
             results_df = results_df.append(pred_dict, ignore_index=True)
             results_df = results_df.reindex(
-                ['regressor', 'params', 'features', 'accuracy_score',
-                 'recall_score'], axis=1
+                ['regressor', 'params', 'features', 
+                 'accuracy_score',
+                 'recall_score', 
+                 'precision_score', 
+                 'nonpoverty_class', 'poverty_class', 
+                 'recall_nonpoverty', 'recall_poverty',
+                 'score'], axis=1
             )
 
     return results_df

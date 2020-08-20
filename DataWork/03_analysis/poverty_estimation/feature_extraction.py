@@ -89,7 +89,6 @@ def get_DTL(row, directory):
 
     for b in bands:
         tile, polygon = int(row['tile_id']), row['geometry']
-        #filename = 'l8_2014_tile{}_b{}.tif'.format(str(int(tile)), str(b))
         filename = f'l8_2014_tile{str(tile)}_b{str(b)}.tif'
         filepath = os.path.join(directory, filename)
         mask_and_write(filepath, polygon)
@@ -120,7 +119,7 @@ def map_DTL_NTL(input_gdf, directory):
     for i, row in gdf.iterrows():
         DTL = get_DTL(row, directory)
         if DTL:
-            # if DTL not an empty list ie if images for this tile are shape (1, 50, 50)
+            # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)
             DTL_list.append(DTL)
         else:
             # remove corresponding obs from NTL data (targets)

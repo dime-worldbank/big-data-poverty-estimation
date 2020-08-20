@@ -3,42 +3,53 @@
 # Description: Build and run CNN that will serve as feature extractor in poverty
 #              estimation.
 # Current author: Nguyen Luong 
-# Updated: 8/13/20
+# Updated: 8/20/20
 
 import os
+import datetime
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-from keras.utils import to_categorical
+from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import classification_report, confusion_matrix
 
+from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Convolution2D
-from keras.layers import AveragePooling2D
-from keras.layers import Dropout
+from keras.layers import Conv2D
+from keras.layers import MaxPooling2D
 from keras.layers import Flatten
 from keras.layers import Dense
-from keras.layers import Activation
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
+from keras.models import load_model
+
+import logging, os 
+logging.disable(logging.WARNING) 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import feature_extraction as fe
 
+CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/satellite_raw"
+VIIRS_GDF_FILEPATH = '../saved_objects/viirs_gdf.pkl'
+DTL_DIRECTORY = os.path.join('Landsat', '2014')
+CNN_FILENAME = 'script_CNN'
+FINAL_TARGET_NAME = 'ntl_bins'
 
-def transform_target(gdf, target_col_name, n_bins):
+
+def transform_target(gdf, orig_target_name, n_bins):
     '''
     Creates log NTL variable and bins into 5 classes using k-means clutering.
     '''
     # Perform log(x+1) for defined domain
-    tranformed_col_name = f'log_{target_col_name}'
-    gdf[transformed_col_name] = np.log(gdf[target_col_name] + 1)
+    transformed_target_name = f'log_{orig_target_name}'
+    gdf[transformed_target_name] = np.log(gdf[orig_target_name] + 1)
 
     # Bin target
-    target = gdf[transformed_col_name].to_numpy().reshape(-1,1)
+    target = gdf[transformed_target_name].to_numpy().reshape(-1,1)
     discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='kmeans')
-    gdf['target_binned'] = discretizer.fit_transform(target)
+    gdf[FINAL_TARGET_NAME] = discretizer.fit_transform(target)
 
 
 def sample_by_target(input_gdf, target_col_name, n):
@@ -101,8 +112,7 @@ def define_model(height, width, channels, num_classes):
     return model
 
 
-def evaluate_model(model, trainX, trainY, testX, testY, current_kfold=None, 
-                   display_metrics=False):
+def evaluate_model(model, trainX, trainY, testX, testY):
     '''
     Fits and evaluates model.
     
@@ -115,34 +125,20 @@ def evaluate_model(model, trainX, trainY, testX, testY, current_kfold=None,
     Returns:
         None
     '''
-    print('---Current K-fold: {}---'.format(current_kfold))
-    
     # Use early stopping to help with overfitting
-    es = EarlyStopping(monitor='val_loss', mode='min', patience=5, verbose=True)
-    mc = ModelCheckpoint('resample_pretrain_CNN.h5', monitor='val_accuracy', mode='max', 
-                         verbose=True, save_best_only=True)
+    es = EarlyStopping(monitor='val_loss', mode='min', patience=5, verbose=False)
+    # Save best model based on accuracy
+    mc = ModelCheckpoint(CNN_FILENAME, monitor='val_accuracy', mode='max', 
+                         verbose=False, save_best_only=True)
     
     # Fit model
     history = model.fit(trainX, trainY, 
                         epochs=10, batch_size=1000, 
-                        validation_data=(testX, testY), callbacks=[es, mc], verbose=True)
+                        validation_data=(testX, testY), callbacks=[es, mc], verbose=False)
     
-    # Evaluate model
-    loss, accuracy = model.evaluate(testX, testY, verbose=True)
-    print('Accuracy: {:.4f}'.format(accuracy))
-    print()
-    
-    if display_metrics:
-        # Get predictions
-        predY = model.predict(testX)
-        predY = np.argmax(predY, axis = 1)
-        testY_bins = np.argmax(testY, axis = 1)
-    
-        # Generate classification report
-        classes = ['Radiance Level 1', 'Radiance Level 2', 'Radiance Level 3', 
-                   'Radiance Level 4', 'Radiance Level 5'] 
-        print(classification_report(testY_bins, predY, target_names=classes))
-        print()
+    # Show accuracy
+    loss, accuracy = model.evaluate(testX, testY, verbose=False)
+    print(f'	Accuracy: {accuracy}')
         
 
 def evaluate_with_crossval(model, dataX, dataY, k=2):
@@ -159,52 +155,69 @@ def evaluate_with_crossval(model, dataX, dataY, k=2):
     '''
     # Define k-fold cross-val
     kfold = KFold(k, shuffle=True, random_state=1)
-    print('Entering cross validation.')
     
     # Loop through folds
-    counter = 0
+    count = 1
     for train_idx, test_idx in kfold.split(dataX):
-        counter += 1
+        print(f'	--- Current K-fold: {count} ---')
         # Select subsets for training and testing
-        trainX, trainY, testX, testY = dataX[train_idx], dataY[train_idx], 
-                                       dataX[test_idx], dataY[test_idx]
-        # Pass to evaluate_model
-        if counter == k:
-            # If last k-fold, then display full evaluation metrics 
-            evaluate_model(model, trainX, trainY, testX, testY, current_kfold=counter, display_metrics=True)
-        else:
-            evaluate_model(model, trainX, trainY, testX, testY, current_kfold=counter)
+        trainX, trainY, testX, testY = dataX[train_idx], dataY[train_idx], \
+        							   dataX[test_idx], dataY[test_idx]
+        # Pass to evaluate_model function
+        evaluate_model(model, trainX, trainY, testX, testY)
+        count += 1
+
+
+def display_eval_metrics(model, testX, testY):
+    '''
+    Displays evaluation metrics for a given trained model.
+    '''
+    # Get predictions
+    predY = model.predict(testX)
+    predY = np.argmax(predY, axis = 1)
+    testY_bins = np.argmax(testY, axis = 1)
+
+    # Generate classification report
+    classes = ['Radiance Level %01d' %i for i in range(1,6)]
+    print(classification_report(testY_bins, predY, target_names=classes, zero_division=0))
+
 
 
 def main():
 
     # SET DIRECTORY
-    os.chdir("/Users/nguyenluong/wb_internship/Data/satellite_raw")
+    os.chdir(CURRENT_DIRECTORY)
+    print(f'{datetime.datetime.now()} 1. Directory Set.')
 
     # LOAD DATA
-    viirs_gdf = pd.read_pickle('../saved_objects/viirs_gdf.pkl')
+    viirs_gdf = pd.read_pickle(VIIRS_GDF_FILEPATH)
     viirs_gdf = viirs_gdf[['tile_id', 'median_rad_2014', 'geometry']]
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
+    print(f'{datetime.datetime.now()} 2. Data Loaded.')
 
     # PREP NTL
     n_bins = 5
     transform_target(viirs_gdf, 'median_rad_2014', n_bins)
+    print(f'{datetime.datetime.now()} 3. NTL transformed.')
 
     # CREATE SAMPLE
-    n = 1000
-    gdf = sample_by_target(viirs_gdf, 'target_binned', n)
+    min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts(ascending=True))
+    gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
+    print(f'{datetime.datetime.now()} 4. Sample Created.')
 
     # MATCH DTL TO NTL
-    DTL_directory = os.path.join('Landsat', '2014')
-    DLT, processed_gdf = fe.map_DTL_NTL(gdf, DTL_directory)
-    NTL = processed_gdf['target_binned'].to_numpy()
+    DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
+    NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
+    print(f'{datetime.datetime.now()} 5. DTL and NTL matched.')
 
     # SPLIT DATA INTO TRAINING AND TESTING
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
                                                                     test_size=0.2, 
                                                                     random_state=1)
+    print(f'{datetime.datetime.now()} 6. Training and Testing sets defined.')
+
     # DEFINE IMAGE CHARACTERISTICS
-    h, w, c = 50, 50, 3
+    h, w, c = 25, 26, 7
     num_classes = 5
     
     # PREP TRAINING AND TESTING DATA
@@ -213,10 +226,16 @@ def main():
     
     # PREP PIXELS IN FEATURES
     trainX, testX = normalize(trainX), normalize(testX)
+    print(f'{datetime.datetime.now()} 7. Data fully prepped.')
 
     # DEFINE AND EVALUTATE MODEL
     model = define_model(h, w, c, num_classes)
-    evaluate_with_crossval(model, trainX, trainY)
+    evaluate_with_crossval(model, trainX, trainY, k=5)
+    print(f'{datetime.datetime.now()} 8. Model Defined and Evaluated.')
+
+    # DISPLAY IN-DEPTH EVALUTAION METRICS
+    best_model = load_model(CNN_FILENAME)
+    display_eval_metrics(best_model, testX, testY)
 
 
 if __name__ == '__main__':

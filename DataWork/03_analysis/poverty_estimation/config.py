@@ -7,9 +7,20 @@
 import os
 from sklearn.tree import DecisionTreeClassifier
 
-#######################
-#   BUILD CLASSIFIER  #
-#######################
+######################
+#     FILEPATHS      #
+######################
+
+CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
+VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
+DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
+DATA_FILEPATH = os.path.join('BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
+BISP_COORDS_FILEPATH = 'BISP/GPS_uid_crosswalk.dta'
+PAKISTAN_BOUNDARIES_SHAPEFILE = 'pakistan_boundaries.json'
+
+######################
+#  BUILD CLASSIFIER #
+######################
 
 # Test grid to make sure everything works - limited models and parameters (classification)
 GRID_TEST_CLASS = {
@@ -66,8 +77,8 @@ GRID_TEST_CLASS = {
                                 DecisionTreeClassifier(max_depth=2), 
                                 DecisionTreeClassifier(max_depth=5),
                                 DecisionTreeClassifier(max_depth=6),
-                              	DecisionTreeClassifier(max_depth=10),
-                              	DecisionTreeClassifier(max_depth=15))
+                                DecisionTreeClassifier(max_depth=10),
+                                DecisionTreeClassifier(max_depth=15))
     ],
     'KNeighborsClassifier': [
         {'n_neighbors': n_neighbors} \
@@ -116,9 +127,9 @@ GRID_MAIN_CLASS = {
         for base_estimator in (None, 
                                 DecisionTreeClassifier(max_depth=2), 
                                 DecisionTreeClassifier(max_depth=5),
-                              	DecisionTreeClassifier(max_depth=6),
-                              	DecisionTreeClassifier(max_depth=10),
-                              	DecisionTreeClassifier(max_depth=15))
+                                DecisionTreeClassifier(max_depth=6),
+                                DecisionTreeClassifier(max_depth=10),
+                                DecisionTreeClassifier(max_depth=15))
     ],
     'KNeighborsClassifier': [
         {'n_neighbors': n_neighbors} \

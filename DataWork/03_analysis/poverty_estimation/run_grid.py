@@ -35,12 +35,12 @@ from feature_extraction import extract_features
 from clean_data import load_and_clean_data
 from ml_utils import TrainedRegressor
 
-# Must define
-CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
 CNN_FILENAME = 'script_CNN.h5'
-
 TARGET_NAME = 'in_poverty'
 TEST_SIZE = 0.2
+
+## MUST DEFINE ##
+CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 
 
 def save_to_file(obj, path):

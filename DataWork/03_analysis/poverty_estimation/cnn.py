@@ -23,15 +23,19 @@ import logging, os
 logging.disable(logging.WARNING) 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
+import config as cf
 import feature_extraction as fe
-
-# Must define
-CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
-VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
-DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
 
 CNN_FILENAME = 'script_CNN.h5'
 FINAL_TARGET_NAME = 'ntl_bins'
+
+## MUST DEFINE ##
+# CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
+# VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
+# DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
+CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
+VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH
+DTL_DIRECTORY = cf.DTL_DIRECTORY
 
 
 def transform_target(gdf, orig_target_name, n_bins):
@@ -134,7 +138,7 @@ def evaluate_model(model, trainX, trainY, testX, testY):
     
     # Show accuracy
     loss, accuracy = model.evaluate(testX, testY, verbose=False)
-    print(f'	Accuracy: {accuracy}')
+    print(f'    Accuracy: {accuracy}')
         
 
 def evaluate_with_crossval(model, dataX, dataY, k=2):
@@ -155,10 +159,10 @@ def evaluate_with_crossval(model, dataX, dataY, k=2):
     # Loop through folds
     count = 1
     for train_idx, test_idx in kfold.split(dataX):
-        print(f'	--- Current K-fold: {count} ---')
+        print(f'    --- Current K-fold: {count} ---')
         # Select subsets for training and testing
         trainX, trainY, testX, testY = dataX[train_idx], dataY[train_idx], \
-        							   dataX[test_idx], dataY[test_idx]
+                                       dataX[test_idx], dataY[test_idx]
         # Pass to evaluate_model function
         evaluate_model(model, trainX, trainY, testX, testY)
         count += 1

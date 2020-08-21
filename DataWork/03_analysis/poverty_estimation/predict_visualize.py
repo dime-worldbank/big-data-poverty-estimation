@@ -23,14 +23,16 @@ import seaborn as sns
 import contextily as ctx
 import matplotlib.cm as cm
 
-# Must define
-CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data"
-BISP_WITH_COORDS = 'bisp_with_coords.pkl'
-FULLY_PREPPED_DATA = 'script_fully_prepped.pkl'
-BOUNDARIES_SHAPEFILE = 'stanford-qx809sm7397-geojson.json'
-RESULTS = 'output/results.csv'
+import config as cf
 
 TARGET_NAME = 'in_poverty'
+BISP_WITH_COORDS = 'bisp_with_coords.pkl'
+FULLY_PREPPED_DATA = 'script_fully_prepped.pkl'
+RESULTS = 'output/results.csv'
+
+## MUST DEFINE ##
+CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
+PAKISTAN_BOUNDARIES_SHAPEFILE = cf.PAKISTAN_BOUNDARIES_SHAPEFILE
 
 
 def get_best_model():
@@ -153,7 +155,7 @@ def fig3_feat_importances(best_model, column_names):
 
 def fig4_map(df):
     # Load boundaries
-    boundaries = gdp.read_file(BOUNDARIES_SHAPEFILE)
+    boundaries = gdp.read_file(PAKISTAN_BOUNDARIES_SHAPEFILE)
     fig, (ax0, ax1) = plt.subplots(figsize=(14, 6), nrows=1, ncols=2)
 
     # True Labels 

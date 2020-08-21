@@ -7,52 +7,8 @@
 import os
 from sklearn.tree import DecisionTreeClassifier
 
-######################
-# 1. READ/WRITE DATA #
-######################
-
-DATA_PATH = os.path.join('..', '..', '..', 'Data', 'FinalData', 'BISP')
-BISP_PATH = os.path.join(DATA_PATH, 'bisp_hh_income.csv')
-SAT_PATH = os.path.join(DATA_PATH, 'bisp_satellite_data.csv')
-CLEAN_DATA_PATH = os.path.join(DATA_PATH, 'bisp_sat_inc_data.csv')
-
-LABEL = 'hhinc_2011'
-
-######################
-# 2. PREPROCESS DATA #
-######################
-
-TEST_SIZE = 0.3
-
-#########################
-# 4. FEATURE GENERATION #
-#########################
-
-# Feature groups
-DAY_FEATURES = ['l7_2011_1', 'l7_2011_2', 'l7_2011_3', 'l7_2011_4', 'l7_2011_5',
-                'l7_2011_6', 'l7_2011_7',
-                'ratio_1_2', 'ratio_1_3', 'ratio_1_4', 'ratio_1_5', 'ratio_1_6',
-                'ratio_1_7', 'ratio_2_3', 'ratio_2_4', 'ratio_2_5', 'ratio_2_6',
-                'ratio_2_7', 'ratio_3_4', 'ratio_3_5', 'ratio_3_6', 'ratio_3_7',
-                'ratio_4_5', 'ratio_4_6', 'ratio_4_7', 'ratio_5_6', 'ratio_5_7',
-                 'ratio_6_7']
-
-NIGHT_FEATURES = ['dmspols_2011', 'viirs_2012',
-                  'dmspols_2011_imputed', 'viirs_2012_imputed']
-
-ALL_FEATURES = ['dmspols_2011', 'viirs_2012',
-                'dmspols_2011_imputed', 'viirs_2012_imputed',
-                'l7_2011_1', 'l7_2011_2', 'l7_2011_3', 'l7_2011_4', 'l7_2011_5',
-                'l7_2011_6', 'l7_2011_7',
-                'ratio_1_2', 'ratio_1_3', 'ratio_1_4', 'ratio_1_5', 'ratio_1_6',
-                'ratio_1_7', 'ratio_2_3', 'ratio_2_4', 'ratio_2_5', 'ratio_2_6',
-                'ratio_2_7', 'ratio_3_4', 'ratio_3_5', 'ratio_3_6', 'ratio_3_7',
-                'ratio_4_5', 'ratio_4_6', 'ratio_4_7', 'ratio_5_6', 'ratio_5_7',
-                'ratio_6_7']
-
-
 #######################
-# 5. BUILD CLASSIFIER #
+#   BUILD CLASSIFIER  #
 #######################
 
 # Test grid to make sure everything works - limited models and parameters (classification)

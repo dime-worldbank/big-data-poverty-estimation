@@ -4,10 +4,7 @@
 # This is a script version of 03_predict_first_pass.ipynb that can be run on
 # a server.
 
-import os
-import math
-#import pickle
-import datetime
+import os, math, pickle, datetime
 import numpy as np
 import pandas as pd
 
@@ -17,21 +14,16 @@ from sklearn.decomposition import PCA
 
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import (BaggingClassifier,
-                              AdaBoostClassifier, 
-                              GradientBoostingClassifier, 
-                              RandomForestClassifier)
+from sklearn.ensemble import (BaggingClassifier, AdaBoostClassifier, 
+                              GradientBoostingClassifier, RandomForestClassifier)
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import (accuracy_score,
-                             average_precision_score,
-                             precision_score,
-                             recall_score,
-                             classification_report)
+from sklearn.metrics import (accuracy_score, precision_score, 
+                             recall_score, classification_report)
 from keras.models import load_model
 from imblearn.over_sampling import RandomOverSampler
 
-import logging, os 
+import logging 
 logging.disable(logging.WARNING) 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
@@ -43,8 +35,10 @@ from feature_extraction import extract_features
 from clean_data import load_and_clean_data
 from ml_utils import TrainedRegressor
 
+# Must define
 CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
-CNN_FILENAME = 'satellite_raw/script_CNN.h5'
+CNN_FILENAME = 'script_CNN.h5'
+
 TARGET_NAME = 'in_poverty'
 TEST_SIZE = 0.2
 
@@ -209,14 +203,14 @@ def main():
     print(f'{datetime.datetime.now()} 4. PCA performed.')
 
     # OVERSAMPLE
-    x_df = pd.DataFrame(df_final.drop(labels=[TARGET_NAME], axis=1))
+    x_df = pd.DataFrame(df_final.drop(labels=['uid', TARGET_NAME], axis=1))
     y_df = df_final[TARGET_NAME]
     oversample = RandomOverSampler(sampling_strategy=0.75, random_state=1)
     x, y = oversample.fit_resample(x_df, y_df)
     print(f'{datetime.datetime.now()} 5. Oversampling performed.')
 
     # SPLIT INTO TRAIN/TEST AND NORMALIZE
-    x_train, x_test, y_train, y_test =  train_test_split(x, y, test_size=TEST_SIZE)
+    x_train, x_test, y_train, y_test =  train_test_split(x, y, test_size=TEST_SIZE, random_state=1)
     normalize(x_train, x_test)
     print(f'{datetime.datetime.now()} 6. Training and Testing sets defined.')
 

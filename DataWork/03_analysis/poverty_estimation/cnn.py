@@ -3,8 +3,7 @@
 # Description: Build and run CNN that will serve as feature extractor in poverty
 #              estimation.
 
-import os
-import datetime
+import os, datetime
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -15,10 +14,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Conv2D
-from keras.layers import MaxPooling2D
-from keras.layers import Flatten
-from keras.layers import Dense
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
@@ -29,9 +25,11 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import feature_extraction as fe
 
-CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/satellite_raw"
-VIIRS_GDF_FILEPATH = '../saved_objects/viirs_gdf.pkl'
-DTL_DIRECTORY = os.path.join('Landsat', '2014')
+# Must define
+CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
+VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
+DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
+
 CNN_FILENAME = 'script_CNN.h5'
 FINAL_TARGET_NAME = 'ntl_bins'
 

@@ -12,14 +12,19 @@ from math import floor
 import config as cf
 import feature_extraction as fe
 
-# Must define
-CURRENT_DIRECTORY = os.path.join('/Users', 'nguyenluong', 'wb_internship', 'Data')
-DATA_FILEPATH = os.path.join('BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
-VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
-BISP_COORDS_FILEPATH = 'BISP/GPS_uid_crosswalk.dta'
-DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
-
 TARGET_NAME = 'in_poverty'
+
+## MUST DEFINE ##
+# CURRENT_DIRECTORY = os.path.join('/Users', 'nguyenluong', 'wb_internship', 'Data')
+# DATA_FILEPATH = os.path.join('BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
+# VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
+# BISP_COORDS_FILEPATH = 'BISP/GPS_uid_crosswalk.dta'
+# DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
+CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
+DATA_FILEPATH = cf.DATA_FILEPATH
+VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH
+BISP_COORDS_FILEPATH = cf.BISP_COORDS_FILEPATH
+DTL_DIRECTORY = cf.DTL_DIRECTORY
 
 
 def load_data():
@@ -116,7 +121,7 @@ def load_and_clean_data():
     df_facebook = processed_gdf.filter(regex='^estimate_dau')
     df_y = processed_gdf[['uid', TARGET_NAME]]
     df_final = df_y.join(df_osm).join(df_facebook).join(df_landsat).join(df_viirs).reset_index(drop=True)
-    df_x = df_final.drop(labels=[['uid', TARGET_NAME]], axis=1)
+    df_x = df_final.drop(columns=['uid', TARGET_NAME])
 
     # STORE FEATURE GROUPS IN DICT
     geo_features = df_viirs.columns.tolist() + df_landsat.columns.tolist()
@@ -128,5 +133,4 @@ def load_and_clean_data():
     print(f'{datetime.datetime.now()}   1.6 Final data and features groups defined.')
 
     return df_final, feature_dict, DTL
-
 

@@ -2,8 +2,6 @@
 #
 # Description: Build and run CNN that will serve as feature extractor in poverty
 #              estimation.
-# Current author: Nguyen Luong 
-# Updated: 8/20/20
 
 import os
 import datetime
@@ -34,7 +32,7 @@ import feature_extraction as fe
 CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/satellite_raw"
 VIIRS_GDF_FILEPATH = '../saved_objects/viirs_gdf.pkl'
 DTL_DIRECTORY = os.path.join('Landsat', '2014')
-CNN_FILENAME = 'script_CNN'
+CNN_FILENAME = 'script_CNN.h5'
 FINAL_TARGET_NAME = 'ntl_bins'
 
 
@@ -182,18 +180,17 @@ def display_eval_metrics(model, testX, testY):
     print(classification_report(testY_bins, predY, target_names=classes, zero_division=0))
 
 
-
 def main():
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
-    print(f'{datetime.datetime.now()} 1. Directory Set.')
+    print(f'{datetime.datetime.now()} 1. Directory set.')
 
     # LOAD DATA
-    viirs_gdf = pd.read_pickle(VIIRS_GDF_FILEPATH)
-    viirs_gdf = viirs_gdf[['tile_id', 'median_rad_2014', 'geometry']]
+    viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
+    viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
-    print(f'{datetime.datetime.now()} 2. Data Loaded.')
+    print(f'{datetime.datetime.now()} 2. Data loaded.')
 
     # PREP NTL
     n_bins = 5
@@ -203,7 +200,7 @@ def main():
     # CREATE SAMPLE
     min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts(ascending=True))
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
-    print(f'{datetime.datetime.now()} 4. Sample Created.')
+    print(f'{datetime.datetime.now()} 4. Sample created.')
 
     # MATCH DTL TO NTL
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
@@ -231,7 +228,7 @@ def main():
     # DEFINE AND EVALUTATE MODEL
     model = define_model(h, w, c, num_classes)
     evaluate_with_crossval(model, trainX, trainY, k=5)
-    print(f'{datetime.datetime.now()} 8. Model Defined and Evaluated.')
+    print(f'{datetime.datetime.now()} 8. Model defined and evaluated.')
 
     # DISPLAY IN-DEPTH EVALUTAION METRICS
     best_model = load_model(CNN_FILENAME)

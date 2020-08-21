@@ -6,28 +6,16 @@
 
 import os
 import math
-import pickle
+#import pickle
 import datetime
 import numpy as np
 import pandas as pd
 
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 
-# For Regression Models
-from sklearn.linear_model import (LinearRegression,
-                                  Lasso,
-                                  Ridge)
-from sklearn.svm import LinearSVR
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import (BaggingRegressor,
-                              GradientBoostingRegressor,
-                              RandomForestRegressor)
-from sklearn.metrics import (r2_score,
-                             mean_squared_error,
-                             max_error)
-
-# For Classification Models
-from sklearn.svm import LinearSVC, SVC
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import (BaggingClassifier,
                               AdaBoostClassifier, 
@@ -40,70 +28,31 @@ from sklearn.metrics import (accuracy_score,
                              precision_score,
                              recall_score,
                              classification_report)
+from keras.models import load_model
+from imblearn.over_sampling import RandomOverSampler
+
+import logging, os 
+logging.disable(logging.WARNING) 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import warnings
+warnings.filterwarnings('ignore')
 
 import config as cf
+from feature_extraction import extract_features
+from clean_data import load_and_clean_data
 from ml_utils import TrainedRegressor
 
-
-def select_data(df):
-    '''
-    Takes a pandas DataFrame as input and performs the following steps:
-        1. Selects data from the appropriate years
-        2. Drops columns where the label is missing
-    '''
-
-    # Keep only 2011 columns, but include viirs_2012
-    df = df.filter(regex='_2011', axis=1).join(df['viirs_2012'])
-
-    # Drop columns where the label is missing
-    df = df.loc[~pd.isnull(df['hhinc_2011'])]
-
-    return df
-
-
-def preprocess_data(df):
-    '''
-    Takes a pandas DataFrame as input and performs the following steps:
-        1. Imputes missing numeric data with the column mean
-        2. Creates a boolean feature for each feature that has imputed data
-    '''
-
-    for i in df.columns:
-        if df[i].isnull().sum():
-            # Create imputed flag
-            new_name = df[i].name + '_imputed'
-            df[new_name] = pd.isnull(df[i]).astype('int')
-            # Fill with mean
-            df[i] = df[i].fillna(df[i].mean())
-        else:
-            continue
-
-    return df
-
-
-def create_features(df):
-    '''
-    Takes a pandas DataFrame as input and performs the following steps:
-        1. Creates ratios from Landsat band pairs
-    '''
-
-    for i in range(1, 8):
-        for j in range(1, 8):
-
-            if i >= j:
-                continue
-            else:
-                band1 = f'l7_2011_{i}'
-                band2 = f'l7_2011_{j}'
-                new_var = f'ratio_{i}_{j}'
-                df[new_var] = abs((df[band1] - df[band2]) / (df[band1] + df[band2]))
-
-    return df
+CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
+CNN_FILENAME = 'satellite_raw/script_CNN.h5'
+TARGET_NAME = 'in_poverty'
+TEST_SIZE = 0.2
 
 
 def save_to_file(obj, path):
-
-    # Save passed obj as a pickle to given filepath
+    '''
+    Saves passed obj as a pickle to given filepath.
+    '''
     with open(path, 'wb') as f:
         pickle.dump(obj=obj,
                     file=f,
@@ -111,6 +60,28 @@ def save_to_file(obj, path):
     print(f"{datetime.datetime.now()} Saving data to {path}")
 
     return None
+
+
+def perform_pca(df, n):
+    '''
+    Performs PCA with n compponents on all columns in df.
+    '''
+    pca = PCA(n_components=n)
+    pca.fit(df)
+    features_pca = pca.transform(df)
+    column_names = ['pc_%01d' %i for i in range(0,n)]
+    df_features_pca = pd.DataFrame(data=features_pca, columns=column_names)
+    
+    return df_features_pca
+
+
+def normalize(x_train, x_test):
+    '''
+    Normalize data.
+    '''
+    x_scaler = StandardScaler().fit(x_train)
+    for df in (x_train, x_test):
+        x_scaler.transform(df)
 
 
 def train_models(params, features, labels, feature_sets, verbose=False):
@@ -139,7 +110,6 @@ def train_models(params, features, labels, feature_sets, verbose=False):
                 count += 1
                 if verbose:
                     print(f'{datetime.datetime.now()} Model {count}: Training {i} on {k} with params {str(j)}')
-
                 try:
                     # Initialize regressor, fit data, then append model to list
                     regressor = eval(i)(**j)
@@ -182,26 +152,10 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
             pred_labels = i.regressor.predict(test_features[features])
 
             # Append results to dataframe
-            '''
-            pred_dict = {
-                'regressor': i.method,
-                'params': i.params,
-                'features': i.features,
-                'r2': r2_score(y_true=test_labels, y_pred=pred_labels),
-                'mse': mean_squared_error(y_true=test_labels, y_pred=pred_labels),
-                'max_err': max_error(y_true=test_labels, y_pred=pred_labels)
-            }
-
-            results_df = results_df.append(pred_dict, ignore_index=True)
-            results_df = results_df.reindex(
-                ['regressor', 'params', 'features', 'r2', 'mse', 'max_err'],
-                axis=1
-            )
-            '''
             target_names = ['not_pov', 'pov']
-
             cr = classification_report(test_labels, pred_labels, 
                                         target_names=target_names,
+                                        zero_division=0,
                                         output_dict=True)
             recall_nonpoverty = cr['not_pov']['recall']
             recall_poverty = cr['pov']['recall']
@@ -223,13 +177,9 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
     
             results_df = results_df.append(pred_dict, ignore_index=True)
             results_df = results_df.reindex(
-                ['regressor', 'params', 'features', 
-                 'accuracy_score',
-                 'recall_score', 
-                 'precision_score', 
-                 'nonpoverty_class', 'poverty_class', 
-                 'recall_nonpoverty', 'recall_poverty',
-                 'score'], axis=1
+                ['regressor', 'params', 'features', 'accuracy_score', 'recall_score', 
+                 'precision_score', 'nonpoverty_class', 'poverty_class', 'recall_nonpoverty', 
+                 'recall_poverty', 'score'], axis=1
             )
 
     return results_df
@@ -237,43 +187,50 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
 
 def main():
 
-    # LOAD DATA
-    df = pd.read_csv(cf.CLEAN_DATA_PATH)
+    # SET DIRECTORY
+    os.chdir(CURRENT_DIRECTORY)
+    print(f'{datetime.datetime.now()} 1. Directory set.')
 
-    # SELECT APPROPRIATE COLUMNS AND ROWS
-    df = select_data(df)
+    # LOAD CLEANED DATA, DICT OF FEATURE GROUPS, AND DTL
+    df, feature_dict, DTL = load_and_clean_data()
+    print(f'{datetime.datetime.now()} 2. Clean data, feature groups, and DTL loaded.')
+    df.to_pickle('script_fully_prepped.pkl')
 
-    # SPLIT DATA INTO TEST/TRAIN
-    x_df = df.drop(labels=[cf.LABEL], axis=1)
-    y_df = df[cf.LABEL]
-    x_train, x_test, y_train, y_test = \
-        train_test_split(x_df, y_df, test_size=cf.TEST_SIZE)
+    # LOAD CNN, EXTRACT FEATURES, ADD TO FEATURE GROUPS
+    layer_name = 'dense1'
+    model = load_model(CNN_FILENAME)
+    df_features = extract_features(model, DTL, layer_name)
+    print(f'{datetime.datetime.now()} 3. Features extracted.')
 
-    # PREPROCES DATA
-    for df in (x_train, x_test):
-        preprocess_data(df)
+    # USE PCA TO SELECT EXTRACTED FEATURES
+    df_features_pca = perform_pca(df_features, 10)
+    feature_dict['EXTRACTED_FEATURES'] = df_features_pca.columns.to_list()
+    df_final = df.join(df_features_pca)
+    print(f'{datetime.datetime.now()} 4. PCA performed.')
 
-    # CREATE FEATURES
-    for df in (x_train, x_test):
-        create_features(df)
+    # OVERSAMPLE
+    x_df = pd.DataFrame(df_final.drop(labels=[TARGET_NAME], axis=1))
+    y_df = df_final[TARGET_NAME]
+    oversample = RandomOverSampler(sampling_strategy=0.75, random_state=1)
+    x, y = oversample.fit_resample(x_df, y_df)
+    print(f'{datetime.datetime.now()} 5. Oversampling performed.')
 
-    # DEFINE FEATURE GROUPS
-    feature_dict = {
-        'DAY_FEATURES': df.filter(regex='l7|ratio', axis=1).columns.tolist(),
-        'NIGHT_FEATURES': ['dmspols_2011', 'viirs_2012', 'dmspols_2011_imputed',
-                           'viirs_2012_imputed'],
-        'ALL_FEATURES': df.columns.tolist()
-    }
+    # SPLIT INTO TRAIN/TEST AND NORMALIZE
+    x_train, x_test, y_train, y_test =  train_test_split(x, y, test_size=TEST_SIZE)
+    normalize(x_train, x_test)
+    print(f'{datetime.datetime.now()} 6. Training and Testing sets defined.')
 
     # TRAIN MODELS AND EXPORT ERRORS
-    parameters = cf.GRID_MAIN
+    parameters = cf.GRID_TEST_CLASS
     training_errors = train_models(parameters, x_train, y_train, feature_dict)
     training_errors.to_csv(os.path.join('output', 'errors.csv'))
+    print(f'{datetime.datetime.now()} 7. Models trained.')
 
     # PREDICT LABELS AND EVALUATE RESULTS
     trained_obj_list = [f for f in os.listdir('output') if f.endswith('_trained.pkl')]
     results_df = evaluate_models(trained_obj_list, x_test, y_test, feature_dict)
     results_df.to_csv(os.path.join('output', 'results.csv'))
+    print(f'{datetime.datetime.now()} 8. Results saved.')
 
 
 if __name__ == '__main__':

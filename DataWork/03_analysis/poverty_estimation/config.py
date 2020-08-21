@@ -1,4 +1,4 @@
-# 03_ml_config.py
+# config.py
 #
 # Description:
 # This file holds all static configuration variables for the Poverty-from-the-
@@ -54,71 +54,6 @@ ALL_FEATURES = ['dmspols_2011', 'viirs_2012',
 #######################
 # 5. BUILD CLASSIFIER #
 #######################
-
-# Test grid to make sure everything works - limited models and parameters (regression)
-GRID_TEST_REG = {
-    'regressors': ['LinearRegression', 'Lasso', 'Ridge', 'LinearSVR',
-                    'DecisionTreeRegressor', 'BaggingRegressor',
-                    'GradientBoostingRegressor', 'RandomForestRegressor'],
-    'LinearRegression': [
-        {'n_jobs': -1}
-    ],
-    'Lasso': [
-        {'alpha': alpha, 'max_iter': max_iter, 'selection': selection,
-        'random_state': 0} \
-        for alpha in (1e-2, ) \
-        for max_iter in (1e3, ) \
-        for selection in ('random', )
-    ],
-    'Ridge': [
-        {'alpha': alpha, 'max_iter': max_iter, 'solver': solver,
-        'random_state': 0} \
-        for alpha in (1e-2, ) \
-        for max_iter in (1e3, )  \
-        for solver in ('cholesky', )
-    ],
-    'LinearSVR': [
-        {'epsilon': epsilon, 'C': C, 'loss': loss, 'max_iter': max_iter,
-        'random_state': 0} \
-        for epsilon in (0, ) \
-        for C in (1e-2, ) \
-        for loss in ('epsilon_insensitive', ) \
-        for max_iter in (1e3, )
-    ],
-    'DecisionTreeRegressor': [
-        {'criterion': criterion, 'splitter': splitter, 'max_depth': max_depth,
-        'max_features': max_features, 'random_state': 0} \
-        for criterion in ('mse', ) \
-        for splitter in ('best', ) \
-        for max_depth in (1, ) \
-        for max_features in ('sqrt', ) \
-    ],
-    'BaggingRegressor': [
-        {'n_estimators': n_estimators, 'max_features': max_features,
-        'random_state': 0, 'n_jobs': -1} \
-        for n_estimators in (100, ) \
-        for max_features in (1, )
-    ],
-    'GradientBoostingRegressor': [
-        {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,
-        'criterion': criterion, 'max_features': max_features,
-        'random_state': 0} \
-        for loss in ('ls', ) \
-        for rate in (1e-4, )
-        for n_estimators in (100, ) \
-        for criterion in ('mse', ) \
-        for max_features in ('sqrt', ) \
-    ],
-    'RandomForestRegressor': [
-        {'n_estimators': n_estimators, 'criterion': criterion,
-        'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
-        'random_state': 0} \
-        for n_estimators in (100, ) \
-        for criterion in ('mse', ) \
-        for max_depth in (1, ) \
-        for max_features in ('sqrt', )
-    ]
-}
 
 # Test grid to make sure everything works - limited models and parameters (classification)
 GRID_TEST_CLASS = {
@@ -189,70 +124,6 @@ GRID_TEST_CLASS = {
     ]
 }
 
-
-# Main grid - most exhaustive option (regression)
-GRID_MAIN_REG = {
-    'regressors': ['LinearRegression', 'Lasso', 'Ridge', 'LinearSVR',
-                    'DecisionTreeRegressor', 'BaggingRegressor',
-                    'GradientBoostingRegressor', 'RandomForestRegressor'],
-    'LinearRegression': [
-        {'n_jobs': -1}
-    ],
-    'Lasso': [
-        {'alpha': alpha, 'max_iter': max_iter, 'selection': selection,
-        'random_state': 0} \
-        for alpha in (1e-2, 1e-1, 1e0, 1e1, 1e2) \
-        for max_iter in (1e3, 1e4, 1e5) \
-        for selection in ('cyclic', 'random')
-    ],
-    'Ridge': [
-        {'alpha': alpha, 'max_iter': max_iter, 'solver': solver,
-        'random_state': 0} \
-        for alpha in (1e-2, 1e-1, 1e0, 1e1, 1e2) \
-        for max_iter in (1e3, 1e4, 1e5)  \
-        for solver in ('svd', 'cholesky', 'lsqr', 'sparse_cg')
-    ],
-    'LinearSVR': [
-        {'epsilon': epsilon, 'C': C, 'loss': loss, 'max_iter': max_iter,
-        'random_state': 0} \
-        for epsilon in (0, 0.1, 0.2, 0.3) \
-        for C in (1e-2, 1e-1, 1e0, 1e1, 1e2) \
-        for loss in ('epsilon_insensitive', 'squared_epsilon_insensitive') \
-        for max_iter in (1e3, 1e4, 1e5)
-    ],
-    'DecisionTreeRegressor': [
-        {'criterion': criterion, 'splitter': splitter, 'max_depth': max_depth,
-        'max_features': max_features, 'random_state': 0} \
-        for criterion in ('mse', 'friedman_mse', 'mae') \
-        for splitter in ('best', 'random') \
-        for max_depth in (1, 5, 10, 20) \
-        for max_features in ('sqrt', 'log2', None) \
-    ],
-    'BaggingRegressor': [
-        {'n_estimators': n_estimators, 'max_features': max_features,
-        'random_state': 0, 'n_jobs': -1} \
-        for n_estimators in (100, 1000, 10000) \
-        for max_features in (0.3, 0.5, 1.0)
-    ],
-    'GradientBoostingRegressor': [
-        {'learning_rate': rate, 'n_estimators': n_estimators,
-        'criterion': criterion, 'max_features': max_features,
-        'random_state': 0} \
-        for rate in (1e-4, 1e-3, 1e-2, 1e-1)
-        for n_estimators in (100, 1000, 10000) \
-        for criterion in ('mse', 'friedman_mse', 'mae') \
-        for max_features in ('sqrt', 'log2', None) \
-    ],
-    'RandomForestRegressor': [
-        {'n_estimators': n_estimators, 'criterion': criterion,
-        'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
-        'random_state': 0} \
-        for n_estimators in (10, 100, 1000) \
-        for criterion in ('mse', 'mae') \
-        for max_depth in (1, 5, 10, 20) \
-        for max_features in ('sqrt', 'log2', None)
-    ]
-}
 
 # Main grid - most exhaustive option (classification)
 GRID_MAIN_CLASS = {

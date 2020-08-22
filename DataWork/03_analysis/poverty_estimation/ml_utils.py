@@ -9,8 +9,8 @@ class TrainedRegressor:
     def __init__(self, method, params, features, regressor):
         self.method = method
         self.params = params
-        self.regressor = regressor
         self.features = features
+        self.regressor = regressor
 
     def __repr__(self):
         return f'Trained {self.method} on feature set {self.features} with params {self.params}'

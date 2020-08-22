@@ -18,6 +18,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, classification_report, confusion_matrix)
 
+import warnings
+warnings.filterwarnings('ignore')
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import contextily as ctx
@@ -29,8 +32,6 @@ TARGET_NAME = 'in_poverty'
 BISP_WITH_COORDS = 'bisp_with_coords.pkl'
 FULLY_PREPPED_DATA = 'script_fully_prepped.pkl'
 RESULTS = 'output/results.csv'
-
-## MUST DEFINE ##
 CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 PAKISTAN_BOUNDARIES_SHAPEFILE = cf.PAKISTAN_BOUNDARIES_SHAPEFILE
 
@@ -38,8 +39,7 @@ PAKISTAN_BOUNDARIES_SHAPEFILE = cf.PAKISTAN_BOUNDARIES_SHAPEFILE
 def get_best_model():
     # Load grid search results
     results = pd.read_csv(RESULTS)
-    results_sorted = results[results['features'] == 'ALL_FEATURES']\
-                            .sort_values('score', ascending=False)
+    results_sorted = results.sort_values(['final_score', 'accuracy_score'], ascending=False)
 
     # Load best regressor by accuracy
     df_bestmodel = results_sorted.iloc[0]
@@ -48,24 +48,28 @@ def get_best_model():
     # Grab best model
     best_model = None
     for x in best_regressor:
-        if df_bestmodel['params'] in x.params and df_bestmodel['features'] in x.features:
+        if df_bestmodel['params'] in x.params and df_bestmodel['feature_group'] in x.features:
             best_model = x
+
+    print(f'BEST MODEL: {best_model}')
+    print(f'FINAL SCORE: {df_bestmodel["final_score"]}')
+    print(f'FEATURE_GROUP: {df_bestmodel["feature_group"]}')
     
     return df_bestmodel, best_model
 
 
-def get_predictions(best_model):
+def get_predictions(feature_columns, best_model):
     # Merge manipulated bisp data and fully prepped data to get geometry for predictions
-    #original = pd.read_pickle(BISP_WITH_COORDS)[['uid', 'geometry']]
-    original = pd.read_pickle(BISP_WITH_COORDS)
+    original = pd.read_pickle(BISP_WITH_COORDS)[['uid', 'geometry']]
     original = gpd.GeoDataFrame(original, geometry='geometry')
     fully_prepped = pd.read_pickle(FULLY_PREPPED_DATA)
 
     df = original.merge(fully_prepped, left_on='uid', right_on='uid')
     df = df.rename(columns={TARGET_NAME: 'true_label'})
+    df = df[feature_columns + ['uid', 'geometry', 'true_label']]
 
     # Run best model and get predictions
-    x = df.drop([['uid', 'geometry', 'true_label']], axis=1)
+    x = df.drop(columns=['uid', 'geometry', 'true_label'])
     df['pred_label'] = best_model.regressor.predict(x)
 
     return df, df['true_label'], df['pred_label'], x.columns.values
@@ -155,7 +159,7 @@ def fig3_feat_importances(best_model, column_names):
 
 def fig4_map(df):
     # Load boundaries
-    boundaries = gdp.read_file(PAKISTAN_BOUNDARIES_SHAPEFILE)
+    boundaries = gpd.read_file(PAKISTAN_BOUNDARIES_SHAPEFILE)
     fig, (ax0, ax1) = plt.subplots(figsize=(14, 6), nrows=1, ncols=2)
 
     # True Labels 
@@ -174,7 +178,6 @@ def fig4_map(df):
 
     fig.legend(labels=['Not in Poverty', 'In Poverty'], loc='lower center')
     plt.savefig('map.png', bbox_inches='tight')
-    plt.show()
 
 
 def main():
@@ -186,13 +189,17 @@ def main():
     df_bestmodel, best_model = get_best_model()
 
     # GET PREDICTIONS
-    df, true_labels, pred_labels, column_names = get_predictions(best_model)
+    feature_columns = ast.literal_eval(df_bestmodel["feature_columns"])
+    df, true_labels, pred_labels, column_names = get_predictions(feature_columns, best_model)
+    print(type(df))
+    print(type(df[df['true_label']==0]))
 
     # GENERATE AND SAVE VISUALIZATIONS
-    fig1_eval_metrics(df_bestmodel, true_labels, pred_labels)
+    #fig1_eval_metrics(df_bestmodel, true_labels, pred_labels)
     fig2_confusion_matrix(true_labels, pred_labels)
     fig3_feat_importances(best_model, column_names)
     fig4_map(df)
+    plt.show()
 
 
 if __name__ == '__main__':

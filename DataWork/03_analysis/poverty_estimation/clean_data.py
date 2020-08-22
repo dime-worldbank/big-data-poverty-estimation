@@ -3,7 +3,7 @@
 # Description
 # This script cleans data and saves it to be used in run_grid.py.
 
-import os, math, pickle, datetime
+import os, datetime
 import numpy as np
 import pandas as pd 
 import geopandas as gpd
@@ -13,13 +13,6 @@ import config as cf
 import feature_extraction as fe
 
 TARGET_NAME = 'in_poverty'
-
-## MUST DEFINE ##
-# CURRENT_DIRECTORY = os.path.join('/Users', 'nguyenluong', 'wb_internship', 'Data')
-# DATA_FILEPATH = os.path.join('BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
-# VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
-# BISP_COORDS_FILEPATH = 'BISP/GPS_uid_crosswalk.dta'
-# DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
 CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 DATA_FILEPATH = cf.DATA_FILEPATH
 VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH
@@ -79,7 +72,6 @@ def load_and_prep_coords():
 
 
 def load_and_clean_data():
-    print(f'{datetime.datetime.now()}   LOADING/CLEANING DATA.')
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
@@ -129,7 +121,7 @@ def load_and_clean_data():
 
     feature_dict = {'ALL_FEATURES': df_x.columns.tolist(),
                     'NUMERIC_GEO_FEATURES': geo_features,
-                    'OSM_FB_FEAUTRES': osm_fb_features}
+                    'OSM_FB_FEATURES': osm_fb_features}
     print(f'{datetime.datetime.now()}   1.6 Final data and features groups defined.')
 
     return df_final, feature_dict, DTL

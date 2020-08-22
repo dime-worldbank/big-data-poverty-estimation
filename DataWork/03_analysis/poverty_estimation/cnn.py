@@ -15,8 +15,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import load_model
 
 import logging, os 
@@ -28,14 +27,26 @@ import feature_extraction as fe
 
 CNN_FILENAME = 'script_CNN.h5'
 FINAL_TARGET_NAME = 'ntl_bins'
-
-## MUST DEFINE ##
-# CURRENT_DIRECTORY = "/Users/nguyenluong/wb_internship/Data/"
-# VIIRS_GDF_FILEPATH = 'saved_objects/viirs_gdf.pkl'
-# DTL_DIRECTORY = os.path.join('satellite_raw', 'Landsat', '2014')
 CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH
 DTL_DIRECTORY = cf.DTL_DIRECTORY
+
+### FOR REPRODUCIBILITY ###
+seed_value= 0
+# 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
+os.environ['PYTHONHASHSEED']=str(seed_value)
+# 2. Set the `python` built-in pseudo-random generator at a fixed value
+import random
+random.seed(seed_value)
+# 3. Set the `numpy` pseudo-random generator at a fixed value
+np.random.seed(seed_value)
+# 4. Set the `tensorflow` pseudo-random generator at a fixed value
+tf.random.set_seed(seed_value)
+# 5. Configure a new global `tensorflow` session
+from keras import backend as K
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
 
 
 def transform_target(gdf, orig_target_name, n_bins):
@@ -186,51 +197,47 @@ def main():
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
-    print(f'{datetime.datetime.now()} 1. Directory set.')
 
     # LOAD DATA
+    print(f'{datetime.datetime.now()} 1. Loading Data and Prepping NTL Data')
     viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
-    print(f'{datetime.datetime.now()} 2. Data loaded.')
 
     # PREP NTL
     n_bins = 5
     transform_target(viirs_gdf, 'median_rad_2014', n_bins)
-    print(f'{datetime.datetime.now()} 3. NTL transformed.')
 
     # CREATE SAMPLE
     min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts(ascending=True))
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
-    print(f'{datetime.datetime.now()} 4. Sample created.')
 
     # MATCH DTL TO NTL
+    print(f'{datetime.datetime.now()} 2. Matching DTL Images to NTL Data.')
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
-    print(f'{datetime.datetime.now()} 5. DTL and NTL matched.')
 
     # SPLIT DATA INTO TRAINING AND TESTING
+    print(f'{datetime.datetime.now()} 3. Defining Training and Testing Sets.')
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
-                                                                    test_size=0.2, 
-                                                                    random_state=1)
-    print(f'{datetime.datetime.now()} 6. Training and Testing sets defined.')
+                                                                    test_size=0.2) 
+                                                                    #random_state=1)
 
     # DEFINE IMAGE CHARACTERISTICS
-    h, w, c = 25, 26, 7
-    num_classes = 5
+    h, w, c, num_classes = 25, 26, 7, 5
     
     # PREP TRAINING AND TESTING DATA
+    print(f'{datetime.datetime.now()} 4. Prepping Training and Testing Sets.')
     trainX, trainY = prep_dataset(raw_trainX, raw_trainY, h, w, c)
     testX, testY = prep_dataset(raw_testX, raw_testY, h, w, c)
     
     # PREP PIXELS IN FEATURES
     trainX, testX = normalize(trainX), normalize(testX)
-    print(f'{datetime.datetime.now()} 7. Data fully prepped.')
 
     # DEFINE AND EVALUTATE MODEL
+    print(f'{datetime.datetime.now()} 8. Defining and Evaluating CNN.')
     model = define_model(h, w, c, num_classes)
     evaluate_with_crossval(model, trainX, trainY, k=5)
-    print(f'{datetime.datetime.now()} 8. Model defined and evaluated.')
 
     # DISPLAY IN-DEPTH EVALUTAION METRICS
     best_model = load_model(CNN_FILENAME)

@@ -8,9 +8,9 @@ import os, math, pickle, datetime
 import numpy as np
 import pandas as pd
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import (BaggingClassifier, AdaBoostClassifier, 
@@ -64,8 +64,7 @@ def save_to_file(obj, path):
         pickle.dump(obj=obj,
                     file=f,
                     protocol=pickle.HIGHEST_PROTOCOL)
-    print(f"{datetime.datetime.now()}   Saving data to {path}")
-
+    print(f"{datetime.datetime.now()}    Saving data to {path}")
     return None
 
 
@@ -78,7 +77,6 @@ def perform_pca(df, n):
     features_pca = pca.transform(df)
     column_names = ['pc_%01d' %i for i in range(0,n)]
     df_features_pca = pd.DataFrame(data=features_pca, columns=column_names)
-    
     return df_features_pca
 
 
@@ -192,6 +190,13 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
                  'nonpoverty_class', 'poverty_class', 'recall_nonpoverty', 'recall_poverty', 
                  'final_score'], axis=1
             )
+            results_df = results_df.reindex(
+                ['regressor', 'params', 'feature_group', 'feature_columns', \
+                 'accuracy_score', 'recall_score', 'precision_score', 'classification_report',
+                 'nonpoverty_class', 'poverty_class', 'recall_nonpoverty', 'recall_poverty', 
+                 'final_score'], axis=1
+            )
+
 
     return results_df
 
@@ -204,7 +209,6 @@ def main():
     # LOAD CLEANED DATA, DICT OF FEATURE GROUPS, AND DTL
     print(f'{datetime.datetime.now()} 1. Loading/Cleaning Data.')
     df, feature_dict, DTL = load_and_clean_data()
-    df.to_pickle('script_fully_prepped.pkl')
 
     # LOAD CNN, EXTRACT FEATURES, ADD TO FEATURE GROUPS
     print(f'{datetime.datetime.now()} 2. Extracting Features.')
@@ -218,21 +222,22 @@ def main():
     feature_dict['EXTRACTED_FEATURES'] = df_features_pca.columns.to_list()
     feature_dict['EXTRACT_OSM_FB_FEATURES'] = feature_dict['EXTRACTED_FEATURES'] \
                                             + feature_dict['OSM_FB_FEATURES']
-    feature_dict['ALL_FEATURES'] = feature_dict['ALL_FEATURES'] + feature_dict['EXTRACTED_FEATURES']
     
     # DEFINE FINAL DATA
     df_final = df.join(df_features_pca)
+    df_final.to_pickle('script_fully_prepped.pkl')
 
     # OVERSAMPLE
     print(f'{datetime.datetime.now()} 4. Defining Sample.')
     x_df = pd.DataFrame(df_final.drop(labels=['uid', TARGET_NAME], axis=1))
     y_df = df_final[TARGET_NAME]
-    oversample = RandomOverSampler(sampling_strategy=0.65)#, random_state=1)
+    feature_dict['ALL_FEATURES'] = x_df.columns.tolist()
+    oversample = RandomOverSampler(sampling_strategy=0.65)
     x, y = oversample.fit_resample(x_df, y_df)
 
     # SPLIT INTO TRAIN/TEST AND NORMALIZE
     print(f'{datetime.datetime.now()} 5. Defining Training and Testing Sets.')
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=TEST_SIZE) #, random_state=1)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=TEST_SIZE)
     normalize(x_train, x_test)
 
     # TRAIN MODELS AND EXPORT ERRORS

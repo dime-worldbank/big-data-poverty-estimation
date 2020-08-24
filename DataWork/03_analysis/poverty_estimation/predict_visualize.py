@@ -1,7 +1,7 @@
 # predict_visualize.py
 #
-# Description
-# This is a script uses the best model from grid search, generates predictions,
+# Description:
+# Determines the best model from grid search, generates predictions,
 # and creates visualizations.
 
 import os, ast, math
@@ -18,20 +18,19 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, classification_report, confusion_matrix)
 
-import warnings
-warnings.filterwarnings('ignore')
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 import contextily as ctx
 import matplotlib.cm as cm
 
-import config as cf
+import warnings
+warnings.filterwarnings('ignore')
 
-TARGET_NAME = 'in_poverty'
-BISP_WITH_COORDS = 'bisp_with_coords.pkl'
-FULLY_PREPPED_DATA = 'script_fully_prepped.pkl'
-RESULTS = 'output/results.csv'
+import config as cf
+from ml_utils import TrainedRegressor
+
+RESULTS = os.path.join(cf.CURRENT_DIRECTORY, 'output/results.csv')
+TARGET_NAME = cf.TARGET_NAME
 CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 PAKISTAN_BOUNDARIES_SHAPEFILE = cf.PAKISTAN_BOUNDARIES_SHAPEFILE
 
@@ -48,33 +47,37 @@ def get_best_model():
     df_bestmodel = results_sorted.iloc[0]
     best_regressor = pd.read_pickle(f'output/{df_bestmodel["regressor"]}_trained.pkl')
     
+    # filename = f'output/{df_bestmodel["regressor"]}_trained.pkl'
+    # filepath = os.path.join('/Users/nguyenluong/wb_internship/Data/', filename)
+    # best_regressor = pd.read_pickle(filepath)
+    
     # Grab best model
     best_model = None
     for x in best_regressor:
-        if df_bestmodel['params'] in x.params and df_bestmodel['feature_group'] in x.features:
+        if df_bestmodel['params'] == x.params and df_bestmodel['feature_group'] == x.features:
             best_model = x
     
     return df_bestmodel, best_model
 
 
-def get_predictions(feature_columns, best_model):
+def get_predictions(df, best_model):
     '''
     Predicts binary poverty for entire dataset.
     '''
     # Merge manipulated bisp data and fully prepped data to get geometry for predictions
-    original = pd.read_pickle(BISP_WITH_COORDS)[['uid', 'geometry']]
-    original = gpd.GeoDataFrame(original, geometry='geometry')
-    fully_prepped = pd.read_pickle(FULLY_PREPPED_DATA)
+    # original = pd.read_pickle(bisp_with_coords)[['uid', 'geometry']]
+    # original = gpd.GeoDataFrame(original, geometry='geometry')
+    # fully_prepped = pd.read_pickle(fully_prepped_data)
 
-    df = original.merge(fully_prepped, left_on='uid', right_on='uid')
-    df = df.rename(columns={TARGET_NAME: 'true_label'})
-    df = df[feature_columns + ['uid', 'geometry', 'true_label']]
+    # df = original.merge(fully_prepped, left_on='uid', right_on='uid')
+    # df = df.rename(columns={TARGET_NAME: 'true_label'})
+    # df = df[feature_columns + ['uid', 'geometry', 'true_label']]
 
     # Run best model and get predictions
     x = df.drop(columns=['uid', 'geometry', 'true_label'])
     df['pred_label'] = best_model.regressor.predict(x)
 
-    return df, df['true_label'], df['pred_label'], x.columns.values
+    return df['true_label'], df['pred_label']
 
 
 def fig1_eval_metrics(df_bestmodel, true_labels, pred_labels):
@@ -182,10 +185,12 @@ def fig4_map(df):
     plt.savefig('map.png', bbox_inches='tight')
 
 
-def main():
+def predict_and_visualize(bisp_with_coords='bisp_with_coords.pkl',
+                          fully_prepped_data='fully_prepped_data.pkl'):
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
+    print('PREDICTING OUTCOMES AND GENERATION VISUALIZATIONS')
 
     # GET BEST MODEL
     df_bestmodel, best_model = get_best_model()
@@ -196,19 +201,29 @@ def main():
     print(f'Precision: {df_bestmodel["precision_score"]}')
     print(f'Recall for HHs in Poverty: {df_bestmodel["recall_poverty"]}')
     print(f'Recall for HHs Not in Poverty: {df_bestmodel["recall_nonpoverty"]}')
+    print(f'Final Score: {df_bestmodel["final_score"]}')
+
+    # MERGE BISP WITH COORDS AND FULLY PREPPED DATA TO ATTACH GEOMETRY TO PREDICTIONS
+    original = pd.read_pickle(bisp_with_coords)[['uid', 'geometry']]
+    original = gpd.GeoDataFrame(original, geometry='geometry')
+    fully_prepped = pd.read_pickle(fully_prepped_data)
+    df = original.merge(fully_prepped, left_on='uid', right_on='uid')
+    df = df.rename(columns={TARGET_NAME: 'true_label'})
+
+    # SUBSET ACCORDING TO FEATURE GROUP OF BEST MODEL
+    feature_columns = ast.literal_eval(df_bestmodel["feature_columns"])
+    df = df[feature_columns + ['uid', 'geometry', 'true_label']]
 
     # GET PREDICTIONS
-    feature_columns = ast.literal_eval(df_bestmodel["feature_columns"])
-    df, true_labels, pred_labels, column_names = get_predictions(feature_columns, best_model)
+    true_labels, pred_labels = get_predictions(df, best_model)
 
     # GENERATE AND SAVE VISUALIZATIONS
     fig1_eval_metrics(df_bestmodel, true_labels, pred_labels)
     fig2_confusion_matrix(true_labels, pred_labels)
-    fig3_feat_importances(best_model, column_names)
+    fig3_feat_importances(best_model, np.array(feature_columns))
     fig4_map(df)
-    plt.show()
 
 
 if __name__ == '__main__':
-    main()
+    predict_and_visualize()
 

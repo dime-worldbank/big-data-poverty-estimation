@@ -1,10 +1,10 @@
 # run_grid.py
 #
-# Description
-# This is a script version of 03_predict_first_pass.ipynb that can be run on
-# a server.
+# Description:
+# Performs complete process of cleaning data and prepping all necessary data 
+# and running the grid search.
 
-import os, math, pickle, datetime
+import os, math, pickle, datetime, json
 import numpy as np
 import pandas as pd
 
@@ -33,15 +33,10 @@ from feature_extraction import extract_features
 from clean_data import load_and_clean_data
 from ml_utils import TrainedRegressor
 
-CNN_FILENAME = 'script_CNN.h5'
-TARGET_NAME = 'in_poverty'
-TEST_SIZE = 0.2
-CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
-
 ### FOR REPRODUCIBILITY ###
 seed_value = 1
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
-os.environ['PYTHONHASHSEED']=str(seed_value)
+os.environ['PYTHONHASHSEED'] = str(seed_value)
 # 2. Set the `python` built-in pseudo-random generator at a fixed value
 import random
 random.seed(seed_value)
@@ -54,6 +49,10 @@ tf.random.set_seed(seed_value)
 session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
 sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 tf.compat.v1.keras.backend.set_session(sess)
+
+TEST_SIZE = 0.2
+TARGET_NAME = cf.TARGET_NAME
+CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 
 
 def save_to_file(obj, path):
@@ -186,26 +185,26 @@ def evaluate_models(obj_list, test_features, test_labels, feature_sets):
             results_df = results_df.append(pred_dict, ignore_index=True)
             results_df = results_df.reindex(
                 ['regressor', 'params', 'feature_group', 'feature_columns', \
-                 'accuracy_score', 'recall_score', 'precision_score', 'classification_report',
-                 'nonpoverty_class', 'poverty_class', 'recall_nonpoverty', 'recall_poverty', 
-                 'final_score'], axis=1
+                 'accuracy_score', 'recall_score', 'precision_score', 'nonpoverty_class', 
+                 'poverty_class', 'recall_nonpoverty', 'recall_poverty', 'final_score'], axis=1
             )
             results_df = results_df.reindex(
                 ['regressor', 'params', 'feature_group', 'feature_columns', \
-                 'accuracy_score', 'recall_score', 'precision_score', 'classification_report',
-                 'nonpoverty_class', 'poverty_class', 'recall_nonpoverty', 'recall_poverty', 
-                 'final_score'], axis=1
+                 'accuracy_score', 'recall_score', 'precision_score', 'nonpoverty_class', 
+                 'poverty_class', 'recall_nonpoverty', 'recall_poverty', 'final_score'], axis=1
             )
-
 
     return results_df
 
 
-def main():
+def run_grid_search(cnn_filepath='script_CNN.h5', grid_ready_data=None,
+                    grid_ready_feature_groups=None):
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
+    print('RUNNING GRID SEARCH')
 
+    # if not grid_ready_data:
     # LOAD CLEANED DATA, DICT OF FEATURE GROUPS, AND DTL
     print(f'{datetime.datetime.now()} 1. Loading/Cleaning Data.')
     df, feature_dict, DTL = load_and_clean_data()
@@ -213,7 +212,7 @@ def main():
     # LOAD CNN, EXTRACT FEATURES, ADD TO FEATURE GROUPS
     print(f'{datetime.datetime.now()} 2. Extracting Features.')
     layer_name = 'dense1'
-    model = load_model(CNN_FILENAME)
+    model = load_model(cnn_filepath)
     df_features = extract_features(model, DTL, layer_name)
 
     # USE PCA TO SELECT EXTRACTED FEATURES
@@ -221,11 +220,17 @@ def main():
     df_features_pca = perform_pca(df_features, 10)
     feature_dict['EXTRACTED_FEATURES'] = df_features_pca.columns.to_list()
     feature_dict['EXTRACT_OSM_FB_FEATURES'] = feature_dict['EXTRACTED_FEATURES'] \
-                                            + feature_dict['OSM_FB_FEATURES']
-    
+                                        + feature_dict['OSM_FB_FEATURES']
+
     # DEFINE FINAL DATA
     df_final = df.join(df_features_pca)
-    df_final.to_pickle('script_fully_prepped.pkl')
+    df_final.to_pickle('fully_prepped_data.pkl')
+
+    # else:
+    #     print(f'{datetime.datetime.now()} 1-3. Not Necessary.')
+    #     df_final = pd.read_pickle(grid_ready_data)
+    #     with open(grid_ready_feature_groups) as f:
+    #         feature_dict = json.load(f)
 
     # OVERSAMPLE
     print(f'{datetime.datetime.now()} 4. Defining Sample.')
@@ -255,4 +260,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    run_grid_search()

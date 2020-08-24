@@ -1,7 +1,7 @@
 # clean_data.py
 #
-# Description
-# This script cleans data and saves it to be used in run_grid.py.
+# Description:
+# Cleans and fully preps data used in run_grid.py.
 
 import os, datetime
 import numpy as np
@@ -12,7 +12,7 @@ from math import floor
 import config as cf
 import feature_extraction as fe
 
-TARGET_NAME = 'in_poverty'
+TARGET_NAME = cf.TARGET_NAME
 CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 DATA_FILEPATH = cf.DATA_FILEPATH
 VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH

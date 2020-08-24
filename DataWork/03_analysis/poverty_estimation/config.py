@@ -12,15 +12,21 @@ from sklearn.tree import DecisionTreeClassifier
 ######################
 
 # The following will need to be changed
-CURRENT_DIRECTORY = '/Users/nguyenluong/wb_internship/Test_Run_c/'
+CURRENT_DIRECTORY = '/Users/nguyenluong/wb_internship/Test_Run/'
 GIT_DIRECTORY = '/Users/nguyenluong/wb_internship/Pakistan-Poverty-from-Sky/DataWork/03_analysis/poverty_estimation'
-VIIRS_GDF_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'saved_objects/viirs_gdf.pkl')
 DTL_DIRECTORY = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'satellite_raw', 'Landsat', '2014')
 DATA_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
 BISP_COORDS_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'BISP/GPS_uid_crosswalk.dta')
+VIIRS_GDF_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'saved_objects/viirs_gdf.pkl')
 PAKISTAN_BOUNDARIES_SHAPEFILE = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'pakistan_boundaries.json')
 
+
+######################
+#    ML VARIABLES    #
+######################
+
 TARGET_NAME = 'in_poverty'
+
 
 ######################
 #  BUILD CLASSIFIER #

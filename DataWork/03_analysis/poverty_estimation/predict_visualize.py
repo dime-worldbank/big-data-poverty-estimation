@@ -4,7 +4,7 @@
 # Determines the best model from grid search, generates predictions,
 # and creates visualizations.
 
-import os, ast, math
+import os, ast, math, datetime
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -47,10 +47,6 @@ def get_best_model():
     df_bestmodel = results_sorted.iloc[0]
     best_regressor = pd.read_pickle(f'output/{df_bestmodel["regressor"]}_trained.pkl')
     
-    # filename = f'output/{df_bestmodel["regressor"]}_trained.pkl'
-    # filepath = os.path.join('/Users/nguyenluong/wb_internship/Data/', filename)
-    # best_regressor = pd.read_pickle(filepath)
-    
     # Grab best model
     best_model = None
     for x in best_regressor:
@@ -64,16 +60,6 @@ def get_predictions(df, best_model):
     '''
     Predicts binary poverty for entire dataset.
     '''
-    # Merge manipulated bisp data and fully prepped data to get geometry for predictions
-    # original = pd.read_pickle(bisp_with_coords)[['uid', 'geometry']]
-    # original = gpd.GeoDataFrame(original, geometry='geometry')
-    # fully_prepped = pd.read_pickle(fully_prepped_data)
-
-    # df = original.merge(fully_prepped, left_on='uid', right_on='uid')
-    # df = df.rename(columns={TARGET_NAME: 'true_label'})
-    # df = df[feature_columns + ['uid', 'geometry', 'true_label']]
-
-    # Run best model and get predictions
     x = df.drop(columns=['uid', 'geometry', 'true_label'])
     df['pred_label'] = best_model.regressor.predict(x)
 
@@ -190,18 +176,18 @@ def predict_and_visualize(bisp_with_coords='bisp_with_coords.pkl',
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
-    print('PREDICTING OUTCOMES AND GENERATION VISUALIZATIONS')
+    print(f'{datetime.datetime.now()} PREDICTING OUTCOMES AND GENERATION VISUALIZATIONS')
 
     # GET BEST MODEL
     df_bestmodel, best_model = get_best_model()
-    print(f'Best Model: {best_model.method}')
-    print(f'Feature Group: {best_model.features}')
-    print(f'Parameters: {best_model.params}')
-    print(f'Accuracy: {df_bestmodel["accuracy_score"]}')
-    print(f'Precision: {df_bestmodel["precision_score"]}')
-    print(f'Recall for HHs in Poverty: {df_bestmodel["recall_poverty"]}')
-    print(f'Recall for HHs Not in Poverty: {df_bestmodel["recall_nonpoverty"]}')
-    print(f'Final Score: {df_bestmodel["final_score"]}')
+    print(f'{datetime.datetime.now()} Best Model: {best_model.method}')
+    print(f'{datetime.datetime.now()} Feature Group: {best_model.features}')
+    print(f'{datetime.datetime.now()} Parameters: {best_model.params}')
+    print(f'{datetime.datetime.now()} Accuracy: {df_bestmodel["accuracy_score"]}')
+    print(f'{datetime.datetime.now()} Precision: {df_bestmodel["precision_score"]}')
+    print(f'{datetime.datetime.now()} Recall for HHs in Poverty: {df_bestmodel["recall_poverty"]}')
+    print(f'{datetime.datetime.now()} Recall for HHs Not in Poverty: {df_bestmodel["recall_nonpoverty"]}')
+    print(f'{datetime.datetime.now()} Final Score: {df_bestmodel["final_score"]}')
 
     # MERGE BISP WITH COORDS AND FULLY PREPPED DATA TO ATTACH GEOMETRY TO PREDICTIONS
     original = pd.read_pickle(bisp_with_coords)[['uid', 'geometry']]

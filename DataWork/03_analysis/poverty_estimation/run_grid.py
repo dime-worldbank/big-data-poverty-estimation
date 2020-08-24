@@ -63,7 +63,6 @@ def save_to_file(obj, path):
         pickle.dump(obj=obj,
                     file=f,
                     protocol=pickle.HIGHEST_PROTOCOL)
-    print(f"{datetime.datetime.now()}    Saving data to {path}")
     return None
 
 
@@ -202,7 +201,7 @@ def run_grid_search(cnn_filepath='script_CNN.h5', grid_ready_data=None,
 
     # SET DIRECTORY
     os.chdir(CURRENT_DIRECTORY)
-    print('RUNNING GRID SEARCH')
+    print(f'{datetime.datetime.now()} RUNNING GRID SEARCH')
 
     # if not grid_ready_data:
     # LOAD CLEANED DATA, DICT OF FEATURE GROUPS, AND DTL
@@ -225,12 +224,6 @@ def run_grid_search(cnn_filepath='script_CNN.h5', grid_ready_data=None,
     # DEFINE FINAL DATA
     df_final = df.join(df_features_pca)
     df_final.to_pickle('fully_prepped_data.pkl')
-
-    # else:
-    #     print(f'{datetime.datetime.now()} 1-3. Not Necessary.')
-    #     df_final = pd.read_pickle(grid_ready_data)
-    #     with open(grid_ready_feature_groups) as f:
-    #         feature_dict = json.load(f)
 
     # OVERSAMPLE
     print(f'{datetime.datetime.now()} 4. Defining Sample.')
@@ -255,8 +248,7 @@ def run_grid_search(cnn_filepath='script_CNN.h5', grid_ready_data=None,
     print(f'{datetime.datetime.now()} 7. Evalating Models.')
     trained_obj_list = [f for f in os.listdir('output') if f.endswith('_trained.pkl')]
     results_df = evaluate_models(trained_obj_list, x_test, y_test, feature_dict)
-    results_df.to_csv(os.path.join('output', 'results.csv'))
-    print(f'{datetime.datetime.now()} 8. END: Results Saved.')   
+    results_df.to_csv(os.path.join('output', 'results.csv')) 
 
 
 if __name__ == '__main__':

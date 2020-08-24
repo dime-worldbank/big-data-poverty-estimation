@@ -21,3 +21,4 @@ datetime==4.3
 pyproj==2.5.0
 contextily==1.0.0
 seaborn==0.10.1
+descartes==1.1.0

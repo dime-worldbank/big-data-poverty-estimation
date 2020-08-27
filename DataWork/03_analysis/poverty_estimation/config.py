@@ -5,21 +5,35 @@
 # Sky ML pipeline.
 
 import os
+import getpass
 from sklearn.tree import DecisionTreeClassifier
 
 ######################
 #     FILEPATHS      #
 ######################
 
-# The following will need to be changed
-CURRENT_DIRECTORY = '/Users/nguyenluong/wb_internship/Test_Run/'
-GIT_DIRECTORY = '/Users/nguyenluong/wb_internship/Pakistan-Poverty-from-Sky/DataWork/03_analysis/poverty_estimation'
-DTL_DIRECTORY = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'satellite_raw', 'Landsat', '2014')
-DATA_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
-BISP_COORDS_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'BISP/GPS_uid_crosswalk.dta')
-VIIRS_GDF_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'saved_objects/viirs_gdf.pkl')
-PAKISTAN_BOUNDARIES_SHAPEFILE = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'pakistan_boundaries.json')
+## Root Paths
+username = getpass.getuser()
 
+if(username == 'robmarty'):
+    DROPBOX_DIRECTORY = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites'
+    GIT_DIRECTORY = '/Users/robmarty/Documents/Github/Pakistan-Poverty-from-Sky'
+
+## Dependent Paths
+GIT_DIRECTORY = os.path.join(GIT_DIRECTORY, 'DataWork', '03_analysis', 'poverty_estimation')
+DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', 'RawData', '2014')
+BISP_DATA_PATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
+BISP_COORDS_PATH = os.path.join('GPS_uid_crosswalk.dta')
+VIIRS_GDF_FILEPATH = ""
+PAKISTAN_BOUNDARIES_SHAPEFILE = ""
+
+#CURRENT_DIRECTORY = '/Users/nguyenluong/wb_internship/Test_Run/'
+#GIT_DIRECTORY = '/Users/nguyenluong/wb_internship/Pakistan-Poverty-from-Sky/DataWork/03_analysis/poverty_estimation'
+#DTL_DIRECTORY = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'satellite_raw', 'Landsat', '2014')
+#DATA_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
+#BISP_COORDS_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'BISP/GPS_uid_crosswalk.dta')
+#VIIRS_GDF_FILEPATH = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'saved_objects/viirs_gdf.pkl')
+#PAKISTAN_BOUNDARIES_SHAPEFILE = os.path.join('/Users/nguyenluong/wb_internship/Data/', 'pakistan_boundaries.json')
 
 ######################
 #    ML VARIABLES    #

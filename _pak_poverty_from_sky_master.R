@@ -9,13 +9,17 @@ raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
 final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
 
+# Secure Directory
+if(Sys.info()[["user"]] == "WB521633") secure_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data" 
+if(Sys.info()[["user"]] == "robmarty") secure_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky"
+
 # Code File Path
 if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky/Code"
 if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky/Code"
 
 # File path for BISP Geocodes
-if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data/BISP" # ONEDRIVE FILE PATH
-if(Sys.info()[["user"]] == "robmarty") bisp_geocodes_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky/BISP/"
+#if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data/BISP" # ONEDRIVE FILE PATH
+#if(Sys.info()[["user"]] == "robmarty") bisp_geocodes_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky/BISP/"
 
 # Webscraping File Path
 if(Sys.info()[["user"]] == "WB521633") webscraping_api_filepath <- "C:/Users/wb521633/Dropbox/World Bank/Webscraping/Files for Server"
@@ -45,6 +49,9 @@ library(alluvial)
 library(ggmap)
 library(velox)
 library(sf)
+library(sp)
+library(raster)
+library(rgeos)
 library(tidyverse)
 source(file.path(code_file_path, "02_bisp_approach", "_functions", "functions.R"))
 

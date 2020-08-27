@@ -18,12 +18,13 @@ username = getpass.getuser()
 if(username == 'robmarty'):
     DROPBOX_DIRECTORY = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites'
     GIT_DIRECTORY = '/Users/robmarty/Documents/Github/Pakistan-Poverty-from-Sky'
+    SECURE_DATA_DIRECTORY = '/Users/robmarty/Documents/World Bank/Pakistan Poverty from Sky'
 
 ## Dependent Paths
 GIT_DIRECTORY = os.path.join(GIT_DIRECTORY, 'DataWork', '03_analysis', 'poverty_estimation')
 DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', 'RawData', '2014')
 BISP_DATA_PATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
-BISP_COORDS_PATH = os.path.join('GPS_uid_crosswalk.dta')
+BISP_COORDS_PATH = os.path.join(SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv')
 VIIRS_GDF_FILEPATH = ""
 PAKISTAN_BOUNDARIES_SHAPEFILE = ""
 
@@ -40,7 +41,6 @@ PAKISTAN_BOUNDARIES_SHAPEFILE = ""
 ######################
 
 TARGET_NAME = 'in_poverty'
-
 
 ######################
 #  BUILD CLASSIFIER #

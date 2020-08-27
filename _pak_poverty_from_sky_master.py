@@ -15,6 +15,7 @@ username = getpass.getuser()
 
 if(username == 'robmarty'):
     DROPBOX_DIRECTORY = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites'
+    SECURE_DATA_DIRECTORY = '/Users/robmarty/Documents/World Bank/Pakistan Poverty from Sky'
     GIT_DIRECTORY = '/Users/robmarty/Documents/Github/Pakistan-Poverty-from-Sky'
 
 ## Other Paths

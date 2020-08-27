@@ -84,7 +84,8 @@ def load_and_clean_data():
     print(f'{datetime.datetime.now()}    1.2 Coordinates added to BISP data.')
 
     # LOAD AND SPATIALLY JOIN SATELLITE DATA TO BISP DATA
-    viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
+
+    viirs = pd.read_pickle(os.path.join(DROPBOX_DIRECTORY, 'Data', 'VIIRS', 'FinalData', 'viirs_annual_polygon.pkl'))
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     gdf = gpd.sjoin(viirs_gdf, gdf_bisp, how="inner", op='intersects').reset_index(drop=True)
     print(f'{datetime.datetime.now()}    1.3 Satellite and BISP data spatially joined.')

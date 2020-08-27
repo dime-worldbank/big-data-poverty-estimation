@@ -28,7 +28,10 @@ bisp_coords <- bisp_coords %>%
          longitude = get_lat_lon(GPSE),
          uid = uid %>% as.numeric()) %>%
   
-  dplyr::select(uid, latitude, longitude)
+  dplyr::select(uid, latitude, longitude) %>%
+  
+  filter(latitude <= 100,
+         longitude <= 100)
 
 ## Restrict to Coordinates in Pakistan
 bisp_coords_sdf <- bisp_coords

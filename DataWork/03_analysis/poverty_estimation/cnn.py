@@ -7,6 +7,8 @@ import os, datetime
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import rasterio
+from rasterio.plot import show
 
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.model_selection import train_test_split, KFold
@@ -25,7 +27,7 @@ import config as cf
 import feature_extraction as fe
 
 ### FOR REPRODUCIBILITY ###
-seed_value = 0
+seed_value = 42
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
 os.environ['PYTHONHASHSEED'] = str(seed_value)
 # 2. Set the `python` built-in pseudo-random generator at a fixed value
@@ -35,11 +37,11 @@ random.seed(seed_value)
 np.random.seed(seed_value)
 # 4. Set the `tensorflow` pseudo-random generator at a fixed value
 import tensorflow as tf
-tf.random.set_seed(seed_value)
+#tf.random.set_seed(seed_value)
 # 5. Configure a new global `tensorflow` session
-session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-tf.compat.v1.keras.backend.set_session(sess)
+#session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+#sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+#tf.compat.v1.keras.backend.set_session(sess)
 
 CNN_FILENAME = 'script_CNN.h5'
 FINAL_TARGET_NAME = 'ntl_bins'
@@ -65,6 +67,7 @@ def sample_by_target(input_gdf, target_col_name, n):
     '''
     Create a sample dataframe containing n observations from each target bin.
     '''
+
     gdf = gpd.GeoDataFrame()
     for x in input_gdf[target_col_name].unique():
         bin_gdf = input_gdf[input_gdf[target_col_name] == x]
@@ -184,12 +187,7 @@ def display_eval_metrics(model, testX, testY):
 
 def buid_and_run_cnn():
 
-    # SET DIRECTORY
-    os.chdir(CURRENT_DIRECTORY)
-    print('BUILDING AND RUNNING CNN')
-
     # LOAD DATA
-    print(f'{datetime.datetime.now()} 1. Loading Data and Prepping NTL Data')
     viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
@@ -199,11 +197,10 @@ def buid_and_run_cnn():
     transform_target(viirs_gdf, 'median_rad_2014', n_bins)
 
     # CREATE SAMPLE
-    min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts(ascending=True))
+    min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
 
     # MATCH DTL TO NTL
-    print(f'{datetime.datetime.now()} 2. Matching DTL Images to NTL Data.')
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 

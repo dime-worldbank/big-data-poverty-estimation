@@ -45,6 +45,8 @@ def mask_and_write(filepath, polygon):
     with rasterio.open(filepath) as dataset:
         out_img, out_transform = mask(dataset, shapes=shapes, crop=True)
         out_meta = dataset.meta
+
+        out_img = np.delete(out_img, -1, axis=2)
     
     out_meta.update({"driver": "GTiff",
                      "height": out_img.shape[1],
@@ -65,8 +67,9 @@ def resample(new_height, new_width):
         data (numpy.ndarray)
     '''
     with rasterio.open('masked.tif') as dataset:
+        # Resampling.nearest
         data = dataset.read(out_shape=(dataset.count, new_height, new_width),
-                            resampling=Resampling.nearest)
+                            resampling=Resampling.bilinear)
     
     return data
 
@@ -84,13 +87,19 @@ def get_DTL(row, directory):
     all_bands = []
     bands = [*range(1,8)]
 
-    crop_img_height = 25
-    crop_img_width = 26
+    crop_img_height = 50
+    crop_img_width = 50
 
     for b in bands:
         tile, polygon = int(row['tile_id']), row['geometry']
         filename = f'l8_2014_tile{str(tile)}_b{str(b)}.tif'
         filepath = os.path.join(directory, filename)
+
+        #shapes = format_coords(polygon) 
+        #with rasterio.open(filepath) as dataset:
+        #    out_img, out_transform = mask(dataset, shapes=shapes, crop=True)
+        #    out_meta = dataset.meta
+
         mask_and_write(filepath, polygon)
         data = resample(crop_img_height, crop_img_width)
         all_bands.append(data)

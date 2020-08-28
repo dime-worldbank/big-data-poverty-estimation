@@ -75,26 +75,21 @@ def load_and_clean_data():
     # LOAD BISP DATA AND TRANSFORM TARGET
     df = load_data()
     df = transform_target(df)
-    print(f'{datetime.datetime.now()}    1.1 BISP data loaded and target transformed.')
 
     # LOAD AND MATCH COORDS TO BISP DATA
     coords = load_and_prep_coords()
     gdf_bisp = coords.merge(df, left_on='uid', right_on='uid')
     gdf_bisp.to_pickle('bisp_with_coords.pkl')
-    print(f'{datetime.datetime.now()}    1.2 Coordinates added to BISP data.')
 
     # LOAD AND SPATIALLY JOIN SATELLITE DATA TO BISP DATA
-
     viirs = pd.read_pickle(os.path.join(DROPBOX_DIRECTORY, 'Data', 'VIIRS', 'FinalData', 'viirs_annual_polygon.pkl'))
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     gdf = gpd.sjoin(viirs_gdf, gdf_bisp, how="inner", op='intersects').reset_index(drop=True)
-    print(f'{datetime.datetime.now()}    1.3 Satellite and BISP data spatially joined.')
 
     # MAP DTL IMAGE FILES TO BISP DATA
     h, w, c = 25, 26, 7
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
     DTL = DTL.reshape((DTL.shape[0], h, w, c))
-    print(f'{datetime.datetime.now()}    1.4 DTL images mapped to BISP data.')
 
     # DEFINE FEATURE GROUPS AND FINAL DATA
     df_viirs = processed_gdf.filter(regex='viirs').filter(regex='_2km')

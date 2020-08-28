@@ -87,8 +87,8 @@ def get_DTL(row, directory):
     all_bands = []
     bands = [*range(1,8)]
 
-    crop_img_height = 50
-    crop_img_width = 50
+    crop_img_height = 25
+    crop_img_width = 25
 
     for b in bands:
         tile, polygon = int(row['tile_id']), row['geometry']

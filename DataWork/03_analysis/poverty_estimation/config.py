@@ -26,6 +26,8 @@ DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', 'RawData', '2
 BISP_DATA_PATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
 VIIRS_GDF_FILEPATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'VIIRS', 'FinalData', 'viirs_annual_polygon.pkl')
 
+CURRENT_DIRECTORY = GIT_DIRECTORY
+
 BISP_COORDS_PATH = os.path.join(SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv')
 PAKISTAN_BOUNDARIES_SHAPEFILE = ""
 

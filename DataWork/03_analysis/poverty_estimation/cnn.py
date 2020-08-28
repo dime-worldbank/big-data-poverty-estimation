@@ -43,9 +43,10 @@ import tensorflow as tf
 #sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 #tf.compat.v1.keras.backend.set_session(sess)
 
-CNN_FILENAME = 'script_CNN.h5'
+CNN_FILENAME = os.path.join(cf.DROPBOX_DIRECTORY, 'Models', 'CNN', 'script_CNN.h5')
+#CNN_FILENAME = 'script_CNN.h5'
 FINAL_TARGET_NAME = 'ntl_bins'
-CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
+#CURRENT_DIRECTORY = cf.CURRENT_DIRECTORY
 VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH
 DTL_DIRECTORY = cf.DTL_DIRECTORY
 
@@ -135,12 +136,17 @@ def evaluate_model(model, trainX, trainY, testX, testY):
     # Use early stopping to help with overfitting
     es = EarlyStopping(monitor='val_loss', mode='min', patience=5, verbose=False)
     # Save best model based on accuracy
+    # val_accuracy
     mc = ModelCheckpoint(CNN_FILENAME, monitor='val_accuracy', mode='max', 
                          verbose=False, save_best_only=True)
     # Fit model
     history = model.fit(trainX, trainY, 
-                        epochs=10, batch_size=1000, 
-                        validation_data=(testX, testY), callbacks=[es, mc], verbose=False)
+                        epochs=10, 
+                        batch_size=500, 
+                        validation_data=(testX, testY), 
+                        callbacks=[es, mc], 
+                        verbose=False)
+
     # Show accuracy
     loss, accuracy = model.evaluate(testX, testY, verbose=False)
     print(f'                              Accuracy: {accuracy}')
@@ -188,6 +194,7 @@ def display_eval_metrics(model, testX, testY):
 def buid_and_run_cnn():
 
     # LOAD DATA
+    print(f'{datetime.datetime.now()} 1. Load and Prep Data.')
     viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
@@ -198,19 +205,22 @@ def buid_and_run_cnn():
 
     # CREATE SAMPLE
     min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
+    min_bin_count = 500
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
 
     # MATCH DTL TO NTL
+    print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 
+    # TODO: Separate script - save at this step, as matching can take awhile
+
     # SPLIT DATA INTO TRAINING AND TESTING
-    print(f'{datetime.datetime.now()} 3. Defining Training and Testing Sets.')
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
                                                                     test_size=0.2)
 
     # DEFINE IMAGE CHARACTERISTICS
-    h, w, c, num_classes = 25, 26, 7, 5
+    h, w, c, num_classes = 25, 25, 7, 5
     
     # PREP TRAINING AND TESTING DATA
     print(f'{datetime.datetime.now()} 4. Prepping Training and Testing Sets.')

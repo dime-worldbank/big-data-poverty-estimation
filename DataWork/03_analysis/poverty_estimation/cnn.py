@@ -50,7 +50,6 @@ FINAL_TARGET_NAME = 'ntl_bins'
 VIIRS_GDF_FILEPATH = cf.VIIRS_GDF_FILEPATH
 DTL_DIRECTORY = cf.DTL_DIRECTORY
 
-
 def transform_target(gdf, orig_target_name, n_bins):
     '''
     Creates log NTL variable and bins into 5 classes using k-means clutering.
@@ -135,9 +134,10 @@ def evaluate_model(model, trainX, trainY, testX, testY):
     '''
     # Use early stopping to help with overfitting
     es = EarlyStopping(monitor='val_loss', mode='min', patience=5, verbose=False)
+
     # Save best model based on accuracy
     # val_accuracy
-    mc = ModelCheckpoint(CNN_FILENAME, monitor='val_accuracy', mode='max', 
+    mc = ModelCheckpoint(CNN_FILENAME, monitor='val_loss', mode='min', 
                          verbose=False, save_best_only=True)
     # Fit model
     history = model.fit(trainX, trainY, 
@@ -188,14 +188,14 @@ def display_eval_metrics(model, testX, testY):
     testY_bins = np.argmax(testY, axis = 1)
     # Generate classification report
     classes = ['Radiance Level %01d' %i for i in range(1,6)]
-    print(classification_report(testY_bins, predY, target_names=classes, zero_division=0))
+    print(classification_report(testY_bins, predY, target_names=classes))
 
 
 def buid_and_run_cnn():
 
-    REPROCESS_DATA = False
+    reprocess_data = False
 
-    if REPROCESS_DATA:
+    if reprocess_data:
 
         # LOAD DATA
         print(f'{datetime.datetime.now()} 1. Load and Prep Data.')
@@ -217,13 +217,13 @@ def buid_and_run_cnn():
         DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
         NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 
-        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'ntl.npy'), NTL)
-        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'dtl.npy'), DTL)
+        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'), NTL)
+        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs' , 'dtl.npy'), DTL)
 
     else:
 
-        NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'ntl.npy'))
-        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'dtl.npy'))
+        NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'))
+        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'dtl.npy'))
 
     # SPLIT DATA INTO TRAINING AND TESTING
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 

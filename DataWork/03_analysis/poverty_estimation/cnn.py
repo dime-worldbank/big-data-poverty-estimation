@@ -193,27 +193,37 @@ def display_eval_metrics(model, testX, testY):
 
 def buid_and_run_cnn():
 
-    # LOAD DATA
-    print(f'{datetime.datetime.now()} 1. Load and Prep Data.')
-    viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
-    viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
-    viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
+    REPROCESS_DATA = False
 
-    # PREP NTL
-    n_bins = 5
-    transform_target(viirs_gdf, 'median_rad_2014', n_bins)
+    if REPROCESS_DATA:
 
-    # CREATE SAMPLE
-    min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
-    min_bin_count = 500
-    gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
+        # LOAD DATA
+        print(f'{datetime.datetime.now()} 1. Load and Prep Data.')
+        viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
+        viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
+        viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
 
-    # MATCH DTL TO NTL
-    print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
-    DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
-    NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
+        # PREP NTL
+        n_bins = 5
+        transform_target(viirs_gdf, 'median_rad_2014', n_bins)
 
-    # TODO: Separate script - save at this step, as matching can take awhile
+        # CREATE SAMPLE
+        min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
+        min_bin_count = 20
+        gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
+
+        # MATCH DTL TO NTL
+        print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
+        DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
+        NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
+
+        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'ntl.npy'), NTL)
+        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'dtl.npy'), DTL)
+
+    else:
+
+        NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'ntl.npy'))
+        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed', 'dtl.npy'))
 
     # SPLIT DATA INTO TRAINING AND TESTING
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 

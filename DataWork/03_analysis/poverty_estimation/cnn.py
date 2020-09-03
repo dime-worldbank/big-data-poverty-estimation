@@ -3,6 +3,9 @@
 # Description:
 # Build and run CNN that will serve as feature extractor in poverty estimation.
 
+# https://github.com/jensleitloff/CNN-Sentinel
+# https://github.com/jensleitloff/CNN-Sentinel/blob/master/slides/M3-2019_RieseLeitloff_SatelliteCV.pdf
+
 import os, datetime
 import numpy as np
 import pandas as pd
@@ -13,11 +16,13 @@ from rasterio.plot import show
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import classification_report, confusion_matrix
+
 from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import load_model
+from keras.applications.vgg16 import VGG16
 
 import logging, os 
 logging.disable(logging.WARNING) 
@@ -131,14 +136,16 @@ def evaluate_model(model, trainX, trainY, testX, testY):
         display_metrics (bool) Default=False
     Returns:
         None
+    # https://towardsdatascience.com/step-by-step-guide-to-using-pretrained-models-in-keras-c9097b647b29
     '''
+
     # Use early stopping to help with overfitting
-    es = EarlyStopping(monitor='val_loss', mode='min', patience=5, verbose=False)
+    es = EarlyStopping(monitor='val_loss', mode='min', patience=10, verbose=False)
 
     # Save best model based on accuracy
-    # val_accuracy
     mc = ModelCheckpoint(CNN_FILENAME, monitor='val_loss', mode='min', 
                          verbose=False, save_best_only=True)
+
     # Fit model
     history = model.fit(trainX, trainY, 
                         epochs=10, 
@@ -190,10 +197,28 @@ def display_eval_metrics(model, testX, testY):
     classes = ['Radiance Level %01d' %i for i in range(1,6)]
     print(classification_report(testY_bins, predY, target_names=classes))
 
-
 def buid_and_run_cnn():
 
-    reprocess_data = False
+    # PARAMETERS -------------------------------------------------------------
+
+    # Process daytime and nighttime imagery for input into CNN? If False, uses 
+    # previously saved data
+    reprocess_data = True
+
+    # Daytime impage parameters
+    image_height = 224 # VGG16 needs images to be rescale to 224x224
+    image_width = 224
+    bands = ['4', '3', '2'] # which bands to use? 4,3,2 are RGB
+
+    N_bands = len(bands)
+
+    # Number of bins for NTL
+    n_ntl_bins = 5
+
+    # Minimum observations to take from each NTL bin
+    min_ntl_bin_count = 20
+
+    # Run --------------------------------------------------------------------
 
     if reprocess_data:
 
@@ -204,17 +229,15 @@ def buid_and_run_cnn():
         viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
 
         # PREP NTL
-        n_bins = 5
-        transform_target(viirs_gdf, 'median_rad_2014', n_bins)
+        transform_target(viirs_gdf, 'median_rad_2014', n_ntl_bins)
 
         # CREATE SAMPLE
         min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
-        min_bin_count = 20
-        gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_bin_count)
+        gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_ntl_bin_count)
 
         # MATCH DTL TO NTL
         print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
-        DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY)
+        DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
         NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 
         np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'), NTL)
@@ -225,24 +248,26 @@ def buid_and_run_cnn():
         NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'))
         DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'dtl.npy'))
 
+    print(np.unique(NTL, return_counts=True))
+
     # SPLIT DATA INTO TRAINING AND TESTING
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
                                                                     test_size=0.2)
 
     # DEFINE IMAGE CHARACTERISTICS
-    h, w, c, num_classes = 25, 25, 7, 5
+    #h, w, c, num_classes = 25, 25, 7, 5
     
     # PREP TRAINING AND TESTING DATA
     print(f'{datetime.datetime.now()} 4. Prepping Training and Testing Sets.')
-    trainX, trainY = prep_dataset(raw_trainX, raw_trainY, h, w, c)
-    testX, testY = prep_dataset(raw_testX, raw_testY, h, w, c)
+    trainX, trainY = prep_dataset(raw_trainX, raw_trainY, image_height, image_width, N_bands)
+    testX, testY = prep_dataset(raw_testX, raw_testY, image_height, image_width, N_bands)
     
     # PREP PIXELS IN FEATURES
     trainX, testX = normalize(trainX), normalize(testX)
 
     # DEFINE AND EVALUTATE MODEL
     print(f'{datetime.datetime.now()} 5. Defining and Evaluating CNN.')
-    model = define_model(h, w, c, num_classes)
+    model = define_model(image_height, image_width, N_bands, n_ntl_bins)
     evaluate_with_crossval(model, trainX, trainY, k=5)
 
     # DISPLAY IN-DEPTH EVALUTAION METRICS

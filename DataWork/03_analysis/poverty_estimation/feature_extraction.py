@@ -74,7 +74,7 @@ def resample(new_height, new_width):
     return data
 
     
-def get_DTL(row, directory):
+def get_DTL(row, directory, bands, img_height, img_width):
     '''
     For a given VIIRS observation, grab and crop corresponding DLT data.
     
@@ -85,10 +85,10 @@ def get_DTL(row, directory):
         all_bands: (list) list of 7 arrays, each array is 3D
     '''
     all_bands = []
-    bands = [*range(1,8)]
 
-    crop_img_height = 25
-    crop_img_width = 25
+    #bands = [*range(1,8)]
+    #crop_img_height = 25
+    #crop_img_width = 25
 
     for b in bands:
         tile, polygon = int(row['tile_id']), row['geometry']
@@ -101,16 +101,16 @@ def get_DTL(row, directory):
         #    out_meta = dataset.meta
 
         mask_and_write(filepath, polygon)
-        data = resample(crop_img_height, crop_img_width)
+        data = resample(img_height, img_width)
         all_bands.append(data)
 
-        if data.shape != (1, crop_img_height, crop_img_width):
+        if data.shape != (1, img_height, img_width):
             print(f'Flag: Irregular cropped image shape {data.shape}')
             
     return all_bands
 
 
-def map_DTL_NTL(input_gdf, directory):
+def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
     '''
     Gets DTL images, crops them, create arrays representing DLT and NLT to 
     become features and targets respectively.
@@ -118,6 +118,9 @@ def map_DTL_NTL(input_gdf, directory):
     Inputs:
         NTL_df (pandas.DataFrame)
         source, year (str)
+        bands: list of landsat bands to use
+        img_height: rescaled image height
+        img_width: rescaled image width
     Returns: 
         (5D numpy.ndarray) DTL features
         (geopandas GeoDataFrame) NTL_gdf with same observations as NTL target array
@@ -126,7 +129,7 @@ def map_DTL_NTL(input_gdf, directory):
     gdf = input_gdf.copy()
 
     for i, row in gdf.iterrows():
-        DTL = get_DTL(row, directory)
+        DTL = get_DTL(row, directory, bands, img_height, img_width)
         if DTL:
             # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)
             DTL_list.append(DTL)

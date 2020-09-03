@@ -5,6 +5,8 @@
 
 # https://github.com/jensleitloff/CNN-Sentinel
 # https://github.com/jensleitloff/CNN-Sentinel/blob/master/slides/M3-2019_RieseLeitloff_SatelliteCV.pdf
+# https://towardsdatascience.com/transfer-learning-for-image-classification-using-keras-c47ccf09c8c8
+# https://colab.research.google.com/drive/18AN2AUM5sEsTMGUzFUL0FLSULtXF4Ps0#scrollTo=IadgsHtw48Of
 
 import os, datetime
 import numpy as np
@@ -18,11 +20,12 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import classification_report, confusion_matrix
 
 from keras.utils import to_categorical
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from keras.models import Sequential, Model
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, GlobalAveragePooling2D, Dropout
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import load_model
 from keras.applications.vgg16 import VGG16
+from keras.applications.inception_v3 import preprocess_input
 
 import logging, os 
 logging.disable(logging.WARNING) 
@@ -123,6 +126,36 @@ def define_model(height, width, channels, num_classes):
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
+def define_model_imagenet(height, width, channels, num_classes):
+    '''
+    Defines and compiles CNN model.
+    
+    Inputs:
+        height, width, channels, num_classes (int)
+    Returns:
+        model (keras.Model object)
+    '''
+
+    # https://medium.com/abraia/first-steps-with-transfer-learning-for-custom-image-classification-with-keras-b941601fcad5
+
+    #### Model Customization
+    base_model = VGG16(weights='imagenet', include_top=False)
+
+    x = base_model.output
+    x = GlobalAveragePooling2D(name='avg_pool')(x)
+    x = Dropout(0.4)(x)
+    predictions = Dense(num_classes, activation='softmax')(x)
+    model = Model(inputs=base_model.input, outputs=predictions)
+
+    for layer in base_model.layers:
+        layer.trainable = False
+
+    model.compile(optimizer='rmsprop',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+    return model
+
 
 def evaluate_model(model, trainX, trainY, testX, testY):
     '''
@@ -205,7 +238,7 @@ def buid_and_run_cnn():
 
     # Process daytime and nighttime imagery for input into CNN? If False, uses 
     # previously saved data
-    reprocess_data = True
+    reprocess_data = False
 
     # Daytime impage parameters
     image_height = 224 # VGG16 needs images to be rescale to 224x224
@@ -276,7 +309,9 @@ def buid_and_run_cnn():
     # DEFINE AND EVALUTATE MODEL
     print(f'{datetime.datetime.now()} 5. Defining and Evaluating CNN.')
 
-    model = define_model(image_height, image_width, N_bands, n_ntl_bins)
+    #model = define_model(image_height, image_width, N_bands, n_ntl_bins)
+    model = define_model_imagenet(image_height, image_width, N_bands, n_ntl_bins)
+
     #evaluate_with_crossval(model, trainX, trainY, k=5)
     evaluate_model(model, trainX, trainY, testX, testY)
 

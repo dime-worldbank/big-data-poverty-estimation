@@ -140,23 +140,25 @@ def evaluate_model(model, trainX, trainY, testX, testY):
     '''
 
     # Use early stopping to help with overfitting
-    es = EarlyStopping(monitor='val_loss', mode='min', patience=10, verbose=False)
+    es = EarlyStopping(monitor='val_loss', mode='min', patience=100, verbose=False)
 
     # Save best model based on accuracy
     mc = ModelCheckpoint(CNN_FILENAME, monitor='val_loss', mode='min', 
-                         verbose=False, save_best_only=True)
+                         verbose=True, save_best_only=True)
 
     # Fit model
-    history = model.fit(trainX, trainY, 
-                        epochs=10, 
-                        batch_size=500, 
-                        validation_data=(testX, testY), 
-                        callbacks=[es, mc], 
-                        verbose=False)
+    model.fit(trainX, trainY, 
+            epochs=10, 
+            batch_size=500, 
+            validation_data=(testX, testY), 
+            callbacks=[es, mc], 
+            verbose=False)
 
     # Show accuracy
     loss, accuracy = model.evaluate(testX, testY, verbose=False)
     print(f'                              Accuracy: {accuracy}')
+
+    #return model
         
 
 def evaluate_with_crossval(model, dataX, dataY, k=2):
@@ -203,7 +205,7 @@ def buid_and_run_cnn():
 
     # Process daytime and nighttime imagery for input into CNN? If False, uses 
     # previously saved data
-    reprocess_data = True
+    reprocess_data = False
 
     # Daytime impage parameters
     image_height = 224 # VGG16 needs images to be rescale to 224x224
@@ -248,8 +250,6 @@ def buid_and_run_cnn():
         NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'))
         DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'dtl.npy'))
 
-    print(np.unique(NTL, return_counts=True))
-
     # SPLIT DATA INTO TRAINING AND TESTING
     raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
                                                                     test_size=0.2)
@@ -262,17 +262,26 @@ def buid_and_run_cnn():
     trainX, trainY = prep_dataset(raw_trainX, raw_trainY, image_height, image_width, N_bands)
     testX, testY = prep_dataset(raw_testX, raw_testY, image_height, image_width, N_bands)
     
+    print(np.unique(NTL, return_counts=True))
+
+    print(np.unique(raw_trainY, return_counts=True))
+    print(np.unique(raw_testY, return_counts=True))
+
+    print(np.unique(trainY, return_counts=True))
+    print(np.unique(testY, return_counts=True))
+
     # PREP PIXELS IN FEATURES
     trainX, testX = normalize(trainX), normalize(testX)
 
     # DEFINE AND EVALUTATE MODEL
     print(f'{datetime.datetime.now()} 5. Defining and Evaluating CNN.')
     model = define_model(image_height, image_width, N_bands, n_ntl_bins)
-    evaluate_with_crossval(model, trainX, trainY, k=5)
+    #evaluate_with_crossval(model, trainX, trainY, k=5)
+    evaluate_model(model, trainX, trainY, testX, testY)
 
     # DISPLAY IN-DEPTH EVALUTAION METRICS
     best_model = load_model(CNN_FILENAME)
-    display_eval_metrics(best_model, testX, testY)
+    display_eval_metrics(model, testX, testY)
     print(f'{datetime.datetime.now()} 6. END: CNN Saved.') 
 
 

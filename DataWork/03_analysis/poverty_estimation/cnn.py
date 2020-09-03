@@ -140,7 +140,7 @@ def evaluate_model(model, trainX, trainY, testX, testY):
     '''
 
     # Use early stopping to help with overfitting
-    es = EarlyStopping(monitor='val_loss', mode='min', patience=100, verbose=False)
+    es = EarlyStopping(monitor='val_loss', mode='min', patience=5, verbose=False)
 
     # Save best model based on accuracy
     mc = ModelCheckpoint(CNN_FILENAME, monitor='val_loss', mode='min', 
@@ -187,7 +187,7 @@ def evaluate_with_crossval(model, dataX, dataY, k=2):
         count += 1
 
 
-def display_eval_metrics(model, testX, testY):
+def display_eval_metrics(model, testX, testY, n_ntl_bins):
     '''
     Displays evaluation metrics for a given trained model.
     '''
@@ -196,7 +196,7 @@ def display_eval_metrics(model, testX, testY):
     predY = np.argmax(predY, axis = 1)
     testY_bins = np.argmax(testY, axis = 1)
     # Generate classification report
-    classes = ['Radiance Level %01d' %i for i in range(1,6)]
+    classes = ['Radiance Level %01d' %i for i in range(1,n_ntl_bins+1)]
     print(classification_report(testY_bins, predY, target_names=classes))
 
 def buid_and_run_cnn():
@@ -205,7 +205,7 @@ def buid_and_run_cnn():
 
     # Process daytime and nighttime imagery for input into CNN? If False, uses 
     # previously saved data
-    reprocess_data = False
+    reprocess_data = True
 
     # Daytime impage parameters
     image_height = 224 # VGG16 needs images to be rescale to 224x224
@@ -215,10 +215,10 @@ def buid_and_run_cnn():
     N_bands = len(bands)
 
     # Number of bins for NTL
-    n_ntl_bins = 5
+    n_ntl_bins = 3
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 20
+    min_ntl_bin_count = 30
 
     # Run --------------------------------------------------------------------
 
@@ -275,13 +275,14 @@ def buid_and_run_cnn():
 
     # DEFINE AND EVALUTATE MODEL
     print(f'{datetime.datetime.now()} 5. Defining and Evaluating CNN.')
+
     model = define_model(image_height, image_width, N_bands, n_ntl_bins)
     #evaluate_with_crossval(model, trainX, trainY, k=5)
     evaluate_model(model, trainX, trainY, testX, testY)
 
     # DISPLAY IN-DEPTH EVALUTAION METRICS
     best_model = load_model(CNN_FILENAME)
-    display_eval_metrics(model, testX, testY)
+    display_eval_metrics(model, testX, testY, n_ntl_bins)
     print(f'{datetime.datetime.now()} 6. END: CNN Saved.') 
 
 

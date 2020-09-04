@@ -7,12 +7,18 @@
 import os
 import pandas as pd
 import numpy as np
+import cv2
 import rasterio 
 from rasterio.mask import mask
 from rasterio.enums import Resampling
 from keras.models import Model
 from keras.applications.imagenet_utils import preprocess_input
 
+# https://automating-gis-processes.github.io/CSC18/lessons/L6/clipping-raster.html
+def getFeatures(gdf):
+    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
+    import json
+    return [json.loads(gdf.to_json())['features'][0]['geometry']]
 
 def format_coords(Polygon):
     '''
@@ -30,53 +36,68 @@ def format_coords(Polygon):
     return [dictionary]
 
 
-def mask_and_write(filepath, polygon):
+def read_crop_resample_raster(filepath, polygon, img_height, img_width):
     '''
-    Crops DLT according to VIIRS polygon, write out a .tif called
-    'masked.tif' to be used in resampling.
-    
+    https://automating-gis-processes.github.io/CSC18/lessons/L6/clipping-raster.html
+
+    Reads raster, crops according to polygon and resamples
+
     Inputs:
         filepath (str)
         polygon (shapely.Polygon object)
     Returns:
-        None
+        2D numpy array
     '''
-    shapes = format_coords(polygon) 
-    with rasterio.open(filepath) as dataset:
-        out_img, out_transform = mask(dataset, shapes=shapes, crop=True)
-        out_meta = dataset.meta
 
-        # TODO: Check
-        #out_img = np.delete(out_img, -1, axis=2)
-        out_img = np.delete(out_img,  1, axis=0)
-        out_img = np.delete(out_img, -1, axis=0)
-        out_img = np.delete(out_img, -1, axis=1)
-        out_img = np.delete(out_img, -1, axis=1)
+    #### Load Raster
+    r_data = rasterio.open(filepath)
+
+    #### Crop
+
+    # Coordinates in format for rasterio
+    shapes = getFeatures(polygon) 
+
+    # Crop
+    from rasterio.mask import mask
+    out_img, out_transform = mask(r_data, shapes=shapes, crop=True)
     
-    out_meta.update({"driver": "GTiff",
-                     "height": out_img.shape[1],
-                     "width": out_img.shape[2],
-                     "transform": out_transform})
+    # Update Metadata
+    # TODO: may not need as treat as numpy, not back to raster?
+    #out_meta = r_data.meta.copy()
+    #out_meta.update({"driver": "GTiff",
+    #                "height": out_img.shape[1],
+    #                "width": out_img.shape[2],
+    #                "transform": out_transform})
 
-    with rasterio.open("masked.tif", "w", **out_meta) as dest:
-        dest.write(out_img)
+    #### 3D to 2D
+    out_img = out_img[0]    
 
+    #### Remove Outer Border [lines of zeros] #TODO: See why happening?
+    out_img = np.delete(out_img,  1, axis=0)
+    out_img = np.delete(out_img, -1, axis=0)
+    out_img = np.delete(out_img,  1, axis=1)
+    out_img = np.delete(out_img, -1, axis=1)
 
-def resample(new_height, new_width):
-    '''
-    Rescale masked images to new_width and new_height.
+    #### Resample
+    out_img = cv2.resize(out_img, dsize=(img_height, img_width), interpolation=cv2.INTER_NEAREST)
 
-    Inputs:
-        new_width, new_height (int)
-    Returns:
-        data (numpy.ndarray)
-    '''
-    with rasterio.open('masked.tif') as dataset:
-        # Resampling.nearest
-        data = dataset.read(out_shape=(dataset.count, new_height, new_width),
-                            resampling=Resampling.bilinear)
-    
-    return data
+    return out_img
+
+#def resample(new_height, new_width):
+#    '''
+#    Rescale masked images to new_width and new_height.
+#
+#    Inputs:
+#        new_width, new_height (int)
+#    Returns:
+#        data (numpy.ndarray)
+#    '''
+#    with rasterio.open('masked.tif') as dataset:
+#        # Resampling.nearest
+#        data = dataset.read(out_shape=(dataset.count, new_height, new_width),
+#                            resampling=Resampling.bilinear)
+#    
+#    return data
 
     
 def get_DTL(row, directory, bands, img_height, img_width):
@@ -91,25 +112,17 @@ def get_DTL(row, directory, bands, img_height, img_width):
     '''
     all_bands = []
 
-    #bands = [*range(1,8)]
-    #crop_img_height = 25
-    #crop_img_width = 25
-
     for b in bands:
+
         tile, polygon = int(row['tile_id']), row['geometry']
         filename = f'l8_2014_tile{str(tile)}_b{str(b)}.tif'
         filepath = os.path.join(directory, filename)
 
-        #shapes = format_coords(polygon) 
-        #with rasterio.open(filepath) as dataset:
-        #    out_img, out_transform = mask(dataset, shapes=shapes, crop=True)
-        #    out_meta = dataset.meta
+        data = read_crop_resample_raster(filepath, polygon, img_height, img_width)
 
-        mask_and_write(filepath, polygon)
-        data = resample(img_height, img_width)
         all_bands.append(data)
 
-        if data.shape != (1, img_height, img_width):
+        if data.shape != (img_height, img_width):
             print(f'Flag: Irregular cropped image shape {data.shape}')
             
     return all_bands

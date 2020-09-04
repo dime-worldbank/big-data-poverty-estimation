@@ -146,7 +146,10 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
     DTL_list = []
     gdf = input_gdf.copy()
 
-    for i, row in gdf.iterrows():
+    for i in range(gdf.shape[0]):
+
+        row = gdf.iloc[[i]]
+
         DTL = get_DTL(row, directory, bands, img_height, img_width)
         if DTL:
             # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)

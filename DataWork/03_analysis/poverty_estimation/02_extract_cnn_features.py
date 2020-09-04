@@ -25,7 +25,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, 
                              recall_score, classification_report)
 from keras.models import load_model
-from imblearn.over_sampling import RandomOverSampler
+#from imblearn.over_sampling import RandomOverSampler
 
 import logging 
 logging.disable(logging.WARNING) 
@@ -233,28 +233,25 @@ def run_grid_search(cnn_filepath='script_CNN.h5', grid_ready_data=None,
     bisp_df = pd.read_csv(os.path.join(cf.SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv'))
     bisp_gdf = pd_to_gdp(bisp_df)
     bisp_gdf = gpd.sjoin(bisp_gdf, dtl_tiles, how="inner", op='intersects').reset_index(drop=True)
-    
     bisp_gdf['geometry'] = bisp_gdf.buffer(distance = 0.75/111.12).envelope
     
-    a = bisp_gdf.head()
-
-    # TODO: SQAURE BUFFER - LIKE VIIRS! SAME DIMENSIONS.
-    # CAN WE GRAB DIMENSIONS FROM VIIRS FILE?
-
     # 3. Extract DTL to BISP Coordinates
 
     # Load CNN parameters 
     with open(cf.CNN_PARAMS_FILENAME, 'r') as fp:
         cnn_param_dict = json.load(fp)
 
-    DTL, processed_gdf = fe.map_DTL_NTL(input_gdf = a, 
+    # Extract
+    bisp_gdf_s = bisp_gdf.head(10)
+    import feature_extraction as fe
+    DTL, bisp_gdf_processed = fe.map_DTL_NTL(input_gdf = bisp_gdf_s, 
                                         directory = cf.DTL_DIRECTORY, 
                                         bands = cnn_param_dict['bands'], 
                                         img_height = cnn_param_dict['image_height'], 
                                         img_width = cnn_param_dict['image_width'])
 
 
-    out_img = DTL[3,1]
+    out_img = DTL[190,2]
     show(out_img)
 
     # Remove border b/c of weird zero issue?

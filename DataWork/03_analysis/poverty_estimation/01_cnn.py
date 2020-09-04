@@ -285,6 +285,13 @@ def buid_and_run_cnn():
 
         # MATCH DTL TO NTL
         print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
+
+        # input_gdf = gdf
+        # directory = DTL_DIRECTORY
+        # bands
+        # img_height = image_height
+        # img_width = image_width
+
         DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
         NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 

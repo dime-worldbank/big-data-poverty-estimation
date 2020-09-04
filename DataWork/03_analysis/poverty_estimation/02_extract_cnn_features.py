@@ -234,24 +234,34 @@ def run_grid_search(cnn_filepath='script_CNN.h5', grid_ready_data=None,
     bisp_gdf = pd_to_gdp(bisp_df)
     bisp_gdf = gpd.sjoin(bisp_gdf, dtl_tiles, how="inner", op='intersects').reset_index(drop=True)
     
+    bisp_gdf['geometry'] = bisp_gdf.buffer(distance = 0.75/111.12).envelope
+    
+    a = bisp_gdf.head()
+
+    # TODO: SQAURE BUFFER - LIKE VIIRS! SAME DIMENSIONS.
+    # CAN WE GRAB DIMENSIONS FROM VIIRS FILE?
+
     # 3. Extract DTL to BISP Coordinates
 
     # Load CNN parameters 
     with open(cf.CNN_PARAMS_FILENAME, 'r') as fp:
         cnn_param_dict = json.load(fp)
 
-    a = bisp_gdf.head()
-
-    DTL, processed_gdf = fe.map_DTL_NTL(a, 
-                                        cf.DTL_DIRECTORY, 
-                                        cnn_param_dict['bands'], 
-                                        cnn_param_dict['image_height'], 
-                                        cnn_param_dict['image_width'])
-
-    bisp_gdf[]
+    DTL, processed_gdf = fe.map_DTL_NTL(input_gdf = a, 
+                                        directory = cf.DTL_DIRECTORY, 
+                                        bands = cnn_param_dict['bands'], 
+                                        img_height = cnn_param_dict['image_height'], 
+                                        img_width = cnn_param_dict['image_width'])
 
 
-    NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
+    out_img = DTL[3,1]
+    show(out_img)
+
+    # Remove border b/c of weird zero issue?
+    out_img = np.delete(out_img,  1, axis=1)
+    out_img = np.delete(out_img, -1, axis=1)
+    out_img = np.delete(out_img, -1, axis=2)
+    out_img = np.delete(out_img, -1, axis=2)
 
 
 

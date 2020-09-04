@@ -46,7 +46,12 @@ def mask_and_write(filepath, polygon):
         out_img, out_transform = mask(dataset, shapes=shapes, crop=True)
         out_meta = dataset.meta
 
-        out_img = np.delete(out_img, -1, axis=2)
+        # TODO: Check
+        #out_img = np.delete(out_img, -1, axis=2)
+        out_img = np.delete(out_img,  1, axis=0)
+        out_img = np.delete(out_img, -1, axis=0)
+        out_img = np.delete(out_img, -1, axis=1)
+        out_img = np.delete(out_img, -1, axis=1)
     
     out_meta.update({"driver": "GTiff",
                      "height": out_img.shape[1],

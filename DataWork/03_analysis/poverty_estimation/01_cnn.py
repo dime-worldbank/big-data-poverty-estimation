@@ -12,6 +12,7 @@ import os, datetime
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import json
 import rasterio
 from rasterio.plot import show
 
@@ -144,6 +145,7 @@ def define_model_imagenet(height, width, channels, num_classes):
     x = base_model.output
     x = GlobalAveragePooling2D(name='avg_pool')(x)
     x = Dropout(0.4)(x)
+    x = Dense(100, activation='relu', name='dense1')(x)
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=predictions)
 
@@ -238,7 +240,7 @@ def buid_and_run_cnn():
 
     # Process daytime and nighttime imagery for input into CNN? If False, uses 
     # previously saved data
-    reprocess_data = False
+    reprocess_data = True
 
     # Daytime impage parameters
     image_height = 224 # VGG16 needs images to be rescale to 224x224
@@ -251,7 +253,18 @@ def buid_and_run_cnn():
     n_ntl_bins = 3
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 30
+    min_ntl_bin_count = 50
+
+    #### Save parameters for later use
+    cnn_param_dict = {'image_height': image_height, 
+                    'image_width': image_width,
+                    'bands': bands,
+                    'N_bands': N_bands,
+                    'n_ntl_bins': n_ntl_bins,
+                    'min_ntl_bin_count': min_ntl_bin_count}
+
+    with open(cf.CNN_PARAMS_FILENAME, 'w') as fp:
+        json.dump(cnn_param_dict, fp)
 
     # Run --------------------------------------------------------------------
 

@@ -3,6 +3,7 @@
 # Description:
 # Build and run CNN that will serve as feature extractor in poverty estimation.
 
+# https://www.analyticsvidhya.com/blog/2020/02/learn-image-classification-cnn-convolutional-neural-networks-3-datasets/
 # https://github.com/jensleitloff/CNN-Sentinel
 # https://github.com/jensleitloff/CNN-Sentinel/blob/master/slides/M3-2019_RieseLeitloff_SatelliteCV.pdf
 # https://towardsdatascience.com/transfer-learning-for-image-classification-using-keras-c47ccf09c8c8
@@ -85,15 +86,15 @@ def sample_by_target(input_gdf, target_col_name, n):
     return gdf
 
 
-def prep_dataset(X, Y, height, width, channels):
-    '''
-    Preps a given dataset for CNN by reshaping features and one-hot encoding targets.
-    '''
-    # Reshape features from 5D to 4D
-    X = X.reshape((X.shape[0], height, width, channels))
-    # One-hot encode targets from 1D to 2D
-    Y = to_categorical(Y)
-    return X, Y
+#def prep_dataset(X, Y, height, width, channels):
+#    '''
+#    Preps a given dataset for CNN by reshaping features and one-hot encoding targets.
+#    '''
+#    # Reshape features from 5D to 4D
+#    X = X.reshape((X.shape[0], height, width, channels))
+#    # One-hot encode targets from 1D to 2D
+#    Y = to_categorical(Y)
+#    return X, Y
 
 
 def normalize(X):
@@ -138,23 +139,40 @@ def define_model_imagenet(height, width, channels, num_classes):
     '''
 
     # https://medium.com/abraia/first-steps-with-transfer-learning-for-custom-image-classification-with-keras-b941601fcad5
+    # https://towardsdatascience.com/cnn-transfer-learning-fine-tuning-9f3e7c5806b2
 
-    #### Model Customization
-    base_model = VGG16(weights='imagenet', include_top=False)
-
-    x = base_model.output
-    x = GlobalAveragePooling2D(name='avg_pool')(x)
-    x = Dropout(0.4)(x)
-    x = Dense(100, activation='relu', name='dense1')(x)
-    predictions = Dense(num_classes, activation='softmax')(x)
-    model = Model(inputs=base_model.input, outputs=predictions)
+    #### Base model
+    input_shape = (height, width, channels)
+    base_model = VGG16(weights='imagenet', include_top=False, input_shape=input_shape)
 
     for layer in base_model.layers:
         layer.trainable = False
 
+    #### Model Customization
+    # We take the last layer of our the model and add it to our classifier
+    last = base_model.layers[-1].output
+    x = Flatten()(last)
+    x = Dense(100, activation='relu', name='fc1')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(num_classes, activation='softmax', name='predictions')(x)
+    model = Model(base_model.input, x)
+    # We compile the model
     model.compile(optimizer='rmsprop',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
+
+    #model.compile(optimizer=Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+
+    #x = base_model.output
+    #x = GlobalAveragePooling2D(name='avg_pool')(x)
+    #x = Dropout(0.4)(x)
+    #x = Dense(100, activation='relu', name='dense1')(x)
+    #predictions = Dense(num_classes, activation='softmax')(x)
+    #model = Model(inputs=base_model.input, outputs=predictions)
+
+    #model.compile(optimizer='rmsprop',
+    #          loss='categorical_crossentropy',
+    #          metrics=['accuracy'])
 
     return model
 
@@ -253,7 +271,7 @@ def buid_and_run_cnn():
     n_ntl_bins = 3
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 50
+    min_ntl_bin_count = 30
 
     #### Save parameters for later use
     cnn_param_dict = {'image_height': image_height, 
@@ -304,16 +322,19 @@ def buid_and_run_cnn():
         DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'dtl.npy'))
 
     # SPLIT DATA INTO TRAINING AND TESTING
-    raw_trainX, raw_testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
-                                                                    test_size=0.2)
+    trainX, testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
+                                                            test_size=0.2)
 
     # DEFINE IMAGE CHARACTERISTICS
     #h, w, c, num_classes = 25, 25, 7, 5
     
     # PREP TRAINING AND TESTING DATA
-    print(f'{datetime.datetime.now()} 4. Prepping Training and Testing Sets.')
-    trainX, trainY = prep_dataset(raw_trainX, raw_trainY, image_height, image_width, N_bands)
-    testX, testY = prep_dataset(raw_testX, raw_testY, image_height, image_width, N_bands)
+    trainY = to_categorical(raw_trainY)
+    testY = to_categorical(raw_testY)
+
+    #print(f'{datetime.datetime.now()} 4. Prepping Training and Testing Sets.')
+    #trainX, trainY = prep_dataset(raw_trainX, raw_trainY, image_height, image_width, N_bands)
+    #testX, testY = prep_dataset(raw_testX, raw_testY, image_height, image_width, N_bands)
     
     print(np.unique(NTL, return_counts=True))
 
@@ -339,7 +360,6 @@ def buid_and_run_cnn():
     best_model = load_model(CNN_FILENAME)
     display_eval_metrics(model, testX, testY, n_ntl_bins)
     print(f'{datetime.datetime.now()} 6. END: CNN Saved.') 
-
 
 if __name__ == '__main__':
     buid_and_run_cnn()

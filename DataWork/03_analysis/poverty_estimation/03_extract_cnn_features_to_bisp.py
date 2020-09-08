@@ -29,7 +29,11 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, 
                              recall_score, classification_report)
+                             
 from keras.models import load_model
+from keras.models import Sequential, Model
+
+from tensorflow.keras.applications.vgg16 import preprocess_input
 
 import warnings
 import random

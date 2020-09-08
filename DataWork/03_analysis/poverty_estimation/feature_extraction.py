@@ -122,10 +122,12 @@ def get_DTL(row, directory, bands, img_height, img_width):
 
         all_bands.append(data)
 
-        if data.shape != (img_height, img_width):
-            print(f'Flag: Irregular cropped image shape {data.shape}')
+        #if data.shape != (img_height, img_width):
+        #    print(f'Flag: Irregular cropped image shape {data.shape}')
             
-    return all_bands
+    all_bands_array = np.stack(all_bands, axis=-1)
+
+    return all_bands_array
 
 
 def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
@@ -151,7 +153,7 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
         row = gdf.iloc[[i]]
 
         DTL = get_DTL(row, directory, bands, img_height, img_width)
-        if DTL:
+        if DTL.shape[0] == img_height:
             # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)
             DTL_list.append(DTL)
         else:

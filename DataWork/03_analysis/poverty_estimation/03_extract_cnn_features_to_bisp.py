@@ -68,33 +68,60 @@ def normalize(x_train, x_test):
     for df in (x_train, x_test):
         x_scaler.transform(df)
 
-def pd_to_gdp(df, lat_name = 'latitude', lon_name = 'longitude'):
-    '''
-    Converts a pandas dataframe with lat and long variables into
-    geopandas point data
 
-    Input:  df - pandas dataframe
-            lat_name - name of latitude variable in df
-            lon_name - name of longitude variable in df
-    Output: geopandas dataframe
-    '''
 
-    geometry = [Point(xy) for xy in zip(df[lon_name], df[lat_name])]
-    df = df.drop([lon_name, lat_name], axis=1)
-    gdf = GeoDataFrame(df, crs="EPSG:4326", geometry=geometry)
-
-    return gdf
-
-def extract_features():
+def extract_cnn_data():
 
     # 1. Load Data
     DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl.npy'))
     bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids.pkl'))
 
     # 2. Extract features
-    
+    # https://towardsdatascience.com/extract-features-visualize-filters-and-feature-maps-in-vgg16-and-vgg19-cnn-models-d2da6333edd0
 
-    ##### DONE !!!!
+    layer_name = 'dense1'
+    model = load_model(cf.CNN_FILENAME)
+
+    #df_features = fe.extract_features(model, DTL, layer_name)
+
+
+
+
+    # Preprocess image data
+    DTL_p = preprocess_input(DTL)
+
+
+
+    # Generate feature extractor using trained CNN
+    feature_extractor = Model(inputs=model.inputs,
+                              outputs=model.get_layer(name=layer_name).output,)
+
+
+
+    a = feature_extractor.predict(DTL_p)
+                              
+
+    # Extract features and convert from tensor to numpy array
+    # features = feature_extractor(DTL_p).numpy()
+    features = feature_extractor(DTL_p)
+
+    # Create and format pandas DataFrame
+    df = pd.DataFrame(features).add_prefix('feat_')
+
+
+
+
+    # USE PCA TO SELECT EXTRACTED FEATURES
+    print(f'{datetime.datetime.now()} 3. Performing PCA.')
+    df_features_pca = perform_pca(df_features, 10)
+    feature_dict['EXTRACTED_FEATURES'] = df_features_pca.columns.to_list()
+    feature_dict['EXTRACT_OSM_FB_FEATURES'] = feature_dict['EXTRACTED_FEATURES'] \
+                                        + feature_dict['OSM_FB_FEATURES']
+
+
+
+
+    ############# DONE ############
 
 
 

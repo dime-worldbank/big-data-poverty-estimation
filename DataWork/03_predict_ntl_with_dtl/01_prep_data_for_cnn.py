@@ -84,7 +84,7 @@ def prep_cnn_data():
     n_ntl_bins = 5
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 6600
+    min_ntl_bin_count = 200
 
     #### Save parameters for later use
     cnn_param_dict = {'image_height': image_height, 
@@ -118,7 +118,10 @@ def prep_cnn_data():
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 
+    print("Saving NTL")
     np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'), NTL)
+
+    print("Saving DTL")
     np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs' , 'dtl.npy'), DTL)
 
 if __name__ == '__main__':

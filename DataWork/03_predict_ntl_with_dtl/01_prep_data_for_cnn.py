@@ -74,8 +74,8 @@ def prep_cnn_data():
     # PARAMETERS -------------------------------------------------------------
 
     # Daytime impage parameters
-    image_height = 224 # VGG16 needs images to be rescale to 224x224
-    image_width = 224
+    image_height = 48 # VGG16 needs images to be rescale to 224x224
+    image_width = 48
     bands = ['4', '3', '2'] # which bands to use? 4,3,2 are RGB
 
     N_bands = len(bands)
@@ -84,7 +84,7 @@ def prep_cnn_data():
     n_ntl_bins = 5
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 200
+    min_ntl_bin_count = 6600
 
     #### Save parameters for later use
     cnn_param_dict = {'image_height': image_height, 
@@ -93,6 +93,8 @@ def prep_cnn_data():
                     'N_bands': N_bands,
                     'n_ntl_bins': n_ntl_bins,
                     'min_ntl_bin_count': min_ntl_bin_count}
+
+    print(cnn_param_dict)
 
     with open(cf.CNN_PARAMS_FILENAME, 'w') as fp:
         json.dump(cnn_param_dict, fp)

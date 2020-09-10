@@ -29,7 +29,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, 
                              recall_score, classification_report)
-                             
+
 from keras.models import load_model
 from keras.models import Sequential, Model
 
@@ -101,6 +101,7 @@ def extract_features_to_pd():
                
     # 4. Export           
     df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.pkl'))
+    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.csv'))
 
 if __name__ == '__main__':
     extract_features_to_pd()

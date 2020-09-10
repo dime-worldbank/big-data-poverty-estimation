@@ -100,7 +100,6 @@ def prep_cnn_data():
     # Run --------------------------------------------------------------------
 
     # LOAD DATA
-    print(f'{datetime.datetime.now()} 1. Load and Prep Data.')
     viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
@@ -109,15 +108,13 @@ def prep_cnn_data():
     transform_target(viirs_gdf, 'median_rad_2014', n_ntl_bins)
 
     # Total pixels in each category
-    viirs_gdf[FINAL_TARGET_NAME].value_counts()
+    print(viirs_gdf[FINAL_TARGET_NAME].value_counts())
 
     # CREATE SAMPLE
     min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_ntl_bin_count)
 
     # MATCH DTL TO NTL
-    print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
-
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
 

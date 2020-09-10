@@ -254,80 +254,23 @@ def display_eval_metrics(model, testX, testY, n_ntl_bins):
 
 def buid_and_run_cnn():
 
-    # PARAMETERS -------------------------------------------------------------
+    with open(cf.CNN_PARAMS_FILENAME, 'r') as fp:
+        cnn_param_dict = json.load(fp)
 
-    # Process daytime and nighttime imagery for input into CNN? If False, uses 
-    # previously saved data
-    reprocess_data = True
+    N_bands = cnn_param_dict['N_bands']
+    n_ntl_bins = cnn_param_dict['n_ntl_bins']
+    image_height = cnn_param_dict['image_height']
+    image_width = cnn_param_dict['image_width']
+    bands = cnn_param_dict['bands']
+    min_ntl_bin_count = cnn_param_dict['bands']
 
-    # Daytime impage parameters
-    image_height = 224 # VGG16 needs images to be rescale to 224x224
-    image_width = 224
-    bands = ['4', '3', '2'] # which bands to use? 4,3,2 are RGB
-
-    N_bands = len(bands)
-
-    # Number of bins for NTL
-    n_ntl_bins = 3
-
-    # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 30
-
-    #### Save parameters for later use
-    cnn_param_dict = {'image_height': image_height, 
-                    'image_width': image_width,
-                    'bands': bands,
-                    'N_bands': N_bands,
-                    'n_ntl_bins': n_ntl_bins,
-                    'min_ntl_bin_count': min_ntl_bin_count}
-
-    with open(cf.CNN_PARAMS_FILENAME, 'w') as fp:
-        json.dump(cnn_param_dict, fp)
-
-    # Run --------------------------------------------------------------------
-
-    if reprocess_data:
-
-        # LOAD DATA
-        print(f'{datetime.datetime.now()} 1. Load and Prep Data.')
-        viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
-        viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
-        viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
-
-        # PREP NTL
-        transform_target(viirs_gdf, 'median_rad_2014', n_ntl_bins)
-
-        # CREATE SAMPLE
-        min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
-        gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_ntl_bin_count)
-
-        # MATCH DTL TO NTL
-        print(f'{datetime.datetime.now()} 2. Matching DTL to NTL')
-
-        # input_gdf = gdf
-        # directory = DTL_DIRECTORY
-        # bands
-        # img_height = image_height
-        # img_width = image_width
-
-        DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
-        NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
-
-        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'), NTL)
-        np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs' , 'dtl.npy'), DTL)
-
-    else:
-
-        NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'))
-        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'dtl.npy'))
+    NTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'))
+    DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'dtl.npy'))
 
     # SPLIT DATA INTO TRAINING AND TESTING
     trainX, testX, raw_trainY, raw_testY = train_test_split(DTL, NTL, 
                                                             test_size=0.2)
 
-    # DEFINE IMAGE CHARACTERISTICS
-    #h, w, c, num_classes = 25, 25, 7, 5
-    
     # PREP TRAINING AND TESTING DATA
     trainY = to_categorical(raw_trainY)
     testY = to_categorical(raw_testY)

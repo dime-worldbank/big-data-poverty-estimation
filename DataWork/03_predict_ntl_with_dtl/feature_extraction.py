@@ -150,8 +150,8 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
 
     for i in range(gdf.shape[0]):
 
-        # Print every 50
-        if (i % 50) == 0: print(i)
+        # Print every 100
+        if (i % 100) == 0: print(i)
 
         row = gdf.iloc[[i]]
 

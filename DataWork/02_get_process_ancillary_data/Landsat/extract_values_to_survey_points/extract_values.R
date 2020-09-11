@@ -1,13 +1,25 @@
-# Extract Satellite Imagery to BISP Households
-
-# Extract Landsat and VIIRS data to BISP Households. Extract to different buffer
-# sizes.
+# Extracts values of landsat to BISP coordinates
 
 #### PARAMETERS
-buffer_sizes_landsat_km <- c(0.1, 0.5, 1, 1.5, 2)
-buffer_sizes_viirs_km <- c(1,2,3,5,10)
+buffer_sizes_landsat_km <- c(0.1, 1, 2)
 
 # Prep BISP --------------------------------------------------------------------
+bisp_coords <- read.csv(file.path(secure_file_path, "Data", "BISP", "FinalData - PII", "GPS_uid_crosswalk.csv"))
+
+coordinates(bisp_coords) <- ~longitude + latitude
+crs(bisp_coords) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+## Determine which grid tile point falls in
+grid <- readRDS(file.path(project_file_path, "Data", "Country Grid", "RawData", "pak_grid_200km.Rds"))
+grid@data <- grid@data %>%
+  dplyr::rename(tile_id = id)
+
+bisp_coords_OVER_grid <- over(bisp_coords, grid)
+bisp_coords$tile_id <- bisp_coords_OVER_grid$tile_id
+
+# EDIT HERE - - - - - - 
+
+
 # Prep Coordinates Data
 bisp_coords <- read_dta(file.path(bisp_geocodes_file_path, "GPS_uid_crosswalk.dta"))
 bisp_coords <- bisp_coords[!is.na(bisp_coords$GPSN),]

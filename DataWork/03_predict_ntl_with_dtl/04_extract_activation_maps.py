@@ -31,7 +31,6 @@ from keract import display_activations
 import config as cf
 import feature_extraction as fe
 
-
 def extract_features_to_pd():
 
     # 1. Load Data and CNN Model

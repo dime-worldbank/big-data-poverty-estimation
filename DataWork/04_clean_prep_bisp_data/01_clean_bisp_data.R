@@ -3,8 +3,8 @@
 # Create Household Level BISP dataframe with all relevant socioeconomic variables
 
 # Load Data --------------------------------------------------------------------
-bisp_plist <- read_dta(file.path(raw_data_file_path, "BISP", "BISP - Deidentified", "bisp_combined_plist.dta"))
-bisp_povscore <- read_dta(file.path(raw_data_file_path, "BISP", "BISP - Deidentified", "UID_pscores.dta"))
+bisp_plist <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified", "bisp_combined_plist.dta"))
+bisp_povscore <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified", "UID_pscores.dta"))
 
 bisp_df <- merge(bisp_plist, bisp_povscore, by=c("period", "uid"))
 
@@ -32,7 +32,12 @@ bisp_df <- bisp_df %>%
   as.data.frame()
 
 # Export -----------------------------------------------------------------------
-saveRDS(bisp_df, file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_socioeconomic.Rds"))
+saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", 
+                           "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))
+
+write.csv(bisp_df, file.path(project_file_path, "Data", "BISP", 
+                             "FinalData", "Individual Datasets", "bisp_socioeconomic.csv"), 
+          row.names = F)
 
 
 

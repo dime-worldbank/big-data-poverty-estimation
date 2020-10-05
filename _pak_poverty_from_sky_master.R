@@ -8,6 +8,7 @@ if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Ban
 raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
 final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
+figures_file_path <- file.path(project_file_path, "Outputs", "Results", "Figures")
 
 # Secure Directory
 if(Sys.info()[["user"]] == "WB521633") secure_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data" 

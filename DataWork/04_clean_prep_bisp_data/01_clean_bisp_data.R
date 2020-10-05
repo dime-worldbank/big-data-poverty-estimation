@@ -8,7 +8,7 @@ bisp_povscore <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData 
 
 bisp_df <- merge(bisp_plist, bisp_povscore, by=c("period", "uid"))
 
-# Select variables and rename --------------------------------------------------
+# Clean main data --------------------------------------------------------------
 names(bisp_df) <- names(bisp_df) %>% tolower
 bisp_df <- bisp_df %>%
   dplyr::rename(days_worked_last_month = cq09,
@@ -30,6 +30,36 @@ bisp_df <- bisp_df %>%
             pscores = mean(pscores, na.rm=T)) %>%
   mutate(year = period %>% as_factor %>% as.character %>% as.numeric) %>%
   as.data.frame()
+
+# Clean and add consumption data -----------------------------------------------
+consum_fm_a <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
+                                "female",  "ModuleGPartA.dta"))
+consum_fm_b <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
+                                  "female",  "ModuleGPartB.dta"))
+
+consum_ma_b <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
+                                  "male",  "ModuleGPartB.dta"))
+consum_ma_c <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
+                                  "male",  "ModuleGPartC.dta"))
+consum_ma_d <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
+                                  "male",  "ModuleGPartD.dta"))
+
+consum_all <- bind_rows(consum_fm_a,
+                        consum_fm_b,
+                        consum_ma_b,
+                        consum_ma_c,
+                        consum_ma_d)
+
+## Value variables: replace
+consum_sum_all <- consum_all %>%
+  dplyr::select(uid, period, v11, v21, v31, v41) %>%
+  mutate_if(is.numeric, ~replace_na(., 0)) %>%
+  mutate(consumption_total = v11 + v21 + v31 + v41) %>%
+  group_by(uid, period) %>%
+  summarise(consumption_total = sum(consumption_total)) 
+
+bisp_df <- merge(bisp_df, consum_sum_all, by = c("uid", "period"),
+                  all.x=T, all.y=T)
 
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", 

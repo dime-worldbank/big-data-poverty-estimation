@@ -1,23 +1,5 @@
 # Alluvial Diagram of Poverty Over Time
 
-# CPI Index
-# https://fred.stlouisfed.org/series/DDOE01PKA086NWDB
-# 2011-01-01	116.18900000000000
-# 2013-01-01	136.91300000000000 // 3030.32 Poverty Line
-# 2014-01-01	142.79800000000000
-# 2016-01-01	152.79700000000000
-
-## Poverty Line
-pov_line_2013 <- 3030.32 
-pov_line_2011 <- (116.189 / 136.913)*3030.32
-pov_line_2014 <- (142.798 / 136.913)*3030.32
-pov_line_2016 <- (152.797 / 136.913)*3030.32
-
-pov_line_2011
-pov_line_2013
-pov_line_2014
-pov_line_2016
-
 # Load Data --------------------------------------------------------------------
 bisp_df <- readRDS(file.path(project_file_path, "Data", "BISP", "FinalData",
                              "Individual Datasets", "bisp_socioeconomic.Rds"))
@@ -27,7 +9,10 @@ bisp_df <- readRDS(file.path(project_file_path, "Data", "BISP", "FinalData",
 bisp_df$N_adult_equiv <- bisp_df$N_adults + bisp_df$N_children * 0.8
 
 # Consumption per adult equivalent
-bisp_df$consumption_adult_equiv <- (bisp_df$consumption_total / bisp_df$N_adult_equiv)
+bisp_df$consumption_adult_equiv <- bisp_df$consumption_total / bisp_df$N_adult_equiv
+
+# 20% consumption at baseline
+# quantile(bisp_df$consumption_total[bisp_df$year %in% 2011], .2)
 
 ## restrict to households with a poverty score in all four years
 bisp_df <- bisp_df %>%
@@ -41,33 +26,34 @@ bisp_df <- bisp_df %>%
 ## define poverty threshold
 # 3,030 per month per adult equivalent. out data has every 14 days, so 38
 # (31/14) for monthly multiplier
-bisp_df$pov_line <- NA
-bisp_df$pov_line[bisp_df$year %in% 2011] <- pov_line_2011
-bisp_df$pov_line[bisp_df$year %in% 2013] <- pov_line_2013
-bisp_df$pov_line[bisp_df$year %in% 2014] <- pov_line_2014
-bisp_df$pov_line[bisp_df$year %in% 2016] <- pov_line_2016
-
-bisp_df$poor <- ifelse(bisp_df$consumption_adult_equiv <= bisp_df$pov_line, 
-                                               "Below", "Above") %>% 
+bisp_df$poor <- ifelse(bisp_df$consumption_adult_equiv <= 3030*(31/14), "Below", "Above") %>% 
   factor(levels=c( "Below","Above"))
 
+mean(bisp_df$poor[bisp_df$year %in% 2011] %in% "Above")
+mean(bisp_df$poor[bisp_df$year %in% 2013] %in% "Above")
+
 bisp_df$poor_bisp <- ifelse(bisp_df$pscores <= 16.17, "Below", "Above") %>% 
-   factor(levels=c( "Below","Above"))
+   factor(levels=c("Below","Above"))
+
+bisp_df <- bisp_df %>%
+  group_by(uid) %>%
+  mutate(poor_bisp_2011 = ifelse(pscores[year %in% 2011] <= 16.17, "Below", "Above")) %>%
+  filter(!is.na(poor_bisp_2011))
 
 ## Number of households
 bisp_df$uid %>% unique() %>% length()
 
 bisp_wide_df <- bisp_df %>% 
-  dplyr::select(uid, year, poor) %>%
+  dplyr::select(uid, year, poor, poor_bisp_2011) %>%
   pivot_wider(names_from=year, values_from=poor) 
 
 bisp_wide_freq <- bisp_wide_df %>% 
-  group_by(`2011`, `2013`, `2014`, `2016`) %>%
+  group_by(`2011`, `2013`, `2014`, `2016`, poor_bisp_2011) %>%
   summarise(Freq = n())
 
-png(file.path(figures_file_path, "bisp_poverty_consumption_alluvial.png"), width=3000, height=1800, res=500)
+png(file.path(figures_file_path, "bisp_poverty_consumption_alluvial_bispstatus.png"), width=3000, height=1800, res=500)
 alluvial(bisp_wide_freq[,1:4], freq=bisp_wide_freq$Freq,
-         col = ifelse(bisp_wide_freq$`2011` == "Above", "forestgreen", "gold3"),
+         col = ifelse(bisp_wide_freq$poor_bisp_2011 == "Above", "forestgreen", "gold3"),
          border="white",
          cex = 0.95,
          alpha=.6,

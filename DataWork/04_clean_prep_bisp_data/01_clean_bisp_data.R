@@ -75,6 +75,33 @@ consum_sum_all <- consum_all %>%
 bisp_df <- merge(bisp_df, consum_sum_all, by = c("uid", "period"),
                   all.x=T, all.y=T)
 
+# Add Poverty Line -------------------------------------------------------------
+# CPI Index
+# https://fred.stlouisfed.org/series/DDOE01PKA086NWDB
+# 2011-01-01	116.18900000000000
+# 2013-01-01	136.91300000000000 // 3030.32 Poverty Line
+# 2014-01-01	142.79800000000000
+# 2016-01-01	152.79700000000000
+
+## Poverty Line
+pov_line_2013 <- 3030.32 
+pov_line_2011 <- (116.189 / 136.913)*3030.32
+pov_line_2014 <- (142.798 / 136.913)*3030.32
+pov_line_2016 <- (152.797 / 136.913)*3030.32
+
+bisp_df$pov_line <- NA
+bisp_df$pov_line[bisp_df$year %in% 2011] <- pov_line_2011
+bisp_df$pov_line[bisp_df$year %in% 2013] <- pov_line_2013
+bisp_df$pov_line[bisp_df$year %in% 2014] <- pov_line_2014
+bisp_df$pov_line[bisp_df$year %in% 2016] <- pov_line_2016
+
+# Create Additional Variables --------------------------------------------------
+# Number adult equivalent
+bisp_df$N_adult_equiv <- bisp_df$N_adults + bisp_df$N_children * 0.8
+
+# Consumption per adult equivalent
+bisp_df$consumption_adult_equiv <- (bisp_df$consumption_total / bisp_df$N_adult_equiv)
+
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", 
                            "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))

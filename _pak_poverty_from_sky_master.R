@@ -18,10 +18,6 @@ if(Sys.info()[["user"]] == "robmarty") secure_file_path <- "~/Documents/World Ba
 if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky/Code"
 if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky/Code"
 
-# File path for BISP Geocodes
-#if(Sys.info()[["user"]] == "WB521633") bisp_geocodes_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data/BISP" # ONEDRIVE FILE PATH
-#if(Sys.info()[["user"]] == "robmarty") bisp_geocodes_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky/BISP/"
-
 # Webscraping File Path
 if(Sys.info()[["user"]] == "WB521633") webscraping_api_filepath <- "C:/Users/wb521633/Dropbox/World Bank/Webscraping/Files for Server"
 if(Sys.info()[["user"]] == "robmarty") webscraping_api_filepath <- "~/Dropbox/World Bank/Webscraping/Files for Server"

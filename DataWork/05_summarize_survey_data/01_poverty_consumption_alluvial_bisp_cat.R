@@ -4,16 +4,6 @@
 bisp_df <- readRDS(file.path(project_file_path, "Data", "BISP", "FinalData",
                              "Individual Datasets", "bisp_socioeconomic.Rds"))
 
-# Determine Poverty Line -------------------------------------------------------
-# Number adult equivalent
-bisp_df$N_adult_equiv <- bisp_df$N_adults + bisp_df$N_children * 0.8
-
-# Consumption per adult equivalent
-bisp_df$consumption_adult_equiv <- bisp_df$consumption_total / bisp_df$N_adult_equiv
-
-# 20% consumption at baseline
-# quantile(bisp_df$consumption_total[bisp_df$year %in% 2011], .2)
-
 ## restrict to households with a poverty score in all four years
 bisp_df <- bisp_df %>%
   filter(!is.na(consumption_total)) %>%
@@ -24,13 +14,9 @@ bisp_df <- bisp_df %>%
   ungroup()
 
 ## define poverty threshold
-# 3,030 per month per adult equivalent. out data has every 14 days, so 38
-# (31/14) for monthly multiplier
-bisp_df$poor <- ifelse(bisp_df$consumption_adult_equiv <= 3030*(31/14), "Below", "Above") %>% 
+bisp_df$poor <- ifelse(bisp_df$consumption_adult_equiv <= bisp_df$pov_line, 
+                       "Below", "Above") %>% 
   factor(levels=c( "Below","Above"))
-
-mean(bisp_df$poor[bisp_df$year %in% 2011] %in% "Above")
-mean(bisp_df$poor[bisp_df$year %in% 2013] %in% "Above")
 
 bisp_df$poor_bisp <- ifelse(bisp_df$pscores <= 16.17, "Below", "Above") %>% 
    factor(levels=c("Below","Above"))

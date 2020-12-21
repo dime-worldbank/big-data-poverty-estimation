@@ -50,6 +50,8 @@ library(sp)
 library(raster)
 library(rgeos)
 library(tidyverse)
+library(caret)
+library(mltest)
 source(file.path(code_file_path, "02_bisp_approach", "_functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")

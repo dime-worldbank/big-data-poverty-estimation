@@ -1,7 +1,8 @@
 # 00_prep_data_for_cnn.py
 
-# Prepares data for CNN. Outputs numpy arrays and 
-# parameter dictionary for CNN.
+# Prepares data for CNN. 
+# 1. Outputs numpy arrays of DTL values and NTL labels
+# 2. Creates parameter dictionary (eg, number of NTL labels)
 
 ### Libraries ###
 import os, datetime
@@ -49,7 +50,6 @@ def transform_target(gdf, orig_target_name, n_bins):
     discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='kmeans')
     gdf[FINAL_TARGET_NAME] = discretizer.fit_transform(target)
 
-
 def sample_by_target(input_gdf, target_col_name, n):
     '''
     Create a sample dataframe containing n observations from each target bin.
@@ -62,7 +62,6 @@ def sample_by_target(input_gdf, target_col_name, n):
         gdf = gdf.append(sample_gdf)
     return gdf
 
-
 def normalize(X):
     '''
     Normalizes features.
@@ -73,6 +72,7 @@ def prep_cnn_data():
 
     # PARAMETERS -------------------------------------------------------------
 
+    #### Define
     # Daytime impage parameters
     image_height = 48 # VGG16 needs images to be rescale to 224x224
     image_width = 48
@@ -81,10 +81,10 @@ def prep_cnn_data():
     N_bands = len(bands)
 
     # Number of bins for NTL
-    n_ntl_bins = 5
+    n_ntl_bins = 3
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 6600
+    min_ntl_bin_count = 16861
 
     #### Save parameters for later use
     cnn_param_dict = {'image_height': image_height, 
@@ -94,34 +94,36 @@ def prep_cnn_data():
                     'n_ntl_bins': n_ntl_bins,
                     'min_ntl_bin_count': min_ntl_bin_count}
 
-    print(cnn_param_dict)
-
     with open(cf.CNN_PARAMS_FILENAME, 'w') as fp:
         json.dump(cnn_param_dict, fp)
 
     # Run --------------------------------------------------------------------
 
-    # LOAD DATA
+    ## LOAD DATA
     viirs = pd.read_pickle(VIIRS_GDF_FILEPATH)
     viirs_gdf = gpd.GeoDataFrame(viirs, geometry='geometry')
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
 
-    # PREP NTL
+    ## PREP NTL
     transform_target(viirs_gdf, 'median_rad_2014', n_ntl_bins)
 
-    # Total pixels in each category
+    ## Total pixels in each category
     print(viirs_gdf[FINAL_TARGET_NAME].value_counts())
 
-    # CREATE SAMPLE
+    ## Create Sample
+    # Subsets VIIRS dataframe
     min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_ntl_bin_count)
 
-    # MATCH DTL TO NTL
+    ## Match DTL TO NTL
     DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
+    NTL_continuous = processed_gdf['median_rad_2014'].to_numpy()
 
+    ## Save
     print("Saving NTL")
     np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'), NTL)
+    np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl_continuous.npy'), NTL_continuous)
 
     print("Saving DTL")
     np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs' , 'dtl.npy'), DTL)

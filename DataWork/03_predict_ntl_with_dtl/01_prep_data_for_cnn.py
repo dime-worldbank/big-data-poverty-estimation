@@ -68,7 +68,7 @@ def normalize(X):
     '''
     return X.astype('float32') / 255.0
 
-def prep_cnn_data():
+def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count):
 
     # PARAMETERS -------------------------------------------------------------
 
@@ -76,15 +76,15 @@ def prep_cnn_data():
     # Daytime impage parameters
     image_height = 48 # VGG16 needs images to be rescale to 224x224
     image_width = 48
-    bands = ['4', '3', '2'] # which bands to use? 4,3,2 are RGB
+    #bands = ['4', '3', '2'] # which bands to use? 4,3,2 are RGB
 
     N_bands = len(bands)
 
     # Number of bins for NTL
-    n_ntl_bins = 3
+    #n_ntl_bins = 3
 
     # Minimum observations to take from each NTL bin
-    min_ntl_bin_count = 16861
+    #min_ntl_bin_count = 1000 # 16861
 
     #### Save parameters for later use
     cnn_param_dict = {'image_height': image_height, 
@@ -94,7 +94,15 @@ def prep_cnn_data():
                     'n_ntl_bins': n_ntl_bins,
                     'min_ntl_bin_count': min_ntl_bin_count}
 
-    with open(cf.CNN_PARAMS_FILENAME, 'w') as fp:
+    ## Make directory for these parameters
+    params_str = 'Nbands' + str(N_bands) + "_nNtlBins" + str(n_ntl_bins) + "_minNTLbinCount" + str(min_ntl_bin_count)
+
+    CNN_DIR_WITH_PARAMS = os.path.join(CNN_DIRECTORY, params_str)
+    os.mkdir(os.path.join(CNN_DIR_WITH_PARAMS))
+
+    CNN_PARAMS_PATH = os.path.join(CNN_DIR_WITH_PARAMS, 'CNN_parameters.json') #TODO: CNN_DIRECTORY --> cf.CNN_DIRECTORY
+    #cf.CNN_DIRECTORY
+    with open(CNN_PARAMS_PATH, 'w') as fp:
         json.dump(cnn_param_dict, fp)
 
     # Run --------------------------------------------------------------------
@@ -122,11 +130,12 @@ def prep_cnn_data():
 
     ## Save
     print("Saving NTL")
-    np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl.npy'), NTL)
-    np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs', 'ntl_continuous.npy'), NTL_continuous)
+    np.save(os.path.join(CNN_DIR_WITH_PARAMS, 'ntl.npy' ), NTL)
+    np.save(os.path.join(CNN_DIR_WITH_PARAMS, 'ntl_continuous.npy'), NTL_continuous)
 
     print("Saving DTL")
-    np.save(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'CNN - Processed Inputs' , 'dtl.npy'), DTL)
+    np.save(os.path.join(CNN_DIR_WITH_PARAMS, 'dtl.npy'), DTL)
 
 if __name__ == '__main__':
-    prep_cnn_data()
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861)
+    #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 4, min_ntl_bin_count = 20)

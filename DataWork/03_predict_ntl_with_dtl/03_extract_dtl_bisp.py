@@ -55,7 +55,7 @@ def pd_to_gdp(df, lat_name = 'latitude', lon_name = 'longitude'):
 
     return gdf
 
-def extract_dtl_bisp():
+def extract_dtl_bisp(param_name):
 
     # 1. Load Grid for DTL Tiles
     dtl_tiles = gpd.read_file(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Pakistan Grid', 'RawData', 'pak_grid_200km.geojson'))
@@ -71,7 +71,9 @@ def extract_dtl_bisp():
     # 3. Extract DTL to BISP Coordinates
 
     # Load CNN parameters 
-    with open(cf.CNN_PARAMS_FILENAME, 'r') as fp:
+    PARAM_PATH_JSON = os.path.join(CNN_DIRECTORY, param_name, 'CNN_parameters.json')
+
+    with open(PARAM_PATH_JSON, 'r') as fp:
         cnn_param_dict = json.load(fp)
 
     # Extract
@@ -84,8 +86,8 @@ def extract_dtl_bisp():
     bisp_gdf_processed = bisp_gdf_processed[['uid']]
 
     # 4. Export
-    np.save(os.path.join(        cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl.npy'), DTL)
-    bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids.pkl'))
+    np.save(os.path.join(        cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_' + param_name + '.npy'), DTL)
+    bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_' + param_name + '.pkl'))
 
 if __name__ == '__main__':
-    extract_dtl_bisp()
+    extract_dtl_bisp("Nbands3_nNtlBins4_minNTLbinCount20")

@@ -75,11 +75,11 @@ def normalize(x_train, x_test):
     for df in (x_train, x_test):
         x_scaler.transform(df)
 
-def extract_features_to_pd():
+def extract_features_to_pd(param_name):
 
     # 1. Load Data
-    DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl.npy'))
-    bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids.pkl'))
+    DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_' + param_name + '.npy'))
+    bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_' + param_name + '.pkl'))
 
     # 2. Extract features
     layer_name = 'fc1'
@@ -100,8 +100,8 @@ def extract_features_to_pd():
     df['uid'] = bisp_df.uid
                
     # 4. Export           
-    df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.pkl'))
-    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.csv'))
+    df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + '.pkl'))
+    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + '.csv'))
 
 if __name__ == '__main__':
-    extract_features_to_pd()
+    extract_features_to_pd("Nbands3_nNtlBins4_minNTLbinCount20")

@@ -50,7 +50,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import load_model
 
 ## User defined libraries
-os.chdir(os.path.join(GIT_DIRECTORY, 'DataWork', '03_analysis', 'poverty_estimation'))
+os.chdir(os.path.join(GIT_DIRECTORY, 'DataWork', '03_predict_ntl_with_dtl'))
 import config as cf
 import feature_extraction as fe
 

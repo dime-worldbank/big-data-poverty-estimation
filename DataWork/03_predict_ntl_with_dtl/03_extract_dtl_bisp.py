@@ -63,7 +63,8 @@ def extract_dtl_bisp(param_name):
 
     # 2. Prep BISP data
     # Load, convert to geopandas, extract dtl tile
-    bisp_df = pd.read_csv(os.path.join(cf.SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv'), engine='python')
+    #bisp_df = pd.read_csv(os.path.join('/Users/robmarty', 'Desktop', 'GPS_uid_crosswalk2.csv'))
+    bisp_df = pd.read_csv(os.path.join(cf.SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv'), engine = 'python')
     bisp_gdf = pd_to_gdp(bisp_df)
     bisp_gdf = gpd.sjoin(bisp_gdf, dtl_tiles, how="inner", op='intersects').reset_index(drop=True)
     bisp_gdf['geometry'] = bisp_gdf.buffer(distance = 0.75/111.12).envelope

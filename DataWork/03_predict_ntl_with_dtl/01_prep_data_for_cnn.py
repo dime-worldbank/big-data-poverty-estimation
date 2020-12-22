@@ -97,8 +97,8 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count):
     ## Make directory for these parameters
     params_str = 'Nbands' + str(N_bands) + "_nNtlBins" + str(n_ntl_bins) + "_minNTLbinCount" + str(min_ntl_bin_count)
 
-    CNN_DIR_WITH_PARAMS = os.path.join(CNN_DIRECTORY, params_str)
-    os.mkdir(os.path.join(CNN_DIR_WITH_PARAMS))
+    CNN_DIR_WITH_PARAMS = os.path.join(cf.CNN_DIRECTORY, params_str)
+    os.mkdir(os.path.join(CNN_DIR_WITH_PARAMS)) #TODO: Check if exists
 
     CNN_PARAMS_PATH = os.path.join(CNN_DIR_WITH_PARAMS, 'CNN_parameters.json') #TODO: CNN_DIRECTORY --> cf.CNN_DIRECTORY
     #cf.CNN_DIRECTORY

@@ -58,12 +58,12 @@ def pd_to_gdp(df, lat_name = 'latitude', lon_name = 'longitude'):
 def extract_dtl_bisp(param_name):
 
     # 1. Load Grid for DTL Tiles
-    dtl_tiles = gpd.read_file(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Pakistan Grid', 'RawData', 'pak_grid_200km.geojson'))
+    dtl_tiles = gpd.read_file(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Country Grid', 'RawData', 'pak_grid_200km.geojson'))
     dtl_tiles.rename(columns = {'id': 'tile_id'}, inplace=True)
 
     # 2. Prep BISP data
     # Load, convert to geopandas, extract dtl tile
-    bisp_df = pd.read_csv(os.path.join(cf.SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv'))
+    bisp_df = pd.read_csv(os.path.join(cf.SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv'), engine='python')
     bisp_gdf = pd_to_gdp(bisp_df)
     bisp_gdf = gpd.sjoin(bisp_gdf, dtl_tiles, how="inner", op='intersects').reset_index(drop=True)
     bisp_gdf['geometry'] = bisp_gdf.buffer(distance = 0.75/111.12).envelope
@@ -71,7 +71,7 @@ def extract_dtl_bisp(param_name):
     # 3. Extract DTL to BISP Coordinates
 
     # Load CNN parameters 
-    PARAM_PATH_JSON = os.path.join(CNN_DIRECTORY, param_name, 'CNN_parameters.json')
+    PARAM_PATH_JSON = os.path.join(cf.CNN_DIRECTORY, param_name, 'CNN_parameters.json')
 
     with open(PARAM_PATH_JSON, 'r') as fp:
         cnn_param_dict = json.load(fp)
@@ -90,4 +90,4 @@ def extract_dtl_bisp(param_name):
     bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_' + param_name + '.pkl'))
 
 if __name__ == '__main__':
-    extract_dtl_bisp("Nbands3_nNtlBins4_minNTLbinCount20")
+    extract_dtl_bisp("Nbands3_nNtlBins3_minNTLbinCount16861")

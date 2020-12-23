@@ -21,7 +21,7 @@ n_layers_viirs <- nlayers(viirs_rad)
 month <- 4
 year <- 2012
 viirs_all_df <- bisp_coords@data %>% dplyr::select(uid)
-for(i in 1:n_lay3ers_viirs){ 
+for(i in 1:n_layers_viirs){ 
   print(i)
   viirs_rad_i <- raster(file.path(project_file_path, "Data", "VIIRS", "RawData", "VIIRS Monthly", "pakistan_viirs_monthly_avg_rad.tif"), i) %>% velox()
   
@@ -87,6 +87,7 @@ df_list <- list() # Initialize list
 for(buff_i in buffer_sizes_viirs_km){
   for(metric_i in c("mean", "sd")){
     for(year_i in 2012:2019){
+      print(year_i)
       df <- summarise_viirs(viirs_all_df,
                       buff_i = buff_i, 
                       metric_i = metric_i, 
@@ -98,7 +99,9 @@ for(buff_i in buffer_sizes_viirs_km){
 }
 
 viirs_df <- df_list %>% bind_cols()
+viirs_df$uid <- bisp_coords$uid
 
 #### Export 
 saveRDS(viirs_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets", "bisp_viirs.Rds"))
+write.csv(viirs_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets", "bisp_viirs.csv"), row.names=F)
 

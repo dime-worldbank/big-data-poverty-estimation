@@ -102,6 +102,17 @@ bisp_df$N_adult_equiv <- bisp_df$N_adults + bisp_df$N_children * 0.8
 # Consumption per adult equivalent
 bisp_df$consumption_adult_equiv <- (bisp_df$consumption_total / bisp_df$N_adult_equiv)
 
+# Create Survey Round Variables ------------------------------------------------
+bisp_df$survey_round <- NA
+bisp_df$survey_round[bisp_df$year %in% 2011] <- 1
+bisp_df$survey_round[bisp_df$year %in% 2013] <- 2
+bisp_df$survey_round[bisp_df$year %in% 2014] <- 3
+bisp_df$survey_round[bisp_df$year %in% 2016] <- 4
+
+# Select Variables and Rename --------------------------------------------------
+bisp_df <- bisp_df %>%
+  dplyr::select(uid, year, survey_round, pscores, income_last_month)
+
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", 
                            "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))

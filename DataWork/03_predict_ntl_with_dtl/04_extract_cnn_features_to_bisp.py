@@ -75,15 +75,18 @@ def normalize(x_train, x_test):
     for df in (x_train, x_test):
         x_scaler.transform(df)
 
-def extract_features_to_pd(param_name):
+def extract_features_to_pd(param_name, bands_type):
 
     # 1. Load Data
-    DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_' + param_name + '.npy'))
-    bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_' + param_name + '.pkl'))
+    if bands_type == "RGB":
+        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_bands' + 'RGB' + '.npy'))
+        bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_bands' + 'RGB' + '.pkl'))
 
     # 2. Extract features
     layer_name = 'fc1'
-    model = load_model(cf.CNN_FILENAME)
+
+    model = load_model(os.path.join(cf.CNN_DIRECTORY, param_name, 'script_CNN.h5'))
+    #model = load_model(cf.CNN_FILENAME)
 
     DTL_p = preprocess_input(DTL) # Preprocess image data
 
@@ -104,4 +107,4 @@ def extract_features_to_pd(param_name):
     df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + '.csv'))
 
 if __name__ == '__main__':
-    extract_features_to_pd("Nbands3_nNtlBins4_minNTLbinCount20")
+    extract_features_to_pd("Nbands3_nNtlBins3_minNTLbinCount16861", "RGB")

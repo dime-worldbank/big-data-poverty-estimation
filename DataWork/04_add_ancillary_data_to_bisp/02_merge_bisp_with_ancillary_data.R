@@ -18,19 +18,15 @@ landsat_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datase
 viirs_all_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_viirs.Rds"))
 osm_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "bisp_osm_roads.Rds"))
 facebook_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_allmerged.Rds"))
+cnn_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_cnn_features_all_Nbands3_nNtlBins3_minNTLbinCount16861.csv"))
 
 bisp_df$uid <- bisp_df$uid %>% as.character() %>% as.numeric
+cnn_df$uid <- cnn_df$uid %>% as.character() %>% as.numeric
+
 landsat_df$uid <- landsat_df$uid %>% as.character() %>% as.numeric
 viirs_all_df$uid <- viirs_all_df$uid %>% as.character() %>% as.numeric
 osm_df$uid <- osm_df$uid %>% as.character() %>% as.numeric
-facebook_df$uid <- facebook_df$uid
-
-# Prep HH Data -----------------------------------------------------------------
-bisp_df$survey_round <- NA
-bisp_df$survey_round[bisp_df$year %in% 2011] <- 1
-bisp_df$survey_round[bisp_df$year %in% 2013] <- 2
-bisp_df$survey_round[bisp_df$year %in% 2014] <- 3
-bisp_df$survey_round[bisp_df$year %in% 2016] <- 4
+facebook_df$uid <- facebook_df$uid %>% as.character() %>% as.numeric
 
 # Create Panel for VIIRS -------------------------------------------------------
 # VIIRS is in a _wide format, where we want to create a panel in a _long format.

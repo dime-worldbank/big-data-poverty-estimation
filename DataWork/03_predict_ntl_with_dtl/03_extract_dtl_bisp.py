@@ -55,7 +55,11 @@ def pd_to_gdp(df, lat_name = 'latitude', lon_name = 'longitude'):
 
     return gdf
 
-def extract_dtl_bisp(param_name):
+def extract_dtl_bisp(bands_type):
+
+    # 0. Load Bands
+    if bands_type == "RGB":
+        bands = ['4', '3', '2']
 
     # 1. Load Grid for DTL Tiles
     dtl_tiles = gpd.read_file(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Country Grid', 'RawData', 'pak_grid_200km.geojson'))
@@ -72,6 +76,8 @@ def extract_dtl_bisp(param_name):
     # 3. Extract DTL to BISP Coordinates
 
     # Load CNN parameters 
+    # Use this for paramers; just effects img_height and img_weidth
+    param_name = "Nbands3_nNtlBins3_minNTLbinCount16861"
     PARAM_PATH_JSON = os.path.join(cf.CNN_DIRECTORY, param_name, 'CNN_parameters.json')
 
     with open(PARAM_PATH_JSON, 'r') as fp:
@@ -80,15 +86,15 @@ def extract_dtl_bisp(param_name):
     # Extract
     DTL, bisp_gdf_processed = fe.map_DTL_NTL(input_gdf = bisp_gdf, 
                                         directory = cf.DTL_DIRECTORY, 
-                                        bands = cnn_param_dict['bands'], 
+                                        bands = bands, 
                                         img_height = cnn_param_dict['image_height'], 
                                         img_width = cnn_param_dict['image_width'])
 
     bisp_gdf_processed = bisp_gdf_processed[['uid']]
 
     # 4. Export
-    np.save(os.path.join(        cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_' + param_name + '.npy'), DTL)
-    bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_' + param_name + '.pkl'))
+    np.save(os.path.join(        cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_bands' + bands_type + '.npy'), DTL)
+    bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_bands' + bands_type + '.pkl'))
 
 if __name__ == '__main__':
-    extract_dtl_bisp("Nbands3_nNtlBins3_minNTLbinCount16861")
+    extract_dtl_bisp("RGB")

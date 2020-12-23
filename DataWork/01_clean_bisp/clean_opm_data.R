@@ -23,34 +23,121 @@ bisp_df <- bisp_df %>%
                 pscores, adult) %>%
   group_by(uid, province, psu, locality, period, treatment, panel, 
            present11, present13, present16) %>%
-  summarise(hh_size = n(),
-            income_last_month_N_NAs = sum(is.na(income_last_month)), 
-            income_last_month = sum(income_last_month, na.rm=T),
-            income_last_year_N_NAs = sum(is.na(income_last_year)), 
-            income_last_year = sum(income_last_year, na.rm=T),
-            pscores = mean(pscores, na.rm=T),
-            N_adults = sum(adult %in% 1),
-            N_children = sum(adult %in% 0)) %>%
+  dplyr::summarise(hh_size = n(),
+                   income_last_month_N_NAs = sum(is.na(income_last_month)), 
+                   income_last_month = sum(income_last_month, na.rm=T),
+                   income_last_year_N_NAs = sum(is.na(income_last_year)), 
+                   income_last_year = sum(income_last_year, na.rm=T),
+                   pscores = mean(pscores, na.rm=T),
+                   N_adults = sum(adult %in% 1),
+                   N_children = sum(adult %in% 0)) %>%
   mutate(year = period %>% as_factor %>% as.character %>% as.numeric,
          hh_size = N_adults + N_children) %>%
   as.data.frame()
 
+# Clean and add asset data -----------------------------------------------------
+asset_df <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
+                               "male",  "06_ModuleL.dta")) 
+
+#### Prep Data
+asset_df <- asset_df %>%
+  dplyr::mutate(asset = LLN %>% 
+                  as_factor() %>% 
+                  as.character() %>%
+                  tolower() %>%
+                  str_replace_all("[[:punct:]]", "") %>%
+                  str_replace_all(" ", "_") %>%
+                  str_replace_all("__", "_"),
+                own = LNONE %>% 
+                  as_factor() %>% 
+                  as.character(),
+                year = period %>% as_factor %>% as.character %>% as.numeric) %>%
+  dplyr::select(uid, year, asset, own)
+
+## If not Yes/No, replace with NA (some "9"s)
+asset_df$own[!(asset_df$own %in% c("Yes", "No"))] <- NA
+
+## Convert to 0/1 [1 = Yes]
+asset_df$own <- ifelse(asset_df$own == "Yes", 1, 0)
+
+## Not distinct
+# For example, uid 22203737 in year 2016 had three rows for "TV", where only
+# in one of rows said "own." Arrange by own, so in cases like this we use
+# "1" (own), not "0".
+asset_df <- asset_df %>%
+  arrange(desc(own)) %>%
+  distinct(uid, year, asset, .keep_all = T) 
+
+## Reshape
+asset_df <- asset_df %>%
+  pivot_wider(id_cols = c(uid, year),
+              names_from = asset,
+              values_from = own,
+              values_fill = 0)
+
+## Replace NA with 0
+for(var in names(asset_df)[!names(asset_df) %in% c("uid", "year")]){
+  asset_df[[var]][is.na(asset_df[[var]])] <- 0
+}
+
+#### PCA Index
+pca <- asset_df %>%
+  dplyr::select(-c(uid, year)) %>%
+  prcomp()
+
+asset_df$asset_index_pca1 <- pca$x[,1]
+asset_df$asset_index_pca2 <- pca$x[,2]
+asset_df$asset_index_pca3 <- pca$x[,3]
+asset_df$asset_index_pca4 <- pca$x[,4]
+asset_df$asset_index_pca5 <- pca$x[,5]
+
+#### Addiditive Index
+asset_df$asset_index_additive <- asset_df %>%
+  dplyr::select(-c(uid, year, 
+                   asset_index_pca1,
+                   asset_index_pca2,
+                   asset_index_pca3,
+                   asset_index_pca4,
+                   asset_index_pca5)) %>%
+  apply(1, sum)
+
+#### Subset and Merge Asset Variables
+asset_df <- asset_df %>%
+  dplyr::select(uid, year, 
+                asset_index_pca1,
+                asset_index_pca2,
+                asset_index_pca3,
+                asset_index_pca4,
+                asset_index_pca5,
+                asset_index_additive)
+
+bisp_df <- merge(bisp_df, asset_df, by = c("uid", "year"),
+                 all.x=T, all.y=T)
+
 # Clean and add consumption data -----------------------------------------------
 consum_fm_a <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
-                                "female",  "ModuleGPartA.dta")) %>%
+                                  "female",  "ModuleGPartA.dta")) %>%
+  dplyr::select(uid, period, v11, v21, v31, v41) %>%
   mutate(days = 14)
+
 consum_fm_b <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
                                   "female",  "ModuleGPartB.dta")) %>%
+  dplyr::select(uid, period, v11, v21, v31, v41) %>%
   mutate(days = 30)
 
 consum_ma_b <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
                                   "male",  "ModuleGPartB.dta")) %>%
+  dplyr::select(uid, period, v11, v21, v31, v41) %>%
   mutate(days = 30)
+
 consum_ma_c <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
                                   "male",  "ModuleGPartC.dta")) %>%
+  dplyr::select(uid, period, v11, v21, v31, v41) %>%
   mutate(days = 365)
+
 consum_ma_d <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified",
                                   "male",  "ModuleGPartD.dta")) %>%
+  dplyr::select(uid, period, v11, v21, v31, v41) %>%
   mutate(days = 365)
 
 consum_all <- bind_rows(consum_fm_a,
@@ -70,10 +157,10 @@ consum_sum_all <- consum_all %>%
   
   ## Aggregate
   group_by(uid, period) %>%
-  summarise(consumption_total = sum(consumption_total)) 
+  dplyr::summarise(consumption_total = sum(consumption_total)) 
 
 bisp_df <- merge(bisp_df, consum_sum_all, by = c("uid", "period"),
-                  all.x=T, all.y=T)
+                 all.x=T, all.y=T)
 
 # Add Poverty Line -------------------------------------------------------------
 # CPI Index
@@ -111,7 +198,15 @@ bisp_df$survey_round[bisp_df$year %in% 2016] <- 4
 
 # Select Variables and Rename --------------------------------------------------
 bisp_df <- bisp_df %>%
-  dplyr::select(uid, year, survey_round, pscores, income_last_month)
+  dplyr::select(uid, year, survey_round, pscores, income_last_month,
+                consumption_total, 
+                consumption_adult_equiv,
+                asset_index_pca1,
+                asset_index_pca2,
+                asset_index_pca3,
+                asset_index_pca4,
+                asset_index_pca5,
+                asset_index_additive)
 
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", 

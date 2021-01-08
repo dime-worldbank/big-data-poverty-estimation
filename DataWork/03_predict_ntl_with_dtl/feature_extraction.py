@@ -100,7 +100,7 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
 #    return data
 
     
-def get_DTL(row, directory, bands, img_height, img_width):
+def get_DTL(row, directory, bands, img_height, img_width, year):
     '''
     For a given VIIRS observation, grab and crop corresponding DLT data.
     

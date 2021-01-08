@@ -68,7 +68,7 @@ def normalize(X):
     '''
     return X.astype('float32') / 255.0
 
-def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count):
+def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
 
     # PARAMETERS -------------------------------------------------------------
 
@@ -113,7 +113,7 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count):
     viirs_gdf = viirs_gdf[ ~ np.isnan(viirs_gdf['tile_id'])]
 
     ## PREP NTL
-    transform_target(viirs_gdf, 'median_rad_2014', n_ntl_bins)
+    transform_target(viirs_gdf, 'median_rad_' + str(year), n_ntl_bins)
 
     ## Total pixels in each category
     print(viirs_gdf[FINAL_TARGET_NAME].value_counts())
@@ -123,19 +123,26 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count):
     min_bin_count = min(viirs_gdf[FINAL_TARGET_NAME].value_counts())
     gdf = sample_by_target(viirs_gdf, FINAL_TARGET_NAME, min_ntl_bin_count)
 
+    ## Path to DTL Files
+    DTL_DIRECTORY_DATA = os.path.join(DTL_DIRECTORY, str(year))
+    
     ## Match DTL TO NTL
-    DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width)
+    DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width, year)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
-    NTL_continuous = processed_gdf['median_rad_2014'].to_numpy()
+    NTL_continuous = processed_gdf['median_rad_'+ str(year)].to_numpy()
 
     ## Save
     print("Saving NTL")
-    np.save(os.path.join(CNN_DIR_WITH_PARAMS, 'ntl.npy' ), NTL)
-    np.save(os.path.join(CNN_DIR_WITH_PARAMS, 'ntl_continuous.npy'), NTL_continuous)
+    np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'ntl_{str(year)}.npy' ), NTL)
+    np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'ntl_continuous_{str(year)}.npy'), NTL_continuous)
 
     print("Saving DTL")
-    np.save(os.path.join(CNN_DIR_WITH_PARAMS, 'dtl.npy'), DTL)
+    np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'dtl_{str(year)}.npy'), DTL)
 
 if __name__ == '__main__':
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861)
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2011)
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2013)
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2014)
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2016)
+    #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, 2014)
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 4, min_ntl_bin_count = 20)

@@ -98,7 +98,9 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     params_str = 'Nbands' + str(N_bands) + "_nNtlBins" + str(n_ntl_bins) + "_minNTLbinCount" + str(min_ntl_bin_count)
 
     CNN_DIR_WITH_PARAMS = os.path.join(cf.CNN_DIRECTORY, params_str)
-    os.mkdir(os.path.join(CNN_DIR_WITH_PARAMS)) #TODO: Check if exists
+    
+    if not os.path.exists(CNN_DIR_WITH_PARAMS):
+        os.mkdir(CNN_DIR_WITH_PARAMS) 
 
     CNN_PARAMS_PATH = os.path.join(CNN_DIR_WITH_PARAMS, 'CNN_parameters.json') #TODO: CNN_DIRECTORY --> cf.CNN_DIRECTORY
     #cf.CNN_DIRECTORY
@@ -127,7 +129,7 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     DTL_DIRECTORY_DATA = os.path.join(DTL_DIRECTORY, str(year))
     
     ## Match DTL TO NTL
-    DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY, bands, image_height, image_width, year)
+    DTL, processed_gdf = fe.map_DTL_NTL(gdf, DTL_DIRECTORY_DATA, bands, image_height, image_width, year)
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
     NTL_continuous = processed_gdf['median_rad_'+ str(year)].to_numpy()
 
@@ -140,9 +142,10 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'dtl_{str(year)}.npy'), DTL)
 
 if __name__ == '__main__':
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2011)
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2013)
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2014)
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2016)
+    #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2011)
+    #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2013)
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, year = 2014)
+    #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2016)
+
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, 2014)
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 4, min_ntl_bin_count = 20)

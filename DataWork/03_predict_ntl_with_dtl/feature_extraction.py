@@ -130,7 +130,7 @@ def get_DTL(row, directory, bands, img_height, img_width, year):
     return all_bands_array
 
 
-def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
+def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year):
     '''
     Gets DTL images, crops them, create arrays representing DLT and NLT to 
     become features and targets respectively.
@@ -155,7 +155,7 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width):
 
         row = gdf.iloc[[i]]
 
-        DTL = get_DTL(row, directory, bands, img_height, img_width)
+        DTL = get_DTL(row, directory, bands, img_height, img_width, year)
         if DTL.shape[0] == img_height:
             # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)
             DTL_list.append(DTL)

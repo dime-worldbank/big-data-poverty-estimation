@@ -23,8 +23,8 @@ import logging, os
 import config as cf
 import feature_extraction as fe
 
-df = pd.read_csv(os.path.join(DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalData', 'Merged Datasets', 'cnn_merge.Rds'))
-
+df = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalData', 'Merged Datasets', 'cnn_merge.csv'))
+df = df[df.year == 2014]
 
 
 

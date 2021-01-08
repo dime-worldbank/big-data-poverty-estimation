@@ -22,7 +22,7 @@ if(username == 'robmarty'):
 
 ## Dependent Paths
 GIT_DIRECTORY = os.path.join(MAIN_GIT_DIRECTORY, 'DataWork', '03_analysis', 'poverty_estimation')
-DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', 'RawData', '2014')
+DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', "l8")
 BISP_DATA_PATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
 VIIRS_GDF_FILEPATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'VIIRS', 'FinalData', 'viirs_annual_polygon.pkl')
 

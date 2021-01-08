@@ -142,9 +142,12 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'dtl_{str(year)}.npy'), DTL)
 
 if __name__ == '__main__':
+    #TODO: For multiple years, should we survey the same locations? We are randomly selecting
+    # locations which would cause differences when comparing the years.
+    
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2011)
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2013)
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, year = 2014)
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, year = 2014)
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2016)
 
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, 2014)

@@ -1,1 +1,3 @@
 https://github.com/worldbank/Pakistan-Poverty-from-Sky/blob/master/DataWork/03_predict_ntl_with_dtl/03_cnn.ipynb
+
+https://colab.research.google.com/github/worldbank/Pakistan-Poverty-from-Sky/blob/master/DataWork/03_predict_ntl_with_dtl/03_cnn.ipynb

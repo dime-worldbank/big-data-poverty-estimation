@@ -17,6 +17,7 @@ username = getpass.getuser()
 
 if(username == 'robmarty'):
     DROPBOX_DIRECTORY = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites'
+    GOOGLE_DRIVE_DIRECTORY = '/Users/robmarty/Google Drive/World Bank/IEs/Pakistan Poverty Estimation'
     MAIN_GIT_DIRECTORY = '/Users/robmarty/Documents/Github/Pakistan-Poverty-from-Sky'
     SECURE_DATA_DIRECTORY = '/Users/robmarty/Documents/World Bank/Pakistan Poverty from Sky'
 
@@ -29,7 +30,8 @@ VIIRS_GDF_FILEPATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'VIIRS', 'FinalData
 #CNN_PARAMS_FILENAME = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN', 'CNN_parameters.json')
 #CNN_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN')
 CNN_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'CNN')
-CNN_FILENAME = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN', 'script_CNN.h5')
+CNN_DIRECTORY_GD = os.path.join(GOOGLE_DRIVE_DIRECTORY, 'Data', 'CNN')
+#CNN_FILENAME = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN', 'script_CNN.h5')
 
 CURRENT_DIRECTORY = GIT_DIRECTORY
 

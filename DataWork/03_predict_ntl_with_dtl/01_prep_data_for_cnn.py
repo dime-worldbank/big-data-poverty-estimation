@@ -97,10 +97,15 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     ## Make directory for these parameters
     params_str = 'Nbands' + str(N_bands) + "_nNtlBins" + str(n_ntl_bins) + "_minNTLbinCount" + str(min_ntl_bin_count)
 
+    # Directory for Dropbox and Google Drive
     CNN_DIR_WITH_PARAMS = os.path.join(cf.CNN_DIRECTORY, params_str)
-    
+    CNN_DIR_GD_WITH_PARAMS = os.path.join(cf.CNN_DIRECTORY_GD, params_str)
+
     if not os.path.exists(CNN_DIR_WITH_PARAMS):
         os.mkdir(CNN_DIR_WITH_PARAMS) 
+
+    if not os.path.exists(CNN_DIR_GD_WITH_PARAMS):
+        os.mkdir(CNN_DIR_GD_WITH_PARAMS) 
 
     CNN_PARAMS_PATH = os.path.join(CNN_DIR_WITH_PARAMS, 'CNN_parameters.json') #TODO: CNN_DIRECTORY --> cf.CNN_DIRECTORY
     #cf.CNN_DIRECTORY
@@ -133,7 +138,7 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     NTL = processed_gdf[FINAL_TARGET_NAME].to_numpy()
     NTL_continuous = processed_gdf['median_rad_'+ str(year)].to_numpy()
 
-    ## Save
+    ## Save - Dropbox
     print("Saving NTL")
     np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'ntl_{str(year)}.npy' ), NTL)
     np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'ntl_continuous_{str(year)}.npy'), NTL_continuous)
@@ -141,13 +146,24 @@ def prep_cnn_data(bands, n_ntl_bins, min_ntl_bin_count, year):
     print("Saving DTL")
     np.save(os.path.join(CNN_DIR_WITH_PARAMS, f'dtl_{str(year)}.npy'), DTL)
 
+    ## Save - Google Drive
+    print("Saving NTL")
+    np.save(os.path.join(CNN_DIR_GD_WITH_PARAMS, f'ntl_{str(year)}.npy' ), NTL)
+    np.save(os.path.join(CNN_DIR_GD_WITH_PARAMS, f'ntl_continuous_{str(year)}.npy'), NTL_continuous)
+
+    print("Saving DTL")
+    np.save(os.path.join(CNN_DIR_GD_WITH_PARAMS, f'dtl_{str(year)}.npy'), DTL)
+
 if __name__ == '__main__':
     #TODO: For multiple years, should we survey the same locations? We are randomly selecting
     # locations which would cause differences when comparing the years.
     
+    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 50, year = 2014)
+
+
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2011)
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2013)
-    prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, year = 2014)
+    #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, year = 2014)
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 100, 2016)
 
     #prep_cnn_data(bands = ['4', '3', '2'], n_ntl_bins = 3, min_ntl_bin_count = 16861, 2014)

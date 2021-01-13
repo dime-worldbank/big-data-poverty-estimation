@@ -75,18 +75,17 @@ def normalize(x_train, x_test):
     for df in (x_train, x_test):
         x_scaler.transform(df)
 
-def extract_features_to_pd(param_name, bands_type):
+def extract_features_to_pd(param_name, bands_type, cnn_filename, year, suffix):
 
     # 1. Load Data
     if bands_type == "RGB":
-        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_bands' + 'RGB' + '.npy'))
-        bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_bands' + 'RGB' + '.pkl'))
+        DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_bands' + 'RGB' + "_" + str(year) + '.npy'))
+        bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_bands' + 'RGB' + "_" + str(year) + '.pkl'))
 
     # 2. Extract features
     layer_name = 'fc1'
 
-    model = load_model(os.path.join(cf.CNN_DIRECTORY, param_name, 'script_CNN.h5'))
-    #model = load_model(cf.CNN_FILENAME)
+    model = load_model(os.path.join(cf.CNN_DIRECTORY_GD, param_name, cnn_filename))
 
     DTL_p = preprocess_input(DTL) # Preprocess image data
 
@@ -103,8 +102,9 @@ def extract_features_to_pd(param_name, bands_type):
     df['uid'] = bisp_df.uid
                
     # 4. Export           
-    df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + '.pkl'))
-    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + '.csv'))
+    df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + "_" + str(year) + suffix + '.pkl'))
+    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all_' + param_name + "_" + str(year) + suffix + '.csv'))
 
 if __name__ == '__main__':
-    extract_features_to_pd("Nbands3_nNtlBins3_minNTLbinCount16861", "RGB")
+    extract_features_to_pd("Nbands3_nNtlBins3_minNTLbinCount16861", "RGB", 'script_CNN_2014.h5', 2014, '')
+    extract_features_to_pd("Nbands3_nNtlBins3_minNTLbinCount16861", "RGB", 'script_CNN_cont_2014.h5', 2014, '_cont')

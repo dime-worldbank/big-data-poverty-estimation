@@ -42,7 +42,6 @@ def perform_pca_expln(df, prop):
     
     return df_features_pca, pca.explained_variance_ratio_
 
-
 def extract_pca_features():
 
     n_components = 10

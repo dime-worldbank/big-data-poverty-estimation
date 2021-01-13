@@ -6,28 +6,65 @@ set.seed(42)
 # Load Data --------------------------------------------------------------------
 ## BISP Data
 bisp_df <- readRDS(file.path(project_file_path, "Data", "BISP", 
-                             "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))
+                           "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))
 
 ## Ancillary Data
-cnn_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_cnn_features_all_Nbands3_nNtlBins3_minNTLbinCount16861.csv"))
-viirs_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_viirs.csv"))
-landsat_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_viirs.csv"))
+cnn_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_cnn_features_all_Nbands3_nNtlBins3_minNTLbinCount16861_2014.csv"))
+cnn_cont_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_cnn_features_all_Nbands3_nNtlBins3_minNTLbinCount16861_2014_cont.csv"))
+viirs_df <- readRDS(file.path(bisp_indiv_files_dir, "bisp_viirs.Rds"))
+landsat_df <- readRDS(file.path(bisp_indiv_files_dir, "bisp_landsat.Rds"))
 
-# Merge ------------------------------------------------------------------------
+# VIIRS/Landsat Prep -----------------------------------------------------------
+## VIIRS
 viirs_df <- viirs_df %>%
   dplyr::select(uid,
                 viirs_buff1km_year2014_spatialMEAN_monthlyMEAN, 
                 viirs_buff5km_year2014_spatialMEAN_monthlyMEAN)
 
-cnn_df <- cnn_df %>%
-  dplyr::select(-X)
+## Landsat
+landsat_df <- landsat_df[,grepl("uid|2014_buff_2km_mean", names(landsat_df))]
+names(landsat_df) <- names(landsat_df) %>% str_replace_all("_2014_buff_2km_mean", "")
 
-bisp_df <- merge(bisp_df, viirs_df, by = c("uid"), all.x=T, all.y=F)
-bisp_df <- merge(bisp_df, cnn_df, by = c("uid"), all.x=T, all.y=F)
+# Construct indices
+bands <- paste0("b", 1:7)
+bands_combn <- combn(bands, 2)
+
+make_indicie <- function(var1, var2, df){
+  (df[[var1]] - df[[var2]]) / (df[[var1]] + df[[var2]])
+}
+
+for(i in 1:ncol(bands_combn)){
+  
+  var_newname <- bands_combn[,i] %>% paste(collapse = "_")
+  landsat_df[[var_newname]] <- make_indicie(bands_combn[,i][1],
+                                            bands_combn[,i][2],
+                                            landsat_df)
+  
+}
+
+viirs_landsat_df <- merge(viirs_df, landsat_df, by = "uid")
+
+# Merge with BISP --------------------------------------------------------------
+## BISP Prep/Merge
+bisp_df <- bisp_df %>%
+  dplyr::filter(year %in% 2014)
+
+bisp_virrs_landsat_df <- merge(bisp_df, viirs_landsat_df, by = "uid")
+
+## Subset
+bisp_virrs_landsat_df <- bisp_virrs_landsat_df %>%
+  filter(!is.na(b1),
+         !is.na(pscores))
+
+## Merge CNN
+bisp_cnn_df      <- merge(bisp_virrs_landsat_df, cnn_df,      by = "uid")
+bisp_cnn_cont_df <- merge(bisp_virrs_landsat_df, cnn_cont_df, by = "uid")
 
 # Export -----------------------------------------------------------------------
-saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_merge.Rds"))
-write.csv(bisp_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_merge.csv"), row.names=F)
+saveRDS(bisp_cnn_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_merge.Rds"))
+write.csv(bisp_cnn_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_merge.csv"), row.names=F)
 
+saveRDS(bisp_cnn_cont_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_cont_merge.Rds"))
+write.csv(bisp_cnn_cont_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_cont_merge.csv"), row.names=F)
 
 

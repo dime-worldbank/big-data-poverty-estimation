@@ -2,6 +2,8 @@
 
 # Create Household Level BISP dataframe with all relevant socioeconomic variables
 
+set.seed(42)
+
 # Load Data --------------------------------------------------------------------
 bisp_plist <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified", "bisp_combined_plist.dta"))
 bisp_povscore <- read_dta(file.path(project_file_path, "Data", "BISP", "RawData - Deidentified", "UID_pscores.dta"))
@@ -80,6 +82,9 @@ for(var in names(asset_df)[!names(asset_df) %in% c("uid", "year")]){
   asset_df[[var]][is.na(asset_df[[var]])] <- 0
 }
 
+#### Rename Asset Variables
+asset_df <- asset_df %>% rename_at(vars(-uid, -year), ~ paste0("asset_", .))
+
 #### PCA Index
 pca <- asset_df %>%
   dplyr::select(-c(uid, year)) %>%
@@ -102,14 +107,15 @@ asset_df$asset_index_additive <- asset_df %>%
   apply(1, sum)
 
 #### Subset and Merge Asset Variables
-asset_df <- asset_df %>%
-  dplyr::select(uid, year, 
-                asset_index_pca1,
-                asset_index_pca2,
-                asset_index_pca3,
-                asset_index_pca4,
-                asset_index_pca5,
-                asset_index_additive)
+## Commented out to keep all the asset variables
+# asset_df <- asset_df %>%
+#   dplyr::select(uid, year, 
+#                 asset_index_pca1,
+#                 asset_index_pca2,
+#                 asset_index_pca3,
+#                 asset_index_pca4,
+#                 asset_index_pca5,
+#                 asset_index_additive)
 
 bisp_df <- merge(bisp_df, asset_df, by = c("uid", "year"),
                  all.x=T, all.y=T)
@@ -197,16 +203,16 @@ bisp_df$survey_round[bisp_df$year %in% 2014] <- 3
 bisp_df$survey_round[bisp_df$year %in% 2016] <- 4
 
 # Select Variables and Rename --------------------------------------------------
-bisp_df <- bisp_df %>%
-  dplyr::select(uid, year, survey_round, pscores, income_last_month,
-                consumption_total, 
-                consumption_adult_equiv,
-                asset_index_pca1,
-                asset_index_pca2,
-                asset_index_pca3,
-                asset_index_pca4,
-                asset_index_pca5,
-                asset_index_additive)
+# bisp_df <- bisp_df %>%
+#   dplyr::select(uid, year, survey_round, pscores, income_last_month,
+#                 consumption_total, 
+#                 consumption_adult_equiv,
+#                 asset_index_pca1,
+#                 asset_index_pca2,
+#                 asset_index_pca3,
+#                 asset_index_pca4,
+#                 asset_index_pca5,
+#                 asset_index_additive)
 
 # Export -----------------------------------------------------------------------
 saveRDS(bisp_df, file.path(project_file_path, "Data", "BISP", 

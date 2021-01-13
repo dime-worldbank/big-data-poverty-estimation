@@ -55,7 +55,7 @@ def pd_to_gdp(df, lat_name = 'latitude', lon_name = 'longitude'):
 
     return gdf
 
-def extract_dtl_bisp(bands_type):
+def extract_dtl_bisp(bands_type, year):
 
     # 0. Load Bands
     if bands_type == "RGB":
@@ -85,16 +85,20 @@ def extract_dtl_bisp(bands_type):
 
     # Extract
     DTL, bisp_gdf_processed = fe.map_DTL_NTL(input_gdf = bisp_gdf, 
-                                        directory = cf.DTL_DIRECTORY, 
+                                        directory = os.path.join(cf.DTL_DIRECTORY, str(year)), 
                                         bands = bands, 
                                         img_height = cnn_param_dict['image_height'], 
-                                        img_width = cnn_param_dict['image_width'])
+                                        img_width = cnn_param_dict['image_width'],
+                                        year = year)
 
     bisp_gdf_processed = bisp_gdf_processed[['uid']]
 
     # 4. Export
-    np.save(os.path.join(        cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_bands' + bands_type + '.npy'), DTL)
-    bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_bands' + bands_type + '.pkl'))
+    np.save(os.path.join(        cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_bands' + bands_type + "_" + str(year) + '.npy'), DTL)
+    bisp_gdf_processed.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids_bands' + bands_type + "_" + str(year) + '.pkl'))
 
 if __name__ == '__main__':
-    extract_dtl_bisp("RGB")
+    extract_dtl_bisp("RGB", 2014)
+
+
+

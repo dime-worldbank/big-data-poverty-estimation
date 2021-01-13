@@ -11,6 +11,11 @@ final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
 figures_file_path <- file.path(project_file_path, "Outputs", "Results", "Figures")
 
+# Google Drive File Path
+if(Sys.info()[["user"]] == "robmarty") gdrive_file_path <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
+
+gdrive_cnn_file_path <- file.path(gdrive_file_path, "Data", "CNN")
+
 # Secure Directory
 if(Sys.info()[["user"]] == "WB521633") secure_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data" 
 if(Sys.info()[["user"]] == "robmarty") secure_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky"

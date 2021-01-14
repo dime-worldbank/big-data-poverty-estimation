@@ -3,10 +3,12 @@
 library(glmnet)
 set.seed(42)
 
+CNN_PCA <- T
+
 # Load Data --------------------------------------------------------------------
 ## BISP Data
 bisp_df <- readRDS(file.path(project_file_path, "Data", "BISP", 
-                           "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))
+                             "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))
 
 ## Ancillary Data
 cnn_df <- read.csv(file.path(bisp_indiv_files_dir, "bisp_cnn_features_all_Nbands3_nNtlBins3_minNTLbinCount16861_2014.csv"))
@@ -43,6 +45,27 @@ for(i in 1:ncol(bands_combn)){
 }
 
 viirs_landsat_df <- merge(viirs_df, landsat_df, by = "uid")
+
+# Prep CNN ---------------------------------------------------------------------
+if(CNN_PCA){
+  
+  cnn_pca <- cnn_df %>%
+    dplyr::select(-c(X, uid)) %>%
+    prcomp()
+  cnn_pca_df <- cnn_pca$x[,1:10] %>% as.data.frame()
+  names(cnn_pca_df) <- paste0("cnn_", 1:ncol(cnn_pca_df))
+  cnn_pca_df$uid <- cnn_df$uid
+  
+  cnn_cont_pca <- cnn_cont_df %>%
+    dplyr::select(-c(X, uid)) %>%
+    prcomp()
+  cnn_cont_pca_df <- cnn_cont_pca$x[,1:10] %>% as.data.frame()
+  names(cnn_cont_pca_df) <- paste0("cnn_", 1:ncol(cnn_cont_pca_df))
+  cnn_cont_pca_df$uid <- cnn_cont_df$uid
+  
+  cnn_df      <- cnn_pca_df
+  cnn_cont_df <- cnn_cont_pca_df
+}
 
 # Merge with BISP --------------------------------------------------------------
 ## BISP Prep/Merge

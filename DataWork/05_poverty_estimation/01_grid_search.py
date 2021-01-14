@@ -62,7 +62,6 @@ def train_models(params, x_train, x_test, y_train, y_test, verbose=False):
     Output: dataframe of training errors
             Also saves a .pkl file of TrainedRegressor objects for each model
     '''
-
     count = 0
 
     # Loop over models, hyperparameter combinations, and feature sets
@@ -108,37 +107,51 @@ def train_models(params, x_train, x_test, y_train, y_test, verbose=False):
     return results_df
 
 # Load/Prep Data ------------------------------------------
-df = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalData', 'Merged Datasets', 'cnn_cont_merge.csv'))
-df = df[df.year == 2014]
+df_cont = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalData', 'Merged Datasets', 'cnn_cont_merge.csv'))
+df_cont = df_cont[df_cont.year == 2014]
+
+df_bin = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalData', 'Merged Datasets', 'cnn_merge.csv'))
+df_bin = df_bin[df_bin.year == 2014]
 
 # X/Y Data ------------------------------------------------
 target = 'pscores_poor'
 
+count = 1
 for target in ['pscores_poor', 'asset_tv', 'asset_washing_machinedryer', 'pscores_poor_med', 'asset_index_additive_bin', 'asset_index_pca1_bin']:
+    for features_regex in ['^cnn_', '^b', '^b|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN', '^b|^cnn_|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN']:
+        for cnn_type in ['binary', 'continuous']:
 
-    print(target)
+            print(target + ' ' + features_regex)
 
-    #x = df.filter(regex=r'^b|^viirs_buff5', axis=1)
-    #x = df.filter(regex=r'^b|^cnn_|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN', axis=1)
-    x = df.filter(regex=r'^b|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN', axis=1)
+            if cnn_type == 'binary':
+                df = df_bin.copy()
+            if cnn_type == 'continuous':
+                df = df_cont.copy()
 
-    y = df[target]
+            x = df.filter(regex=features_regex, axis=1)
+            y = df[target]
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=TEST_SIZE)
+            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=TEST_SIZE)
 
-    # Normalize
-    x_scaler = StandardScaler().fit(x_train)
+            # Normalize
+            x_scaler = StandardScaler().fit(x_train)
 
-    x_train = x_scaler.transform(x_train)
-    x_test = x_scaler.transform(x_test)
+            x_train = x_scaler.transform(x_train)
+            x_test = x_scaler.transform(x_test)
 
-    # Train/Evaluate -------------------------------------------
-    parameters = cf.GRID_TEST_CLASS
+            # Train/Evaluate -------------------------------------------
+            parameters = cf.GRID_TEST_CLASS
 
-    r_df = train_models(parameters, x_train, x_test, y_train, y_test, verbose=False)
-    r_df['target'] = target
+            r_df = train_models(parameters, x_train, x_test, y_train, y_test, verbose=False)
+            r_df['target'] = target
+            r_df['features_regex'] = features_regex
+            r_df['cnn_type'] = cnn_type
 
-    r_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Poverty Estimation Results', 'binary_classification', 'individual_files', target + '.csv'))
+            r_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Poverty Estimation Results', 'binary_classification', 'individual_files', 'results_' + str(count) + '.csv'))
+
+            count = count + 1
+
+
 
 
 

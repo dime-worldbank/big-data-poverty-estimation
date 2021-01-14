@@ -12,15 +12,17 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.ensemble import (BaggingClassifier, AdaBoostClassifier, 
-                              GradientBoostingClassifier, RandomForestClassifier)
-from sklearn.neighbors import KNeighborsClassifier
+                              GradientBoostingClassifier, RandomForestClassifier,
+                              BaggingRegressor, AdaBoostRegressor, 
+                              GradientBoostingRegressor, RandomForestRegressor)
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, 
                              recall_score, classification_report)
 from keras.models import load_model
-from imblearn.over_sampling import RandomOverSampler
+#from imblearn.over_sampling import RandomOverSampler
 
 import logging 
 logging.disable(logging.WARNING) 
@@ -29,6 +31,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import config as cf
+import grid_params as grids
 from feature_extraction import extract_features
 from clean_data import load_and_clean_data
 from ml_utils import TrainedRegressor

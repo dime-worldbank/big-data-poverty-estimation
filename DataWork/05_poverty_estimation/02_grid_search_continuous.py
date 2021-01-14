@@ -23,13 +23,16 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.ensemble import (BaggingClassifier, AdaBoostClassifier, 
-                              GradientBoostingClassifier, RandomForestClassifier)
-from sklearn.neighbors import KNeighborsClassifier
+                              GradientBoostingClassifier, RandomForestClassifier,
+                              BaggingRegressor, AdaBoostRegressor, 
+                              GradientBoostingRegressor, RandomForestRegressor)
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (accuracy_score, precision_score, 
-                             recall_score, classification_report)
+                             recall_score, classification_report,
+                             explained_variance_score, r2_score)
 from keras.models import load_model
 #from imblearn.over_sampling import RandomOverSampler
 
@@ -38,6 +41,7 @@ import logging, os
 np.random.seed(42)
 
 ### User Defined Libraries ###
+import grid_params as grids
 import config as cf
 #import feature_extraction as fe
 
@@ -45,11 +49,6 @@ import config as cf
 TEST_SIZE = 0.2
 
 # Functions -----------------------------------------------
-#params = parameters.copy()
-#test_features = x_train.copy()
-#test_labels = y_train.copy()
-#feature_dict = feature_sets.copy()
-
 def train_models(params, x_train, x_test, y_train, y_test, verbose=False):
     '''
     Saves a .pkl file of TrainedRegressor objects for each model type, as
@@ -62,11 +61,12 @@ def train_models(params, x_train, x_test, y_train, y_test, verbose=False):
     Output: dataframe of training errors
             Also saves a .pkl file of TrainedRegressor objects for each model
     '''
-    count = 0
+    count = 1
 
     # Loop over models, hyperparameter combinations, and feature sets
     # Save one set of trained models for each regressor
     results_df = pd.DataFrame()
+    y_df = pd.DataFrame({'y': y_test})
 
     for i in params['regressors']:
         models = []
@@ -87,14 +87,14 @@ def train_models(params, x_train, x_test, y_train, y_test, verbose=False):
                 pred_dict = {
                     'regressor': i,
                     'params': j,
-                    'accuracy_score': accuracy_score(y_test, y_pred),
-                    'recall_score': recall_score(y_test, y_pred),
-                    'precision_score': precision_score(y_test, y_pred),
-                    'y_truth_1': sum(y_test == 1),
-                    'y_truth_0': sum(y_test == 0)
+                    'explained_variance': explained_variance_score(y_test, y_pred),
+                    'r2': r2_score(y_test, y_pred),
+                    'y_truth_mean': np.mean(y_test),
+                    'model_count': count
                  }
 
                 results_df = results_df.append(pred_dict, ignore_index=True)
+                y_df['y_pred_' + str(count)] = y_pred
 
             except Exception as e:
                 print(f"{datetime.datetime.now()}    ERROR: {str(e)}")
@@ -104,7 +104,7 @@ def train_models(params, x_train, x_test, y_train, y_test, verbose=False):
                     'error_message': str(e)
                 }, ignore_index=True)
 
-    return results_df
+    return results_df, y_df
 
 # Load/Prep Data ------------------------------------------
 df_cont = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalData', 'Merged Datasets', 'cnn_cont_merge.csv'))
@@ -114,10 +114,8 @@ df_bin = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP', 'FinalDa
 df_bin = df_bin[df_bin.year == 2014]
 
 # X/Y Data ------------------------------------------------
-target = 'pscores_poor'
-
 count = 1
-for target in ['pscores_poor', 'asset_tv', 'asset_washing_machinedryer', 'pscores_poor_med', 'asset_index_additive_bin', 'asset_index_pca1_bin']:
+for target in ['pscores', 'asset_index_additive', 'asset_index_pca1']:
     for features_regex in ['^cnn_', '^b', '^b|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN', '^b|^cnn_|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN']:
         for cnn_type in ['binary', 'continuous']:
 
@@ -140,14 +138,21 @@ for target in ['pscores_poor', 'asset_tv', 'asset_washing_machinedryer', 'pscore
             x_test = x_scaler.transform(x_test)
 
             # Train/Evaluate -------------------------------------------
-            parameters = cf.GRID_TEST_CLASS
+            parameters = grids.GRID_REGRESS
 
-            r_df = train_models(parameters, x_train, x_test, y_train, y_test, verbose=False)
+            r_df, pred_df = train_models(parameters, x_train, x_test, y_train, y_test, verbose=False)
+            
             r_df['target'] = target
             r_df['features_regex'] = features_regex
             r_df['cnn_type'] = cnn_type
+            r_df['model_type_count'] = count
+            r_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Poverty Estimation Results', 'continuous_classification', 'individual_files', 'results_' + str(count) + '.csv'))
 
-            r_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Poverty Estimation Results', 'binary_classification', 'individual_files', 'results_' + str(count) + '.csv'))
+            pred_df['target'] = target
+            pred_df['features_regex'] = features_regex
+            pred_df['cnn_type'] = cnn_type
+            pred_df['model_type_count'] = count
+            pred_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'Poverty Estimation Results', 'continuous_classification', 'predicted_values', 'results_' + str(count) + '.csv'))
 
             count = count + 1
 

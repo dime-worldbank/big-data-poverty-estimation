@@ -1,6 +1,6 @@
 # Results
 
-results_df <- file.path(project_file_path, 'Data', 'Poverty Estimation Results', 'binary_classification', 'individual_files') %>%
+results_binary_df <- file.path(project_file_path, 'Data', 'Poverty Estimation Results', 'binary_classification', 'individual_files') %>%
   list.files(full.names = T) %>%
   lapply(read.csv) %>%
   bind_rows() %>%
@@ -8,8 +8,17 @@ results_df <- file.path(project_file_path, 'Data', 'Poverty Estimation Results',
   arrange(desc(f1)) %>%
   dplyr::select(-X)
 
+results_cont_df <- file.path(project_file_path, 'Data', 'Poverty Estimation Results', 'continuous_classification', 'individual_files') %>%
+  list.files(full.names = T) %>%
+  lapply(read.csv) %>%
+  bind_rows() %>%
+  dplyr::select(-X)
 
-results_df$f1 %>% head()
+pred_df <- read.csv(file.path(project_file_path, 'Data', 'Poverty Estimation Results', 
+                              'continuous_classification', 'predicted_values', 
+                              paste0("results_", 18, ".csv")))
 
+cor(pred_df$y, pred_df$y_pred_17) %>% sqrt()
 
+plot(pred_df$y, pred_df$y_pred_17)
 

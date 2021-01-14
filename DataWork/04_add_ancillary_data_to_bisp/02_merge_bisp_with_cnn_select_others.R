@@ -3,7 +3,7 @@
 library(glmnet)
 set.seed(42)
 
-CNN_PCA <- T
+CNN_PCA <- F
 
 # Load Data --------------------------------------------------------------------
 ## BISP Data
@@ -95,6 +95,5 @@ write.csv(bisp_cnn_df, file.path(project_file_path, "Data", "BISP", "FinalData",
 
 saveRDS(bisp_cnn_cont_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_cont_merge.Rds"))
 write.csv(bisp_cnn_cont_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_cont_merge.csv"), row.names=F)
-
 
 

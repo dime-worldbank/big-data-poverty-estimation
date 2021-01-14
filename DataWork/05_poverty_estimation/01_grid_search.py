@@ -121,7 +121,7 @@ for target in ['pscores_poor', 'asset_tv', 'asset_washing_machinedryer', 'pscore
     for features_regex in ['^cnn_', '^b', '^b|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN', '^b|^cnn_|viirs_buff5km_year2014_spatialMEAN_monthlyMEAN']:
         for cnn_type in ['binary', 'continuous']:
 
-            print(target + ' ' + features_regex)
+            print(target + ' ' + cnn_type + ' ' + features_regex)
 
             if cnn_type == 'binary':
                 df = df_bin.copy()

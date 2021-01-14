@@ -66,7 +66,7 @@ asset_df$own <- ifelse(asset_df$own == "Yes", 1, 0)
 # For example, uid 22203737 in year 2016 had three rows for "TV", where only
 # in one of rows said "own." Arrange by own, so in cases like this we use
 # "1" (own), not "0".
-asset_df <- asset_df %>%
+asseta_df <- asset_df %>%
   arrange(desc(own)) %>%
   distinct(uid, year, asset, .keep_all = T) 
 

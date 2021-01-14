@@ -56,6 +56,12 @@ bisp_virrs_landsat_df <- bisp_virrs_landsat_df %>%
   filter(!is.na(b1),
          !is.na(pscores))
 
+## BISP Transformations
+bisp_virrs_landsat_df$pscores_poor <- as.numeric(bisp_virrs_landsat_df$pscores <= 16.17)
+bisp_virrs_landsat_df$pscores_poor_med <- as.numeric(bisp_virrs_landsat_df$pscores < median(bisp_virrs_landsat_df$pscores))
+bisp_virrs_landsat_df$asset_index_additive_bin <- as.numeric(bisp_virrs_landsat_df$asset_index_additive < median(bisp_virrs_landsat_df$asset_index_additive))
+bisp_virrs_landsat_df$asset_index_pca1_bin <- as.numeric(bisp_virrs_landsat_df$asset_index_pca1 < median(bisp_virrs_landsat_df$asset_index_pca1))
+
 ## Merge CNN
 bisp_cnn_df      <- merge(bisp_virrs_landsat_df, cnn_df,      by = "uid")
 bisp_cnn_cont_df <- merge(bisp_virrs_landsat_df, cnn_cont_df, by = "uid")
@@ -66,5 +72,6 @@ write.csv(bisp_cnn_df, file.path(project_file_path, "Data", "BISP", "FinalData",
 
 saveRDS(bisp_cnn_cont_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_cont_merge.Rds"))
 write.csv(bisp_cnn_cont_df, file.path(project_file_path, "Data", "BISP", "FinalData", "Merged Datasets", "cnn_cont_merge.csv"), row.names=F)
+
 
 

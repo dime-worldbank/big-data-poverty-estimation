@@ -1,6 +1,7 @@
 # Useful functions for project
 
 get_lat_lon <- function(number){
+  # Transform lat/lon degree/minute/second data from OPM to decimal degrees.
   
   deg = floor(number / 100)
   min = floor(number - (100 * deg))

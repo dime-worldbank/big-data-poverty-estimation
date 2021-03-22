@@ -1,17 +1,5 @@
 # BISP Coords to WGS84
 
-get_lat_lon <- function(number){
-  
-  deg = floor(number / 100)
-  min = floor(number - (100 * deg))
-  sec = 100 * (number - (100 * deg) - min)
-  degree = deg + (min / 60) + (sec / 3600)
-  
-  degree <- degree %>% as.numeric()
-  
-  return(degree)
-}
-
 # Load Data --------------------------------------------------------------------
 bisp_coords <- read_dta(file.path(secure_file_path, 
                                   "Data", "BISP", "RawData - PII", 

@@ -20,14 +20,14 @@ plot(pak,add=T)
 
 # Export -----------------------------------------------------------------------
 
-saveRDS(grid, file.path(project_file_path, "Data", "Pakistan Grid", "RawData", "pak_grid_200km.Rds"))
+saveRDS(grid, file.path(project_file_path, "Data", "Pakistan Grid", "FinalData", "pak_grid_200km.Rds"))
 
 writeOGR(grid,
-         dsn = file.path(project_file_path, "Data", "Pakistan Grid", "RawData", "shp"),
+         dsn = file.path(project_file_path, "Data", "Pakistan Grid", "FinalData", "shp"),
          layer = "pak_grid_200km",
          driver = "ESRI Shapefile")
 
 grid_sf <- st_as_sf(grid)
-write_sf(grid_sf, file.path(project_file_path, "Data", "Pakistan Grid", "RawData", "pak_grid_200km.geojson"))
+write_sf(grid_sf, file.path(project_file_path, "Data", "Pakistan Grid", "FinalData", "pak_grid_200km.geojson"))
 
 

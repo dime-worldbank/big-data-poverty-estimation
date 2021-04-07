@@ -1,0 +1,26 @@
+# Predict NTL with DTL
+# 03_predict_ntl_with_dtl
+
+# Extract daytime imagery to OPM locations. Creates a (1) numpy array with daytime imagery
+# values around each survey location and a (2) pandas dataframe with the uid of each survey
+# location, in the same order as the numpy array.
+# -- 01_extract_dtl_opm.ipynb
+
+# Extract daytime and nighttime lights data for CNN. Nighttime lights is originally at about
+# a 1x1km resolution and daytime is at a 30m resolution. Creates numpy arrays for both daytime and nighttime imagery values. For each observation, nighttime imagery contains one value (the value of nighttime lights) and daytime imagery contains a stacked matrix of values
+# -- 01_prep_data_for_cnn.py
+
+# Run CNN. Save best model and predicted values from best model.
+# 02_cnn.ipynb
+
+# Examine CNN results. Calculate stats of results.
+# 03_cnn_results_R.ipynb
+
+# Extract CNN features to OPM data using the best CNN model. Creates a dataframe with the OPM uid and the cnn featurs.
+# 03_extract_cnn_features_to_opm.ipynb
+
+# PCA of CNN features to reduce dimensionality
+# 04_cnn_features_pca.py
+
+# Extract activation maps of CNN layers. Do this to make some figures to include in paper.
+# 04_extract_activation_maps.py

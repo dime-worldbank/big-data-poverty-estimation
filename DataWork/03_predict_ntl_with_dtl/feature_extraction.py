@@ -163,9 +163,9 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year):
 
     for i in range(gdf.shape[0]):
 
-        # Print every 100
-        if (i % 100) == 0: print(i)
-
+        # Print every 10
+        if (i % 10) == 0: print(str(i) + "/" + str(gdf.shape[0])) 
+        
         row = gdf.iloc[[i]]
 
         DTL = get_DTL(row, directory, bands, img_height, img_width, year)

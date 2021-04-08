@@ -8,6 +8,14 @@ import os
 import getpass
 from sklearn.tree import DecisionTreeClassifier
 
+import boto3
+from sagemaker import get_execution_role
+from s3fs.core import S3FileSystem 
+s3 = S3FileSystem()
+role = get_execution_role()
+
+bucket = 'worldbank-pakistan-data'
+LOCAL_DIR = '/home/ec2-user/SageMaker/'
 
 ######################
 #    ML VARIABLES    #

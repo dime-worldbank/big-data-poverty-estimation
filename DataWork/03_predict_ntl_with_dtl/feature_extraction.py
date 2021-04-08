@@ -14,6 +14,15 @@ from rasterio.enums import Resampling
 #from keras.models import Model
 #from keras.applications.imagenet_utils import preprocess_input
 
+import boto3
+from sagemaker import get_execution_role
+from s3fs.core import S3FileSystem 
+s3 = S3FileSystem()
+role = get_execution_role()
+
+bucket = 'worldbank-pakistan-data'
+LOCAL_DIR = '/home/ec2-user/SageMaker/'
+
 # https://automating-gis-processes.github.io/CSC18/lessons/L6/clipping-raster.html
 def getFeatures(gdf):
     """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
@@ -48,11 +57,13 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
     Returns:
         2D numpy array
     '''
+    
 
     #### Load Raster
     # TODO: Update
     #r_data = rasterio.open(filepath)
-    r_data = rasterio.open(s3.open('{}/{}'.format(bucket, filepath)))
+    #r_data = rasterio.open(s3.open('{}/{}'.format(bucket, filepath)))
+    r_data = rasterio.open(os.path.join('s3://worldbank-pakistan-data', filepath)) 
 
     #### Crop
 

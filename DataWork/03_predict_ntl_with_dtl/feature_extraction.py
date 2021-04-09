@@ -8,11 +8,18 @@ import os
 import pandas as pd
 import numpy as np
 import cv2
-#import rasterio 
-#from rasterio.mask import mask
-#from rasterio.enums import Resampling
+
 #from keras.models import Model
 #from keras.applications.imagenet_utils import preprocess_input
+
+import boto3
+from sagemaker import get_execution_role
+from s3fs.core import S3FileSystem 
+s3 = S3FileSystem()
+role = get_execution_role()
+
+bucket = 'worldbank-pakistan-data'
+LOCAL_DIR = '/home/ec2-user/SageMaker/'
 
 # https://automating-gis-processes.github.io/CSC18/lessons/L6/clipping-raster.html
 def getFeatures(gdf):
@@ -54,7 +61,10 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
     from rasterio.enums import Resampling
 
     #### Load Raster
-    r_data = rasterio.open(filepath)
+    # TODO: Update
+    #r_data = rasterio.open(filepath)
+    #r_data = rasterio.open(s3.open('{}/{}'.format(bucket, filepath)))
+    r_data = rasterio.open(os.path.join('s3://worldbank-pakistan-data', filepath)) 
 
     #### Crop
 
@@ -62,6 +72,7 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
     shapes = getFeatures(polygon) 
 
     # Crop
+    from rasterio.mask import mask
     out_img, out_transform = mask(r_data, shapes=shapes, crop=True)
     
     # Update Metadata
@@ -153,9 +164,9 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year):
 
     for i in range(gdf.shape[0]):
 
-        # Print every 100
-        if (i % 100) == 0: print(i)
-
+        # Print every 10
+        if (i % 10) == 0: print(str(i) + "/" + str(gdf.shape[0])) 
+        
         row = gdf.iloc[[i]]
 
         DTL = get_DTL(row, directory, bands, img_height, img_width, year)
@@ -180,10 +191,6 @@ def extract_features(model, data, layer_name):
     Returns:
         (pandas DataFrame) features
     '''
-    
-    from keras.models import Model
-    from keras.applications.imagenet_utils import preprocess_input
-    
     # Preprocess image data
     data = preprocess_input(data)
 

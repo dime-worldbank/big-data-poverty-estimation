@@ -11,8 +11,8 @@ import cv2
 #import rasterio 
 #from rasterio.mask import mask
 #from rasterio.enums import Resampling
-from keras.models import Model
-from keras.applications.imagenet_utils import preprocess_input
+#from keras.models import Model
+#from keras.applications.imagenet_utils import preprocess_input
 
 # https://automating-gis-processes.github.io/CSC18/lessons/L6/clipping-raster.html
 def getFeatures(gdf):
@@ -48,6 +48,10 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
     Returns:
         2D numpy array
     '''
+    
+    import rasterio 
+    from rasterio.mask import mask
+    from rasterio.enums import Resampling
 
     #### Load Raster
     r_data = rasterio.open(filepath)
@@ -58,7 +62,6 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
     shapes = getFeatures(polygon) 
 
     # Crop
-    from rasterio.mask import mask
     out_img, out_transform = mask(r_data, shapes=shapes, crop=True)
     
     # Update Metadata
@@ -177,6 +180,10 @@ def extract_features(model, data, layer_name):
     Returns:
         (pandas DataFrame) features
     '''
+    
+    from keras.models import Model
+    from keras.applications.imagenet_utils import preprocess_input
+    
     # Preprocess image data
     data = preprocess_input(data)
 

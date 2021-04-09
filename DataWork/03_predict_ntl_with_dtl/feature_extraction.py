@@ -8,9 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 import cv2
-import rasterio 
-from rasterio.mask import mask
-from rasterio.enums import Resampling
+
 #from keras.models import Model
 #from keras.applications.imagenet_utils import preprocess_input
 
@@ -58,6 +56,9 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
         2D numpy array
     '''
     
+    import rasterio 
+    from rasterio.mask import mask
+    from rasterio.enums import Resampling
 
     #### Load Raster
     # TODO: Update

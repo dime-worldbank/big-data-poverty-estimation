@@ -6,6 +6,10 @@
 # RATE LIMIT: 200 calls/hour
 # 60*60/200
 
+# PARAMETERS
+# https://developers.facebook.com/docs/marketing-api/audiences/reference/basic-targeting
+# https://developers.facebook.com/docs/marketing-api/audiences/reference/advanced-targeting
+
 # RESOURCES
 # https://github.com/SofiaG1l/Using_Facebook_API
 
@@ -37,8 +41,8 @@ creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"]
 version <- api_keys$Key[api_keys$Account %in% "version"]
 
 # Parameters -------------------------------------------------------------------
-# TODO: Adapt this to expand from other parameters
-parameters_df <- data.frame(
+# By male/female
+parameters_df_1 <- data.frame(
   radius_km = 5,
   gender = c("1,2","1","2"),
   age_min = 13,
@@ -50,8 +54,71 @@ parameters_df <- data.frame(
   stringsAsFactors = F
 )
 
-#loc_i = 1
-#parameters_df_i = parameters_df[1,]
+# By education status
+parameters_df_2 <- data.frame(
+  radius_km = 5,
+  gender = c("1,2"),
+  age_min = 13,
+  age_max = 65,
+  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+  device_platforms = "'mobile','desktop'",
+  publisher_platforms = "'facebook','messenger'",
+  messenger_positions = "'messenger_home'",
+  education_statuses = c("1,4,13",
+                         "2,5,6,7,8,9,10,11"),
+  stringsAsFactors = F
+)
+
+# By device type
+parameters_df_3 <- data.frame(
+  radius_km = 5,
+  gender = c("1,2"),
+  age_min = 13,
+  age_max = 65,
+  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+  device_platforms = "'mobile','desktop'",
+  publisher_platforms = "'facebook','messenger'",
+  messenger_positions = "'messenger_home'",
+  user_os = c("'iOS'",
+              "'Android'",
+              "'iOS_ver_2.0_to_3.0'",
+              "'iOS_ver_4.0_to_5.0'",
+              "'iOS_ver_6.0_to_7.0'",
+              "'iOS_ver_8.0_to_9.0'",
+              "'Android_ver_2.0_to_3.2'",
+              "'Android_ver_4.0_to_5.1'",
+              "'Android_ver_6.0_to_7.1'",
+              "'Android_ver_8.0_and_above'"),
+  stringsAsFactors = F
+)
+
+# Wireless carrier
+parameters_df_4 <- data.frame(
+  radius_km = 5,
+  gender = c("1,2"),
+  age_min = 13,
+  age_max = 65,
+  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+  device_platforms = "'mobile','desktop'",
+  publisher_platforms = "'facebook','messenger'",
+  messenger_positions = "'messenger_home'",
+  wireless_carrier = "'wifi'",
+  stringsAsFactors = F
+)
+
+# Append
+parameters_df <- bind_rows(
+  parameters_df_1,
+  parameters_df_2,
+  parameters_df_3,
+  parameters_df_4
+)
+
+
+# Function to extract data -----------------------------------------------------
+
+loc_i = 4
+parameters_df_i = parameters_df[loc_i,]
 make_query_location_i <- function(loc_i, 
                                   coords_df,
                                   parameters_df_i, 
@@ -82,6 +149,12 @@ make_query_location_i <- function(loc_i,
                     "'longitude':",coords_df$longitude[loc_i] %>% substring(1,7),",",
                     "'radius':",parameters_df_i$radius_km,",",
                     "'distance_unit':'kilometer'}]},",
+                    ifelse(is.na(parameters_df_i$education_statuses), "", 
+                           paste0("'education_statuses':[", parameters_df_i$education_statuses, "],")), 
+                    ifelse(is.na(parameters_df_i$user_os), "", 
+                           paste0("'user_os':[", parameters_df_i$user_os, "],")), 
+                    ifelse(is.na(parameters_df_i$wireless_carrier), "", 
+                           paste0("'wireless_carrier':[", parameters_df_i$wireless_carrier, "],")), 
                     "'genders':[",parameters_df_i$gender,"],",
                     "'age_min':",parameters_df_i$age_min,",",
                     "'age_max':",parameters_df_i$age_max, #",",
@@ -134,17 +207,23 @@ make_query_location_i <- function(loc_i,
 }
 
 # Implement Function and Export ------------------------------------------------
-
-queries_all_df_1 <- map_df(1:3, make_query_location_i, coords_df, parameters_df[1,], version, creation_act, token)
-
-time <- Sys.time() %>% as.character() %>% str_replace_all("[[:punct:]]| ", "")
-saveRDS(queries_all_df_1,
-        file.path(project_file_path, "Data", "Facebook", "FinalData", 
-                  "mau_dau_results", 
-                  paste0("facebook_marketing_",time,".Rds")))
-write.csv(queries_all_df_1,
+for(pararm_i in 1:nrow(parameters_df)){
+  
+  queries_all_df_1 <- map_df(1:nrow(coords_df), make_query_location_i, 
+                             coords_df, parameters_df[pararm_i,], version, creation_act, token)
+  
+  time_parm <- Sys.time() %>% as.character() %>% str_replace_all("[[:punct:]]| ", "")
+  time_parm <- paste0(time_parm, "_", pararm_i)
+  queries_all_df_1$param_version <- time_parm
+  saveRDS(queries_all_df_1,
           file.path(project_file_path, "Data", "Facebook", "FinalData", 
                     "mau_dau_results", 
-                    paste0("facebook_marketing_",time,".csv")),
-          row.names = F)
+                    paste0("facebook_marketing_",time_parm,".Rds")))
+  write.csv(queries_all_df_1,
+            file.path(project_file_path, "Data", "Facebook", "FinalData", 
+                      "mau_dau_results", 
+                      paste0("facebook_marketing_",time_parm,".csv")),
+            row.names = F)
+  
+}
 

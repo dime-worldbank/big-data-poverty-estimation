@@ -1,38 +1,58 @@
 # Merge Data Extracted from Facebook API
 
 # Load Data --------------------------------------------------------------------
-uid_clusterid_crosswalk <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_clusterid_crosswalk.Rds"))
+opm_cluster_crosswalk <- readRDS(file.path(project_file_path, "Data", "Facebook", "FinalData", "locations_to_scrape", "opm_cluster_crosswalk.Rds"))
 
-facebook_1_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_1.Rds"))
-facebook_2_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_2.Rds"))
-facebook_3_df <- readRDS(file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_3.Rds"))
+# To Wide ----------------------------------------------------------------------
+df_long <- file.path(project_file_path, "Data", "Facebook", "FinalData", 
+                     "mau_dau_results") %>%
+  list.files(pattern = "*.Rds",
+             full.names = T) %>%
+  map_df(readRDS)
 
-facebook_1_df <- facebook_1_df %>%
-  dplyr::select(cluster_id, estimate_dau, estimate_mau) %>%
-  dplyr::rename(estimate_dau_all = estimate_dau,
-                estimate_mau_all = estimate_mau)
+df_wide <- df_long %>%
+  pivot_wider(id_cols = c(cluster_id),
+              names_from = param_version,
+              values_from = c(estimate_dau, estimate_mau))
 
-facebook_2_df <- facebook_2_df %>%
-  dplyr::select(cluster_id, estimate_dau, estimate_mau) %>%
-  dplyr::rename(estimate_dau_male = estimate_dau,
-                estimate_mau_male = estimate_mau)
+# To Proportion ----------------------------------------------------------------
+# estimate_dau_20210413195626_1 is all facebook users, so divide by this to 
+# get proportion of facebook users that meet a certain category
 
-facebook_3_df <- facebook_3_df %>%
-  dplyr::select(cluster_id, estimate_dau, estimate_mau) %>%
-  dplyr::rename(estimate_dau_female = estimate_dau,
-                estimate_mau_female = estimate_mau)
+df_wide_prop <- df_wide %>%
+  mutate_at(vars(contains("dau"), -estimate_dau_20210413195626_1), ~(. /  estimate_dau_20210413195626_1)) %>%
+  mutate_at(vars(contains("mau"), -estimate_mau_20210413195626_1), ~(. /  estimate_mau_20210413195626_1)) %>%
+  dplyr::select(-c(estimate_dau_20210413195626_1, estimate_mau_20210413195626_1)) %>%
+  dplyr::mutate_all(replace_na, 0)
 
-facebook_df <- merge(facebook_1_df, facebook_2_df, by="cluster_id", all=T)
-facebook_df <- merge(facebook_df, facebook_3_df, by="cluster_id", all=T)
-hh_facebook_df <- merge(uid_clusterid_crosswalk, facebook_df, by="cluster_id")
+# Merge with HH ID -------------------------------------------------------------
+# Data is at cluster level, merge so at HH level
+
+df_wide <- opm_cluster_crosswalk %>%
+  left_join(df_wide, by = "cluster_id") %>%
+  dplyr::mutate_all(replace_na, 0) %>%
+  dplyr::select(-cluster_id)
+
+df_wide_prop <- opm_cluster_crosswalk %>%
+  left_join(df_wide_prop, by = "cluster_id") %>%
+  dplyr::mutate_all(replace_na, 0) %>%
+  dplyr::select(-cluster_id)
 
 # Export -----------------------------------------------------------------------
-hh_facebook_df$cluster_id <- NULL
-saveRDS(hh_facebook_df, file.path(final_data_file_path, "BISP", "Individual Datasets", "facebook_marketing_extract_allmerged.Rds"))
+saveRDS(df_wide, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau.Rds"))
+write.csv(df_wide, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau.csv"), row.names = F)
 
+saveRDS(df_wide_prop, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau_prop.Rds"))
+write.csv(df_wide_prop, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau_prop.csv"), row.names = F)
 
+# Indicatoes parameters for each "param_version"
+param_df <- df_long %>%
+  dplyr::select(-c(estimate_dau, estimate_mau, estimate_ready, latitude, longitude, api_call_time_utc)) %>%
+  dplyr::distinct(param_version, .keep_all = T) %>%
+  dplyr::select(param_version, everything())
 
-
+saveRDS(param_df, file.path(final_data_file_path, "OPSM", "Individual Datasets", "facebook_marketing_parameters.Rds"))
+write.csv(param_df, file.path(final_data_file_path, "OPSM", "Individual Datasets", "facebook_marketing_parameters.csv"), row.names = F)
 
 
 

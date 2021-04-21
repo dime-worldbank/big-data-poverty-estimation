@@ -7,7 +7,6 @@ if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Ban
 
 bisp_indiv_files_dir <- file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets")
 raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
-final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
 tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
 figures_file_path <- file.path(project_file_path, "Outputs", "Results", "Figures")
 

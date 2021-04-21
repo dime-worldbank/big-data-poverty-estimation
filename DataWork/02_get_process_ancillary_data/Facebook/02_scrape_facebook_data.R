@@ -117,8 +117,8 @@ parameters_df <- bind_rows(
 
 # Function to extract data -----------------------------------------------------
 
-loc_i = 4
-parameters_df_i = parameters_df[loc_i,]
+loc_i = 655
+parameters_df_i = parameters_df[1,]
 make_query_location_i <- function(loc_i, 
                                   coords_df,
                                   parameters_df_i, 
@@ -208,6 +208,8 @@ make_query_location_i <- function(loc_i,
 
 # Implement Function and Export ------------------------------------------------
 for(pararm_i in 1:nrow(parameters_df)){
+  
+  print(paste0(pararm_i, "---------------------------------------------------"))
   
   queries_all_df_1 <- map_df(1:nrow(coords_df), make_query_location_i, 
                              coords_df, parameters_df[pararm_i,], version, creation_act, token)

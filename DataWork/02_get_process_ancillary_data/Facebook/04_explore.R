@@ -24,11 +24,11 @@ opm_pov$estimate_mau_20210417054957_11 %>% hist()
 ggplot() +
   geom_point(data = opm_pov,
              aes(x = pscores,
-                 y = estimate_dau_20210417140047_12))
+                 y = estimate_mau_20210415044235_5))
 
 opm_pov %>%
   names() %>%
-  str_subset("dau")
+  str_subset("mau")
 
 lm(pscores ~ estimate_dau_20210414121920_3, data = opm_pov %>%
      dplyr::filter(estimate_dau_20210414121920_3 != Inf)) %>%

@@ -30,13 +30,13 @@ df_wide_prop <- df_wide %>%
 
 df_wide <- opm_cluster_crosswalk %>%
   left_join(df_wide, by = "cluster_id") %>%
-  dplyr::mutate_all(replace_na, 0) %>%
-  dplyr::select(-cluster_id)
+  dplyr::mutate_all(replace_na, 0) #%>%
+  #dplyr::select(-cluster_id)
 
 df_wide_prop <- opm_cluster_crosswalk %>%
   left_join(df_wide_prop, by = "cluster_id") %>%
-  dplyr::mutate_all(replace_na, 0) %>%
-  dplyr::select(-cluster_id)
+  dplyr::mutate_all(replace_na, 0) #%>%
+  #dplyr::select(-cluster_id)
 
 # Export -----------------------------------------------------------------------
 saveRDS(df_wide, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_dau_mau.Rds"))

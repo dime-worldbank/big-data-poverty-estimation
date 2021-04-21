@@ -39,11 +39,11 @@ df_wide_prop <- opm_cluster_crosswalk %>%
   dplyr::select(-cluster_id)
 
 # Export -----------------------------------------------------------------------
-saveRDS(df_wide, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau.Rds"))
-write.csv(df_wide, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau.csv"), row.names = F)
+saveRDS(df_wide, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_dau_mau.Rds"))
+write.csv(df_wide, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_dau_mau.csv"), row.names = F)
 
-saveRDS(df_wide_prop, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau_prop.Rds"))
-write.csv(df_wide_prop, file.path(final_data_file_path, "OPM", "Individual Datasets", "facebook_marketing_dau_mau_prop.csv"), row.names = F)
+saveRDS(df_wide_prop, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_dau_mau_prop.Rds"))
+write.csv(df_wide_prop, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_dau_mau_prop.csv"), row.names = F)
 
 # Indicatoes parameters for each "param_version"
 param_df <- df_long %>%
@@ -51,8 +51,8 @@ param_df <- df_long %>%
   dplyr::distinct(param_version, .keep_all = T) %>%
   dplyr::select(param_version, everything())
 
-saveRDS(param_df, file.path(final_data_file_path, "OPSM", "Individual Datasets", "facebook_marketing_parameters.Rds"))
-write.csv(param_df, file.path(final_data_file_path, "OPSM", "Individual Datasets", "facebook_marketing_parameters.csv"), row.names = F)
+saveRDS(param_df, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_parameters.Rds"))
+write.csv(param_df, file.path(data_dir, "OPM", "FinalData", "Individual Datasets", "facebook_marketing_parameters.csv"), row.names = F)
 
 
 

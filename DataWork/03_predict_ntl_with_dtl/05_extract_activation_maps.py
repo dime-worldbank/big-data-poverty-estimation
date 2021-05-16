@@ -34,8 +34,8 @@ import feature_extraction as fe
 def extract_features_to_pd():
 
     # 1. Load Data and CNN Model
-    DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl.npy'))
-    bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids.pkl'))
+    DTL = np.load(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_dtl.npy'))
+    bisp_df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_dtl_uids.pkl'))
     model = load_model(cf.CNN_FILENAME)
 
     # 2. Extract features
@@ -78,8 +78,8 @@ def extract_features_to_pd():
     df['uid'] = bisp_df.uid
                
     # 4. Export           
-    df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.pkl'))
-    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'BISP' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.csv'))
+    df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.pkl'))
+    df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.csv'))
 
 if __name__ == '__main__':
     extract_features_to_pd()

@@ -6,8 +6,7 @@ if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/D
 if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 
 bisp_indiv_files_dir <- file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets")
-raw_data_file_path <- file.path(project_file_path, "Data", "RawData")
-final_data_file_path <- file.path(project_file_path,"Data", "FinalData")
+data_dir <- file.path(project_file_path, "Data")
 tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
 figures_file_path <- file.path(project_file_path, "Outputs", "Results", "Figures")
 
@@ -58,6 +57,7 @@ library(rgeos)
 library(tidyverse)
 library(caret)
 library(mltest)
+library(RANN)
 source(file.path(code_file_path, "02_bisp_approach", "_functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")

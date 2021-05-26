@@ -47,7 +47,7 @@ def extract_pca_features():
     n_components = 10
 
     # 1. Load Data
-    df = pd.read_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_all.pkl'))
+    df = pd.read_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Merged Datasets', 'cnn_merge.csv'))
 
     # 2.Remove unique ID
     cnn_df = df.drop(['uid'], axis=1)
@@ -60,8 +60,8 @@ def extract_pca_features():
     pca_df['uid'] = df.uid
                
     # 5. Export           
-    pca_df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_pca.pkl'))
-    pca_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Individual Datasets', 'bisp_cnn_features_pca.csv'))
+    pca_df.to_pickle(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Merged Datasets', 'cnn_merge_pca.pkl'))
+    pca_df.to_csv(os.path.join(cf.DROPBOX_DIRECTORY, 'Data', 'OPM' , 'FinalData', 'Merged Datasets', 'cnn_merge_pca.csv'))
 
 if __name__ == '__main__':
     extract_pca_features()

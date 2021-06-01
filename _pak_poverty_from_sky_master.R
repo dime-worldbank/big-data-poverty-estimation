@@ -5,6 +5,7 @@
 if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 
+opm_dir <- file.path(project_file_path, "Data", "OPM")
 bisp_indiv_files_dir <- file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets")
 data_dir <- file.path(project_file_path, "Data")
 tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
@@ -20,8 +21,8 @@ if(Sys.info()[["user"]] == "WB521633") secure_file_path <- "C:/Users/wb521633/On
 if(Sys.info()[["user"]] == "robmarty") secure_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky"
 
 # Code File Path
-if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky/Code"
-if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky/Code"
+if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky"
+if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
 
 # Webscraping File Path
 if(Sys.info()[["user"]] == "WB521633") webscraping_api_filepath <- "C:/Users/wb521633/Dropbox/World Bank/Webscraping/Files for Server"
@@ -58,7 +59,7 @@ library(tidyverse)
 library(caret)
 library(mltest)
 library(RANN)
-source(file.path(code_file_path, "02_bisp_approach", "_functions", "functions.R"))
+source(file.path(code_file_path, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
 

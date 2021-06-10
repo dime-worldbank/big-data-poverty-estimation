@@ -28,8 +28,8 @@ library(curl)
 library(haven)
 
 # Load Coordinates -------------------------------------------------------------
-coords_df <- readRDS(file.path(project_file_path, "Data", "Facebook", "FinalData", 
-                               "locations_to_scrape", "cluster_locations.Rds"))
+coords_df <- readRDS(file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", 
+                               "Individual Datasets", "fb_mau_cluster_locations.Rds"))
 
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
@@ -113,7 +113,6 @@ parameters_df <- bind_rows(
   parameters_df_3,
   parameters_df_4
 )
-
 
 # Function to extract data -----------------------------------------------------
 
@@ -217,15 +216,9 @@ for(pararm_i in 1:nrow(parameters_df)){
   time_parm <- Sys.time() %>% as.character() %>% str_replace_all("[[:punct:]]| ", "")
   time_parm <- paste0(time_parm, "_", pararm_i)
   queries_all_df_1$param_version <- time_parm
-  saveRDS(queries_all_df_1,
-          file.path(project_file_path, "Data", "Facebook", "FinalData", 
-                    "mau_dau_results", 
-                    paste0("facebook_marketing_",time_parm,".Rds")))
-  write.csv(queries_all_df_1,
-            file.path(project_file_path, "Data", "Facebook", "FinalData", 
-                      "mau_dau_results", 
-                      paste0("facebook_marketing_",time_parm,".csv")),
-            row.names = F)
+  
+  saveRDS(queries_all_df_1, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_individual_datasets",
+                                      paste0("facebook_marketing_",time_parm,".Rds")))
   
 }
 

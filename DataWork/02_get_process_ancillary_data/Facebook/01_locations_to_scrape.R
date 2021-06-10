@@ -11,14 +11,7 @@
 set.seed(42)
 
 # Load HH Coordinates ----------------------------------------------------------
-opm_coords <- read.csv(file.path(secure_file_path, "Data", "BISP", "FinalData - PII", "GPS_uid_crosswalk.csv"),
-                        stringsAsFactors = F)
-
-opm_coords$uid <- opm_coords$uid %>% as.numeric()
-
-# Some coordinates are bad; remove those
-opm_coords <- opm_coords[(opm_coords$latitude < 37) & (opm_coords$latitude > 23),]
-opm_coords <- opm_coords[(opm_coords$longitude < 81) & (opm_coords$longitude > 65),]
+opm_coords <- readRDS(SURVEY_COORDS_PATH)
 
 # Add projected coords
 coordinates(opm_coords) <- ~longitude+latitude
@@ -44,15 +37,13 @@ cluster_df <- opm_coords %>%
   summarise_at(vars(c(latitude, longitude)), mean)
 
 # Export -----------------------------------------------------------------------
-saveRDS(opm_cluster_crosswalk, file.path(project_file_path, "Data", "Facebook", "FinalData", "locations_to_scrape", "opm_cluster_crosswalk.Rds"))
-write.csv(opm_cluster_crosswalk, file.path(project_file_path, "Data", "Facebook", "FinalData", "locations_to_scrape", "opm_cluster_crosswalk.csv"),
+saveRDS(opm_cluster_crosswalk,   file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_cluster_crosswalk.Rds"))
+write.csv(opm_cluster_crosswalk, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_cluster_crosswalk.csv"),
           row.names = F)
 
-saveRDS(cluster_df, file.path(project_file_path, "Data", "Facebook", "FinalData", "locations_to_scrape", "cluster_locations.Rds"))
-write.csv(cluster_df, file.path(project_file_path, "Data", "Facebook", "FinalData", "locations_to_scrape", "cluster_locations.csv"),
+saveRDS(cluster_df,              file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_cluster_locations.Rds"))
+write.csv(cluster_df,            file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_cluster_locations.csv"),
           row.names = F)
-
-
 
 
 

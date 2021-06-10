@@ -5,11 +5,9 @@ buffer_size_osm_m <- c(100, 200, 1000, 2000, 5000)
 # Load Data --------------------------------------------------------------------
 #### Roads
 osm_roads_sdf <- readRDS(file.path(project_file_path, "Data", "OSM", "FinalData", "gis_osm_roads_free_1.Rds"))
-osm_roads_sdf <- osm_roads_sdf[1:100,]
 
 #### OSM Coordinates
 opm_coords <- readRDS(SURVEY_COORDS_PATH)
-opm_coords <- opm_coords[1:100,]
 
 coordinates(opm_coords) <- ~longitude+latitude
 crs(opm_coords) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
@@ -96,7 +94,7 @@ for(buffer_size_m_i in buffer_size_osm_m){
                              osm_roads_sf,
                              opm_coords_buff) %>%
     reduce(merge, by = "uid") %>%
-    dplyr::rename_at(vars(-uid), ~ paste0("osm_length_", ., "_1kmbuff"))
+    dplyr::rename_at(vars(-uid), ~ paste0("osm_length_", ., "_",buffer_size_m_i,"m_buff"))
   
   saveRDS(rd_length_m_df, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", paste0("osm_road_length_",buffer_size_m_i,"m_buff.Rds")))
   write.csv(rd_length_m_df, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", paste0("osm_road_length_",buffer_size_m_i,"m_buff.csv")),

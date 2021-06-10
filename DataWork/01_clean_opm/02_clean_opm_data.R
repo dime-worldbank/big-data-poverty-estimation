@@ -1,6 +1,7 @@
 # Clean OPM Data
 
-# Clean Oxford Policy Management (OPM) survey data. Create Household Level dataframe with relevant socioeconomic variables.
+# Clean Oxford Policy Management (OPM) survey data. Create Household Level 
+# dataframe with relevant socioeconomic variables.
 
 # Load Data --------------------------------------------------------------------
 bisp_plist <- read_dta(file.path(opm_dir, "RawData - Deidentified", 'bisp_combined_plist.dta'))
@@ -51,7 +52,10 @@ asset_df <- asset_df %>%
                 own = LNONE %>% 
                   as_factor() %>% 
                   as.character(),
-                year = period %>% as_factor %>% as.character %>% as.numeric) %>%
+                year = period %>% 
+                  as_factor %>% 
+                  as.character %>% 
+                  as.numeric) %>%
   dplyr::select(uid, year, asset, own)
 
 ## If not Yes/No, replace with NA (some "9"s)
@@ -89,19 +93,11 @@ pca <- asset_df %>%
   prcomp()
 
 asset_df$asset_index_pca1 <- pca$x[,1]
-asset_df$asset_index_pca2 <- pca$x[,2]
-asset_df$asset_index_pca3 <- pca$x[,3]
-asset_df$asset_index_pca4 <- pca$x[,4]
-asset_df$asset_index_pca5 <- pca$x[,5]
 
 #### Addiditive Index
 asset_df$asset_index_additive <- asset_df %>%
   dplyr::select(-c(uid, year, 
-                   asset_index_pca1,
-                   asset_index_pca2,
-                   asset_index_pca3,
-                   asset_index_pca4,
-                   asset_index_pca5)) %>%
+                   asset_index_pca1)) %>%
   apply(1, sum)
 
 bisp_df <- merge(bisp_df, asset_df, by = c("uid", "year"),
@@ -164,7 +160,7 @@ bisp_df$pov_line[bisp_df$year %in% 2013] <- pov_line_2013
 bisp_df$pov_line[bisp_df$year %in% 2014] <- pov_line_2014
 bisp_df$pov_line[bisp_df$year %in% 2016] <- pov_line_2016
 
-# Create Additional Variables --------------------------------------------------
+# Create/Adjust Variables ------------------------------------------------------
 # Number adult equivalent
 bisp_df$N_adult_equiv <- bisp_df$N_adults + bisp_df$N_children * 0.8
 
@@ -178,12 +174,79 @@ bisp_df$survey_round[bisp_df$year %in% 2013] <- 2
 bisp_df$survey_round[bisp_df$year %in% 2014] <- 3
 bisp_df$survey_round[bisp_df$year %in% 2016] <- 4
 
+# UID to numeric
+bisp_df$uid <- bisp_df$uid %>% as.numeric()
+
+# Constant sample identifies
+bisp_df <- bisp_df %>%
+  group_by(uid) %>%
+  dplyr::mutate(years_surveyed = year %>% paste(collapse=";")) %>%
+  ungroup() %>%
+  mutate(constant_11_13 = 
+           str_detect(years_surveyed, "2011") & 
+           str_detect(years_surveyed, "2013"),
+         constant_11_13_14 = 
+           str_detect(years_surveyed, "2011") & 
+           str_detect(years_surveyed, "2013") &
+           str_detect(years_surveyed, "2014"),
+         constant_11_13_14_16 = 
+           str_detect(years_surveyed, "2011") & 
+           str_detect(years_surveyed, "2013") &
+           str_detect(years_surveyed, "2014") &
+           str_detect(years_surveyed, "2016"))
+
+# Merge in Coordinates & GADM Data ---------------------------------------------
+#### Coords
+opm_coords <- read.csv(file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "GPS_uid_crosswalk.csv"))
+
+bisp_df <- bisp_df %>%
+  left_join(opm_coords, by = "uid")
+
+#### GADM
+pak_adm3 <- readRDS(file.path(gadm_dir, "RawData", 'gadm36_PAK_3_sp.rds'))
+
+bisp_df_geo <- bisp_df %>%
+  dplyr::select(uid, latitude, longitude) %>%
+  dplyr::filter(!is.na(latitude)) %>%
+  distinct()
+
+coordinates(bisp_df_geo) <- ~longitude+latitude
+crs(bisp_df_geo) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+bisp_df_geo_OVER_pak_adm3 <- over(bisp_df_geo, pak_adm3)
+bisp_df_geo_OVER_pak_adm3$uid <- bisp_df_geo$uid 
+#bisp_df_geo_OVER_pak_adm3$tile_id <- bisp_df_geo$tile_id 
+
+bisp_df_geo_OVER_pak_adm3 <- bisp_df_geo_OVER_pak_adm3 %>%
+  dplyr::select(uid, 
+                GID_1, NAME_1,
+                GID_2, NAME_2,
+                GID_3, NAME_3) %>%
+  dplyr::rename(gadm_id_1 = GID_1,
+                gadm_id_2 = GID_2,
+                gadm_id_3 = GID_3,
+                gadm_name_1 = NAME_1,
+                gadm_name_2 = NAME_2,
+                gadm_name_3 = NAME_3)
+
+bisp_df <- left_join(bisp_df,
+                     bisp_df_geo_OVER_pak_adm3,
+                     by = "uid")
+
 # Export -----------------------------------------------------------------------
-saveRDS(bisp_df, file.path(opm_dir, "FinalData", "Individual Datasets", "bisp_socioeconomic.Rds"))
-write.csv(bisp_df, file.path(opm_dir, "FinalData", "Individual Datasets", "bisp_socioeconomic.csv"), row.names = F)
+## Without Lat/Lon
+saveRDS(bisp_df %>% 
+          dplyr::select(-c(latitude, longitude)), 
+        file.path(opm_dir, "FinalData", "Individual Datasets", "opm_socioeconomic.Rds"))
 
+write.csv(bisp_df %>% 
+            dplyr::select(-c(latitude, longitude)), 
+          file.path(opm_dir, "FinalData", "Individual Datasets", "opm_socioeconomic.csv"), row.names = F)
 
+## With Lat/Lon
+saveRDS(bisp_df, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "opm_socioeconomic_geo.Rds"))
 
+write.csv(bisp_df, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "opm_socioeconomic_geo.csv"), row.names = F)
 
 
 

@@ -11,36 +11,30 @@
 set.seed(42)
 
 # Load Data --------------------------------------------------------------------
-opm_coords <- read.csv(file.path(secure_file_path, "Data", "BISP", "FinalData - PII", "GPS_uid_crosswalk.csv"),
-                       stringsAsFactors = F)
+survey_coords <- readRDS(SURVEY_COORDS_PATH)
 
-opm_coords$uid <- opm_coords$uid %>% as.numeric()
-
-# Some coordinates are bad; remove those
-opm_coords <- opm_coords[(opm_coords$latitude < 37) & (opm_coords$latitude > 23),]
-opm_coords <- opm_coords[(opm_coords$longitude < 81) & (opm_coords$longitude > 65),]
-
-coordinates(opm_coords) <- ~longitude+latitude
+coordinates(survey_coords) <- ~longitude + latitude
+crs(survey_coords) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
 # Load FB Data -----------------------------------------------------------------
 fb_df <- read.csv(file.path(project_file_path, "Data", "Facebook Relative Wealth Index", 
                             "RawData", "ind_pak_relative_wealth_index.csv"))
 
 coordinates(fb_df) <- ~longitude+latitude
-fb_df <- fb_df %>% crop(extent(opm_coords))
+fb_df <- fb_df %>% crop(extent(survey_coords))
 
 # Nearest Neighbor -------------------------------------------------------------
-opm_coords <- as.data.frame(opm_coords)
+survey_coords <- as.data.frame(survey_coords)
 fb_df <- as.data.frame(fb_df)
 
 closest <- nn2(fb_df[,c("latitude", "longitude")], 
-               opm_coords[,c("latitude", "longitude")], 
+               survey_coords[,c("latitude", "longitude")], 
                k = 1, 
                searchtype = "radius", 
                radius = 1)
 closest <- sapply(closest, cbind) %>% as_tibble
 
-opm_coords$fb_id <- closest$nn.idx
+survey_coords$fb_id <- closest$nn.idx
 
 fb_df <- fb_df %>%
   dplyr::mutate(fb_id = 1:n()) %>%
@@ -48,17 +42,17 @@ fb_df <- fb_df %>%
   dplyr::rename(fb_rwi = rwi,
                 fb_rwi_error = error)
 
-opm_coords <- merge(opm_coords, fb_df, by = "fb_id", all.x=T, all.y=F)
+survey_coords <- merge(survey_coords, fb_df, by = "fb_id", all.x=T, all.y=F)
 
 # Export -----------------------------------------------------------------------
-opm_coords <- opm_coords %>%
+survey_coords <- survey_coords %>%
   dplyr::select(uid, fb_rwi, fb_rwi_error)
 
-write.csv(opm_coords, file.path(project_file_path, "Data", "OPM", "FinalData", "Individual Datasets", 
+write.csv(survey_coords, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", 
                                            "fb_relative_wealth.csv"),
           row.names = F)
 
-saveRDS(opm_coords, file.path(project_file_path, "Data", "OPM", "FinalData", "Individual Datasets", 
+saveRDS(survey_coords, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", 
                                 "fb_relative_wealth.Rds"))
 
 

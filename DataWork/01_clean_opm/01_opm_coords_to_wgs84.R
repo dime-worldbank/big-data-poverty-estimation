@@ -28,7 +28,7 @@ bisp_coords_sdf <- bisp_coords
 coordinates(bisp_coords_sdf) <- ~longitude+latitude
 crs(bisp_coords_sdf) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
-#bisp_coords$tile_id <- over(bisp_coords_sdf, grid)$tile_id
+bisp_coords$tile_id <- over(bisp_coords_sdf, grid)$tile_id
 
 dist_to_pak <- gDistance(bisp_coords_sdf, pak_adm0, byid=T) %>% as.vector()
 bisp_coords <- bisp_coords[dist_to_pak == 0,]
@@ -36,5 +36,4 @@ bisp_coords <- bisp_coords[dist_to_pak == 0,]
 # Export -----------------------------------------------------------------------
 write.csv(bisp_coords, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)
 saveRDS(bisp_coords, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "GPS_uid_crosswalk.Rds"))
-
 

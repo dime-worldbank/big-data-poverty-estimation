@@ -107,7 +107,7 @@ def read_crop_resample_raster(filepath, polygon, img_height, img_width):
 #    return data
 
     
-def get_DTL(row, directory, bands, img_height, img_width, year):
+def get_DTL(row, directory, bands, img_height, img_width, year, sat_suffix):
     '''
     For a given VIIRS observation, grab and crop corresponding DLT data.
     
@@ -122,7 +122,7 @@ def get_DTL(row, directory, bands, img_height, img_width, year):
     for b in bands:
 
         tile, polygon = int(row['tile_id']), row['geometry']
-        filename = f'l8_2014_tile{str(tile)}_b{str(b)}.tif'
+        filename = f'{str(sat_suffix)}_{str(year)}_tile{str(tile)}_b{str(b)}.tif'
         filepath = os.path.join(directory, filename)
 
         data = read_crop_resample_raster(filepath, polygon, img_height, img_width)
@@ -137,7 +137,7 @@ def get_DTL(row, directory, bands, img_height, img_width, year):
     return all_bands_array
 
 
-def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year):
+def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year, sat_suffix):
     '''
     Gets DTL images, crops them, create arrays representing DLT and NLT to 
     become features and targets respectively.
@@ -148,6 +148,8 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year):
         bands: list of landsat bands to use
         img_height: rescaled image height
         img_width: rescaled image width
+        year: year of satellite imagery
+        sat_suffix: Suffix to satellite imagery (eg, 'l7_')
     Returns: 
         (5D numpy.ndarray) DTL features
         (geopandas GeoDataFrame) NTL_gdf with same observations as NTL target array
@@ -157,12 +159,12 @@ def map_DTL_NTL(input_gdf, directory, bands, img_height, img_width, year):
 
     for i in range(gdf.shape[0]):
 
-        # Print every 10
-        if (i % 10) == 0: print(str(i) + "/" + str(gdf.shape[0])) 
+        # Print every 100
+        if (i % 100) == 0: print(str(i) + "/" + str(gdf.shape[0])) 
         
         row = gdf.iloc[[i]]
 
-        DTL = get_DTL(row, directory, bands, img_height, img_width, year)
+        DTL = get_DTL(row, directory, bands, img_height, img_width, year, sat_suffix)
         if DTL.shape[0] == img_height:
             # if DTL not an empty list ie if images for this tile are shape (1, 25, 26)
             DTL_list.append(DTL)

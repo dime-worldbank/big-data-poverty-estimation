@@ -7,7 +7,7 @@ RUN_CODE <- F
 EXTRACT_DAYTIME_SAT_VALUES <- T
 EXTRACT_VIIRS_VALUES <- T
 EXTRACT_FACEBOOK_RWI <- T
-EXTRACT_FACEBOOK_MAU <- T
+EXTRACT_FACEBOOK_MAU <- F
 
 # Create Other Objects ---------------------------------------------------------
 if(SURVEY_NAME %in% "OPM"){

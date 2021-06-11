@@ -206,7 +206,7 @@ bisp_df <- bisp_df %>%
 pak_adm3 <- readRDS(file.path(gadm_dir, "RawData", 'gadm36_PAK_3_sp.rds'))
 
 bisp_df_geo <- bisp_df %>%
-  dplyr::select(uid, latitude, longitude) %>%
+  dplyr::select(uid, latitude, longitude, tile_id) %>%
   dplyr::filter(!is.na(latitude)) %>%
   distinct()
 
@@ -215,10 +215,10 @@ crs(bisp_df_geo) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs
 
 bisp_df_geo_OVER_pak_adm3 <- over(bisp_df_geo, pak_adm3)
 bisp_df_geo_OVER_pak_adm3$uid <- bisp_df_geo$uid 
-#bisp_df_geo_OVER_pak_adm3$tile_id <- bisp_df_geo$tile_id 
+bisp_df_geo_OVER_pak_adm3$tile_id <- bisp_df_geo$tile_id 
 
 bisp_df_geo_OVER_pak_adm3 <- bisp_df_geo_OVER_pak_adm3 %>%
-  dplyr::select(uid, 
+  dplyr::select(uid, tile_id,
                 GID_1, NAME_1,
                 GID_2, NAME_2,
                 GID_3, NAME_3) %>%

@@ -6,6 +6,7 @@ if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/D
 if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 
 opm_dir <- file.path(project_file_path, "Data", "OPM")
+dhs_dir <- file.path(project_file_path, "Data", "DHS")
 gadm_dir <- file.path(project_file_path, "Data", "GADM")
 bisp_indiv_files_dir <- file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets")
 data_dir <- file.path(project_file_path, "Data")

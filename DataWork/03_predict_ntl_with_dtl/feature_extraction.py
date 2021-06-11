@@ -8,18 +8,11 @@ import os
 import pandas as pd
 import numpy as np
 import cv2
-
-#from keras.models import Model
-#from keras.applications.imagenet_utils import preprocess_input
-
-import boto3
-from sagemaker import get_execution_role
-from s3fs.core import S3FileSystem 
-s3 = S3FileSystem()
-role = get_execution_role()
-
-bucket = 'worldbank-pakistan-data'
-LOCAL_DIR = '/home/ec2-user/SageMaker/'
+import rasterio 
+from rasterio.mask import mask
+from rasterio.enums import Resampling
+from keras.models import Model
+from keras.applications.imagenet_utils import preprocess_input
 
 # https://automating-gis-processes.github.io/CSC18/lessons/L6/clipping-raster.html
 def getFeatures(gdf):

@@ -8,6 +8,33 @@ import os
 import getpass
 from sklearn.tree import DecisionTreeClassifier
 
+######################
+#     FILEPATHS      #
+######################
+
+## Root Paths
+username = getpass.getuser()
+
+if(username == 'robmarty'):
+    DROPBOX_DIRECTORY = '/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites'
+    MAIN_GIT_DIRECTORY = '/Users/robmarty/Documents/Github/Pakistan-Poverty-from-Sky'
+    SECURE_DATA_DIRECTORY = '/Users/robmarty/Documents/World Bank/Pakistan Poverty from Sky'
+
+## Dependent Paths
+GIT_DIRECTORY = os.path.join(MAIN_GIT_DIRECTORY, 'DataWork', '03_analysis', 'poverty_estimation')
+DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', 'RawData', '2014')
+BISP_DATA_PATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'BISP', 'bisp_socioeconomic_satellite_panel_full_satPovNAsRemoved_1hh.csv')
+VIIRS_GDF_FILEPATH = os.path.join(DROPBOX_DIRECTORY, 'Data', 'VIIRS', 'FinalData', 'viirs_annual_polygon.pkl')
+
+#CNN_PARAMS_FILENAME = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN', 'CNN_parameters.json')
+#CNN_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN')
+CNN_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'CNN')
+CNN_FILENAME = os.path.join(DROPBOX_DIRECTORY, 'Models', 'CNN', 'script_CNN.h5')
+
+CURRENT_DIRECTORY = GIT_DIRECTORY
+
+BISP_COORDS_PATH = os.path.join(SECURE_DATA_DIRECTORY, 'Data', 'BISP', 'FinalData - PII', 'GPS_uid_crosswalk.csv')
+PAKISTAN_BOUNDARIES_SHAPEFILE = ""
 
 ######################
 #    ML VARIABLES    #

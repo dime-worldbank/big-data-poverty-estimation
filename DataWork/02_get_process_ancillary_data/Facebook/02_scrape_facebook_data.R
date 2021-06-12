@@ -27,9 +27,14 @@ library(httr)
 library(curl)
 library(haven)
 
+SKIP_IF_ALREAD_SCRAPED <- T
+
 # Load Coordinates -------------------------------------------------------------
-coords_df <- readRDS(file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", 
-                               "Individual Datasets", "fb_mau_cluster_locations.Rds"))
+df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
+
+if(SURVEY_NAME %in% "DHS"){
+  df <- df[df$uid %>% str_detect("PK2017"),]
+}
 
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
@@ -41,13 +46,18 @@ creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"]
 version <- api_keys$Key[api_keys$Account %in% "version"]
 
 # Parameters -------------------------------------------------------------------
-# By male/female
-parameters_df_1 <- data.frame(
-  radius_km = 5,
-  gender = c("1,2","1","2"),
-  age_min = 13,
-  age_max = 65,
-  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+AGE_MIN = 18
+AGE_MAX = 65
+FACEBOOK_POSITIONS = "'feed','instant_article','instream_video','marketplace'"
+RADIUS_KM = 10
+
+# All
+parameters_df_all <- data.frame(
+  radius_km = RADIUS_KM,
+  gender = c("1,2"),
+  age_min = AGE_MIN,
+  age_max = AGE_MAX,
+  facebook_positions = FACEBOOK_POSITIONS,
   device_platforms = "'mobile','desktop'",
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
@@ -55,12 +65,12 @@ parameters_df_1 <- data.frame(
 )
 
 # By education status
-parameters_df_2 <- data.frame(
-  radius_km = 5,
+parameters_df_educ <- data.frame(
+  radius_km = RADIUS_KM,
   gender = c("1,2"),
-  age_min = 13,
-  age_max = 65,
-  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+  age_min = AGE_MIN,
+  age_max = AGE_MAX,
+  facebook_positions = FACEBOOK_POSITIONS,
   device_platforms = "'mobile','desktop'",
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
@@ -70,35 +80,37 @@ parameters_df_2 <- data.frame(
 )
 
 # By device type
-parameters_df_3 <- data.frame(
-  radius_km = 5,
+parameters_df_device <- data.frame(
+  radius_km = RADIUS_KM,
   gender = c("1,2"),
-  age_min = 13,
-  age_max = 65,
-  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+  age_min = AGE_MIN,
+  age_max = AGE_MAX,
+  facebook_positions = FACEBOOK_POSITIONS,
   device_platforms = "'mobile','desktop'",
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
   user_os = c("'iOS'",
               "'Android'",
-              "'iOS_ver_2.0_to_3.0'",
-              "'iOS_ver_4.0_to_5.0'",
-              "'iOS_ver_6.0_to_7.0'",
-              "'iOS_ver_8.0_to_9.0'",
-              "'Android_ver_2.0_to_3.2'",
-              "'Android_ver_4.0_to_5.1'",
-              "'Android_ver_6.0_to_7.1'",
+              #"'iOS_ver_2.0_to_3.0'",
+              #"'iOS_ver_4.0_to_5.0'",
+              #"'iOS_ver_6.0_to_7.0'",
+              #"'iOS_ver_8.0_and_above'",
+              "'iOS_ver_9.0_and_above'",
+              #"'Android_ver_2.0_to_3.2'",
+              #"'Android_ver_4.0_to_5.1'",
+              #"'Android_ver_6.0_to_7.1'",
+              #"'Android_ver_7.0_and_above'",
               "'Android_ver_8.0_and_above'"),
   stringsAsFactors = F
 )
 
 # Wireless carrier
-parameters_df_4 <- data.frame(
-  radius_km = 5,
+parameters_df_carrier <- data.frame(
+  radius_km = RADIUS_KM,
   gender = c("1,2"),
-  age_min = 13,
-  age_max = 65,
-  facebook_positions = "'feed','instant_article','instream_video','marketplace'",
+  age_min = AGE_MIN,
+  age_max = AGE_MAX,
+  facebook_positions = FACEBOOK_POSITIONS,
   device_platforms = "'mobile','desktop'",
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
@@ -106,28 +118,68 @@ parameters_df_4 <- data.frame(
   stringsAsFactors = F
 )
 
-# Append
-parameters_df <- bind_rows(
-  parameters_df_1,
-  parameters_df_2,
-  parameters_df_3,
-  parameters_df_4
+# Behaviors
+parameters_df_behaviors <- data.frame(
+  radius_km = RADIUS_KM,
+  gender = c("1,2"),
+  age_min = AGE_MIN,
+  age_max = AGE_MAX,
+  facebook_positions = FACEBOOK_POSITIONS,
+  device_platforms = "'mobile','desktop'",
+  publisher_platforms = "'facebook','messenger'",
+  messenger_positions = "'messenger_home'",
+  behavior = c("{'id':6002714895372}", # Frequent Travelers
+               "{'id':6022788483583}", # Frequent international travelers
+               "{'id':6002714898572}", # Small business owners
+               "{'id':6003808923172}", # Technology early adopters
+               "{'id':6004386044572}", # Facebook access (mobile): Android devices
+               "{'id':6004384041172}", # Facebook access (mobile): Apple (iOS) devices
+               "{'id':6004854404172}", # Facebook access: older devices and OS
+               "{'id':6007078565383}", # New smartphone and tablet users
+               "{'id':6017253486583}", # Facebook access (network type): 2G
+               "{'id':6017253511583}", # Facebook access (network type): 3G
+               "{'id':6017253531383}", # Facebook access (network type): 4G
+               "{'id':6015235495383}" # Facebook access (network type): WiFi
+  ), 
+  stringsAsFactors = F
 )
 
-if(SURVEY_NAME %in% "DHS"){
-  parameters_df$radius_km <- 10
-}
+# Interests
+parameters_df_interests <- data.frame(
+  radius_km = RADIUS_KM,
+  gender = c("1,2"),
+  age_min = AGE_MIN,
+  age_max = AGE_MAX,
+  facebook_positions = FACEBOOK_POSITIONS,
+  device_platforms = "'mobile','desktop'",
+  publisher_platforms = "'facebook','messenger'",
+  messenger_positions = "'messenger_home'",
+  interest = c("{'id':6003012317397}", # Gambling
+               "{'id':6004115167424}" # Physical exercise
+  ), 
+  stringsAsFactors = F
+)
+
+# Append
+parameters_df <- bind_rows(
+  parameters_df_all,
+  parameters_df_educ,
+  parameters_df_device,
+  #parameters_df_carrier,
+  parameters_df_behaviors,
+  parameters_df_interests
+)
+
+param_df <- parameters_df
 
 # Function to extract data -----------------------------------------------------
-
-loc_i = 655
-parameters_df_i = parameters_df[1,]
-make_query_location_i <- function(loc_i, 
+make_query_location_i <- function(param_i,
+                                  param_df,
                                   coords_df,
-                                  parameters_df_i, 
                                   version, 
                                   creation_act, 
-                                  token){
+                                  token,
+                                  sleep_time = 20){
   
   # Query Facebook Marketing API
   # ARGs:
@@ -137,6 +189,8 @@ make_query_location_i <- function(loc_i,
   # --version: Facebook marketing API verion
   # --creation_act: Creation act (associated with API key/account)
   # --token: API token/key
+  
+  parameters_df_i <- param_df[param_i,]
   
   # Stall if not connected to internet
   while(!curl::has_internet()){ Sys.sleep(30); print("Looking for internet") }
@@ -148,8 +202,8 @@ make_query_location_i <- function(loc_i,
                     "/act_",creation_act,
                     "/delivery_estimate?access_token=",token,
                     "&include_headers=false&method=get&pretty=0&suppress_http_code=1&method=get&optimization_goal=REACH&pretty=0&suppress_http_code=1&targeting_spec={",
-                    "'geo_locations':{'custom_locations':[{'latitude':",coords_df$latitude[loc_i] %>% substring(1,7),",",
-                    "'longitude':",coords_df$longitude[loc_i] %>% substring(1,7),",",
+                    "'geo_locations':{'location_types':['home'],'custom_locations':[{'latitude':",coords_df$latitude %>% substring(1,7),",",
+                    "'longitude':",coords_df$longitude %>% substring(1,7),",",
                     "'radius':",parameters_df_i$radius_km,",",
                     "'distance_unit':'kilometer'}]},",
                     ifelse(is.na(parameters_df_i$education_statuses), "", 
@@ -158,6 +212,10 @@ make_query_location_i <- function(loc_i,
                            paste0("'user_os':[", parameters_df_i$user_os, "],")), 
                     ifelse(is.na(parameters_df_i$wireless_carrier), "", 
                            paste0("'wireless_carrier':[", parameters_df_i$wireless_carrier, "],")), 
+                    ifelse(is.na(parameters_df_i$behavior), "", 
+                           paste0("'behaviors':[", parameters_df_i$behavior, "],")), 
+                    ifelse(is.na(parameters_df_i$interest), "", 
+                           paste0("'interests':[", parameters_df_i$interest, "],")), 
                     "'genders':[",parameters_df_i$gender,"],",
                     "'age_min':",parameters_df_i$age_min,",",
                     "'age_max':",parameters_df_i$age_max, #",",
@@ -180,20 +238,20 @@ make_query_location_i <- function(loc_i,
       for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
       
       ## Add cluster info
-      query_val_df$cluster_id <- coords_df$cluster_id[loc_i]
-      query_val_df$latitude   <- coords_df$latitude[loc_i]
-      query_val_df$longitude  <- coords_df$longitude[loc_i]
+      query_val_df$cluster_id <- coords_df$uid
+      query_val_df$latitude   <- coords_df$latitude
+      query_val_df$longitude  <- coords_df$longitude
       
       ## Add time
       query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
       
       ## Print result and sleep (sleep needed b/c of rate limiting)
-      print(paste0(loc_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
-      Sys.sleep(20) # really just need 18; 20 just in case
+      print(paste0(param_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau))
+      Sys.sleep(sleep_time) # really just need 18; 20 just in case
       
       #### If there is an error, print the error and make output null  
     } else{
-      print(paste(loc_i, "-----------------------------------------------------"))
+      print(paste(param_i, "-----------------------------------------------------"))
       print(query_val)
       query_val_df <- NULL
     }
@@ -209,20 +267,43 @@ make_query_location_i <- function(loc_i,
   return(query_val_df)
 }
 
+# Determine Sleep Time ---------------------------------------------------------
+# 200 calls per hour
+sleep_time_after_param <- 0.5
+
+number_locs_per_hour <- ceiling(200/nrow(parameters_df))
+
+seconds_in_hour <- 60*60
+sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
+sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
+sleep_time_after_loc <- sleep_time_after_loc + 1
+
 # Implement Function and Export ------------------------------------------------
-for(pararm_i in 1:nrow(parameters_df)){
+for(uid_i in unique(df$uid)){
   
-  print(paste0(pararm_i, "---------------------------------------------------"))
+  OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
+                        "fb_mau_individual_datasets", paste0("fb_",uid_i,".Rds"))
   
-  queries_all_df_1 <- map_df(1:nrow(coords_df), make_query_location_i, 
-                             coords_df, parameters_df[pararm_i,], version, creation_act, token)
-  
-  time_parm <- Sys.time() %>% as.character() %>% str_replace_all("[[:punct:]]| ", "")
-  time_parm <- paste0(time_parm, "_", pararm_i)
-  queries_all_df_1$param_version <- time_parm
-  
-  saveRDS(queries_all_df_1, file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_individual_datasets",
-                                      paste0("facebook_marketing_",time_parm,".Rds")))
+  if(SKIP_IF_ALREAD_SCRAPED & file.exists(OUT_PATH)){
+    print(paste("Skip", uid_i))
+  } else{
+
+    df_i <- df[df$uid %in% uid_i,]
+    
+    # 1:nrow(parameters_df)
+    df_out <- map_df(1:nrow(parameters_df), make_query_location_i, 
+                     parameters_df,
+                     df_i,
+                     version,
+                     creation_act,
+                     token,
+                     sleep_time = sleep_time_after_param)
+    
+    saveRDS(df_out, OUT_PATH)
+    rm(df_out)
+    
+    Sys.sleep(sleep_time_after_loc)
+  }
   
 }
 

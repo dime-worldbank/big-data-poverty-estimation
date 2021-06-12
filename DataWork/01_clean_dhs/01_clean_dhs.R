@@ -20,8 +20,9 @@ clean_geo <- function(df){
                   latitude = LATNUM,
                   longitude = LONGNUM,
                   urban_rural = URBAN_RURA,
-                  year = DHSYEAR) %>%
-    dplyr::select(cluster_id, latitude, longitude, urban_rural, year)
+                  year = DHSYEAR,
+                  country_code = DHSCC) %>%
+    dplyr::select(cluster_id, latitude, longitude, urban_rural, year, country_code)
   
   return(df)
 }
@@ -54,7 +55,7 @@ merge_clean <- function(hh_df, geo_df){
   
   df_out <- geo_df %>%
     left_join(hh_df, by = "cluster_id") %>%
-    dplyr::mutate(uid = paste0(cluster_id, year) %>% as.numeric)
+    dplyr::mutate(uid = paste0(country_code, year, cluster_id))
   
   return(df_out)
 }
@@ -89,7 +90,7 @@ write.csv(df, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "su
 
 ## Geo Only
 df_geoonly <- df %>%
-  dplyr::select(cluster_id, latitude, longitude, urban_rural, tile_id)
+  dplyr::select(uid, latitude, longitude, urban_rural, tile_id)
 
 saveRDS(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
 write.csv(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)

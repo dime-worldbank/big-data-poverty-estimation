@@ -1,7 +1,7 @@
 # Process Anciallary Data: Master Script
 
 # Main Parameters 
-SURVEY_NAME <- "OPM"
+SURVEY_NAME <- "OPM" # DHS, OPM
 
 RUN_CODE <- F
 EXTRACT_DAYTIME_SAT_VALUES <- T

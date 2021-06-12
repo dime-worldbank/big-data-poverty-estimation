@@ -4,13 +4,13 @@ library(spex)
 
 viirs_path = file.path(project_file_path, "Data", "VIIRS", "RawData", "VIIRS Annual")
 
-viirs2012_p <- raster(file.path(viirs_path, "pak_viirs_median_2012.tif")) %>% spex::polygonize(na.rm = T)
-viirs2013_p <- raster(file.path(viirs_path, "pak_viirs_median_2013.tif")) %>% spex::polygonize(na.rm = T)
-viirs2014_p <- raster(file.path(viirs_path, "pak_viirs_median_2014.tif")) %>% spex::polygonize(na.rm = T)
-viirs2015_p <- raster(file.path(viirs_path, "pak_viirs_median_2015.tif")) %>% spex::polygonize(na.rm = T)
-viirs2016_p <- raster(file.path(viirs_path, "pak_viirs_median_2016.tif")) %>% spex::polygonize(na.rm = T)
-viirs2017_p <- raster(file.path(viirs_path, "pak_viirs_median_2017.tif")) %>% spex::polygonize(na.rm = T)
-viirs2018_p <- raster(file.path(viirs_path, "pak_viirs_median_2018.tif")) %>% spex::polygonize(na.rm = T)
+viirs2012_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2012.tif")) %>% spex::polygonize(na.rm = T)
+viirs2013_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2013.tif")) %>% spex::polygonize(na.rm = T)
+viirs2014_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2014.tif")) %>% spex::polygonize(na.rm = T)
+viirs2015_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2015.tif")) %>% spex::polygonize(na.rm = T)
+viirs2016_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2016.tif")) %>% spex::polygonize(na.rm = T)
+viirs2017_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2017.tif")) %>% spex::polygonize(na.rm = T)
+viirs2018_p <- raster(file.path(viirs_path, "pakregion_viirs_median_2018.tif")) %>% spex::polygonize(na.rm = T)
 
 virrs_p <- viirs2012_p %>%
   dplyr::rename(median_rad_2012 = pak_viirs_median_2012)

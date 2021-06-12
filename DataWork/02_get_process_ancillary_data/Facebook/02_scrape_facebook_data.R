@@ -114,6 +114,10 @@ parameters_df <- bind_rows(
   parameters_df_4
 )
 
+parameters_df2 <- parameters_df
+parameters_df2$radius_km <- 10
+parameters_df <- bind_rows(parameters_df, parameters_df2)
+
 # Function to extract data -----------------------------------------------------
 
 loc_i = 655

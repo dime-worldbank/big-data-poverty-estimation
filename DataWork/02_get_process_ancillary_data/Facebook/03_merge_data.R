@@ -1,18 +1,13 @@
 # Merge Data Extracted from Facebook API
 
-# Load Data --------------------------------------------------------------------
-#opm_cluster_crosswalk <- readRDS(file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", "fb_mau_cluster_crosswalk.Rds"))
-
-# To Wide ----------------------------------------------------------------------
+# Load Data ----------------------------------------------------------------------
 df_long <- file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", 
                      "fb_mau_individual_datasets") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   map_df(readRDS)
 
-df_long <- df_long %>%
-  dplyr::rename(uid = cluster_id)
-
+# To Wide ----------------------------------------------------------------------
 df_wide <- df_long %>%
   pivot_wider(id_cols = c(uid),
               names_from = param_id,

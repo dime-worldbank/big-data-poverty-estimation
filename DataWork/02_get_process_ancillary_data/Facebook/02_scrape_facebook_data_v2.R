@@ -39,11 +39,11 @@ if(SURVEY_NAME %in% "DHS"){
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",
-         Details == "robmarty3@gmail.com")
+         Details == "robertandrewmarty3@gmail.com")
 
-token <- api_keys$Key[api_keys$Account %in% "token"]
-creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"]
-version <- api_keys$Key[api_keys$Account %in% "version"]
+token <- api_keys$Key[api_keys$Account %in% "token"] %>% str_squish()
+creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"] %>% str_squish()
+version <- api_keys$Key[api_keys$Account %in% "version"] %>% str_squish()
 
 # Parameters -------------------------------------------------------------------
 AGE_MIN = 18
@@ -279,10 +279,11 @@ sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
 sleep_time_after_loc <- sleep_time_after_loc + 1
 
-Sys.sleep(3600)
+sleep_time_after_param <- 0.1
+sleep_time_after_loc <- 0.1
 
 # Implement Function and Export ------------------------------------------------
-for(uid_i in unique(df$uid)){
+for(uid_i in rev(unique(df$uid))){
   
   OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
                         "fb_mau_individual_datasets", paste0("fb_",uid_i,".Rds"))

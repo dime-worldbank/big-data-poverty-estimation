@@ -27,7 +27,7 @@ library(httr)
 library(curl)
 library(haven)
 
-SKIP_IF_ALREAD_SCRAPED <- T
+SKIP_IF_ALREAD_SCRAPED <- F
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
@@ -238,7 +238,8 @@ make_query_location_i <- function(param_i,
       for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
       
       ## Add cluster info
-      query_val_df$cluster_id <- coords_df$uid
+      query_val_df$param_id   <- param_i
+      query_val_df$uid <- coords_df$uid
       query_val_df$latitude   <- coords_df$latitude
       query_val_df$longitude  <- coords_df$longitude
       

@@ -279,8 +279,7 @@ sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
 sleep_time_after_loc <- sleep_time_after_loc + 1
 
-sleep_time_after_param <- 0.1
-sleep_time_after_loc <- 0.1
+#Sys.sleep(3600)
 
 # Implement Function and Export ------------------------------------------------
 for(uid_i in rev(unique(df$uid))){

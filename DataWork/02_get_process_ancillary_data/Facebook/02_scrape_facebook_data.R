@@ -138,7 +138,7 @@ parameters_df_behaviors <- data.frame(
     "{'id':6106224431383}", # Owns: Galaxy S9+
     "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383}", #Samsung Galaxy phone S8/S8+/S9/S9+ 
     "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383},{'id':6092512462983},{'id':6092512412783},{'id':6092512424583}", # iPhone X/8/8 Plus or Samsung Galaxy phone S8/S8+/S9/S9+ 
-
+    
     # Other device types
     "{'id':6004382299972}", # Facebook access (mobile): all mobile devices
     "{'id':6004383149972}", # Facebook access (mobile): feature phones
@@ -250,7 +250,7 @@ make_query_location_i <- function(param_i,
                     "}")
     
     query_val <- url(query) %>% fromJSON
-
+    
     #### If there is no error
     if(is.null(query_val$error)){
       
@@ -306,35 +306,40 @@ sleep_time_after_loc <- sleep_time_after_loc + 1
 #Sys.sleep(3600)
 
 # Implement Function and Export ------------------------------------------------
-for(uid_i in unique(df$uid)){
+for(country_code_i in c("PH")){
   
-  df_i <- df[df$uid %in% uid_i,]
+  df_c <- df[df$country_code %in% country_code_i,]
   
-  if(df_i$urban_rural %in% "U") RADIUS_i <- 5 #km
-  if(df_i$urban_rural %in% "R") RADIUS_i <- 10 #km
-  
-  OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
-                        "fb_mau_individual_datasets", paste0("fb_",uid_i,"_radius",RADIUS_KM,"km.Rds"))
-
-  if(SKIP_IF_ALREAD_SCRAPED & file.exists(OUT_PATH)){
-    print(paste("Skip", uid_i))
-  } else{
+  for(uid_i in unique(df_c$uid)){
     
-    parameters_df$radius_km <- RADIUS_i
+    df_i <- df_c[df_c$uid %in% uid_i,]
     
-    df_out <- map_df(parameters_df$param_id, make_query_location_i, 
-                     parameters_df,
-                     df_i,
-                     version,
-                     creation_act,
-                     token,
-                     sleep_time = sleep_time_after_param)
+    if(df_i$urban_rural %in% "U") RADIUS_i <- 5 #km
+    if(df_i$urban_rural %in% "R") RADIUS_i <- 10 #km
     
-    saveRDS(df_out, OUT_PATH)
-    rm(df_out)
+    OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
+                          "fb_mau_individual_datasets", paste0("fb_",uid_i,"_radius",RADIUS_KM,"km.Rds"))
     
-    Sys.sleep(sleep_time_after_loc)
+    if(SKIP_IF_ALREAD_SCRAPED & file.exists(OUT_PATH)){
+      print(paste("Skip", uid_i))
+    } else{
+      
+      parameters_df$radius_km <- RADIUS_i
+      
+      df_out <- map_df(parameters_df$param_id, make_query_location_i, 
+                       parameters_df,
+                       df_i,
+                       version,
+                       creation_act,
+                       token,
+                       sleep_time = sleep_time_after_param)
+      
+      saveRDS(df_out, OUT_PATH)
+      rm(df_out)
+      
+      Sys.sleep(sleep_time_after_loc)
+    }
+    
   }
-  
 }
 

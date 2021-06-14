@@ -6,40 +6,32 @@
 # RATE LIMIT: 200 calls/hour
 # 60*60/200
 
-# PARAMETERS
+# RESOURCES
 # https://developers.facebook.com/docs/marketing-api/audiences/reference/basic-targeting
 # https://developers.facebook.com/docs/marketing-api/audiences/reference/advanced-targeting
-
-# RESOURCES
 # https://github.com/SofiaG1l/Using_Facebook_API
 
-# TODO
-# 1. Time Range
-# https://developers.facebook.com/docs/marketing-api/insights/
-# 'time_range={"since":"2015-03-01","until":"2015-03-31"}'
-# "'time_range':{'since':'",parameters_df_i$date_start,"',",
-# "'until':'",parameters_df_i$date_end,"'},",
-
-library(tidyverse)
-library(lubridate)
-library(jsonlite)
-library(httr)
-library(curl)
-library(haven)
+# PARAMETERS
 
 SKIP_IF_ALREAD_SCRAPED <- T
+
+# "robmarty3@gmail.com"
+# "robertandrewmarty3@gmail.com"
+API_KEY_EMAIL <- "robmarty3@gmail.com"
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
 
 if(SURVEY_NAME %in% "DHS"){
-  df <- df[df$uid %>% str_detect("PK2017"),]
+  df <- df[df$most_recent_survey %in% T,]
 }
+
+df <- df[df$country_code %in% c("PH", "PK"),]
 
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",
-         Details == "robmarty3@gmail.com")
+         Details == API_KEY_EMAIL)
 
 token <- api_keys$Key[api_keys$Account %in% "token"] %>% str_squish()
 creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"] %>% str_squish()
@@ -128,18 +120,43 @@ parameters_df_behaviors <- data.frame(
   device_platforms = "'mobile','desktop'",
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
-  behavior = c("{'id':6002714895372}", # Frequent Travelers
-               "{'id':6022788483583}", # Frequent international travelers
-               "{'id':6002714898572}", # Small business owners
-               "{'id':6003808923172}", # Technology early adopters
-               "{'id':6004386044572}", # Facebook access (mobile): Android devices
-               "{'id':6004384041172}", # Facebook access (mobile): Apple (iOS) devices
-               "{'id':6004854404172}", # Facebook access: older devices and OS
-               "{'id':6007078565383}", # New smartphone and tablet users
-               "{'id':6017253486583}", # Facebook access (network type): 2G
-               "{'id':6017253511583}", # Facebook access (network type): 3G
-               "{'id':6017253531383}", # Facebook access (network type): 4G
-               "{'id':6015235495383}" # Facebook access (network type): WiFi
+  behavior = c(
+    # Network access
+    "{'id':6017253486583}", # Facebook access (network type): 2G
+    "{'id':6017253511583}", # Facebook access (network type): 3G
+    "{'id':6017253531383}", # Facebook access (network type): 4G
+    "{'id':6015235495383}", # Facebook access (network type): WiFi
+    
+    # Mobile OS
+    "{'id':6004386044572}", # Facebook access (mobile): Android devices
+    "{'id':6004384041172}", # Facebook access (mobile): Apple (iOS) devices
+    "{'id':6004385895772}", # Facebook access (mobile): Windows phones
+    
+    # High end phones
+    "{'id':6092512462983}", # Facebook access (mobile): iPhone X
+    "{'id':6092512462983},{'id':6092512412783},{'id':6092512424583}", # iPhone X/8/8 Plus
+    "{'id':6106224431383}", # Owns: Galaxy S9+
+    "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383}", #Samsung Galaxy phone S8/S8+/S9/S9+ 
+    "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383},{'id':6092512462983},{'id':6092512412783},{'id':6092512424583}", # iPhone X/8/8 Plus or Samsung Galaxy phone S8/S8+/S9/S9+ 
+
+    # Other device types
+    "{'id':6004382299972}", # Facebook access (mobile): all mobile devices
+    "{'id':6004383149972}", # Facebook access (mobile): feature phones
+    "{'id':6004383049972}", # Facebook access (mobile): smartphones and tablets
+    "{'id':6016286626383}", # Facebook access (mobile): tablets
+    "{'id':6023460590583}", # Owns: Cherry Mobile
+    "{'id':6056265212183}", # Owns: VIVO devices
+    "{'id':6011390261383}", # Owns: Huawei
+    "{'id':6056265200983}", # Owns: Oppo
+    "{'id':6056265200983},{'id':6056265212183},{'id':6023460590583}", # Oppo/Vivo/Cherry
+    "{'id':6004386010572}", # Facebook access (mobile): Samsung Android mobile devices
+    
+    # OTHER
+    "{'id':6002714895372}", # Frequent Travelers
+    "{'id':6022788483583}", # Frequent international travelers
+    "{'id':6002714898572}", # Small business owners
+    "{'id':6003808923172}", # Technology early adopters
+    "{'id':6004854404172}" # Facebook access: older devices and OS
   ), 
   stringsAsFactors = F
 )
@@ -155,7 +172,9 @@ parameters_df_interests <- data.frame(
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
   interest = c("{'id':6003012317397}", # Gambling
-               "{'id':6004115167424}" # Physical exercise
+               "{'id':6004115167424}", # Physical exercise
+               "{'id':6003384248805}", # Fitness and wellness
+               "{'id':6007828099136}" # Luxury Goods
   ), 
   stringsAsFactors = F
 )
@@ -164,13 +183,16 @@ parameters_df_interests <- data.frame(
 parameters_df <- bind_rows(
   parameters_df_all,
   parameters_df_educ,
-  parameters_df_device,
+  #parameters_df_device,
   #parameters_df_carrier,
   parameters_df_behaviors,
   parameters_df_interests
 )
 
-param_df <- parameters_df
+# parameters_df <- bind_rows(
+#   parameters_df_all,
+#   parameters_df_behaviors[4,]
+# )
 
 # Function to extract data -----------------------------------------------------
 make_query_location_i <- function(param_i,
@@ -284,16 +306,20 @@ sleep_time_after_loc <- sleep_time_after_loc + 1
 # Implement Function and Export ------------------------------------------------
 for(uid_i in unique(df$uid)){
   
-  OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
-                        "fb_mau_individual_datasets", paste0("fb_",uid_i,".Rds"))
+  df_i <- df[df$uid %in% uid_i,]
   
+  if(df_i$urban_rural %in% "U") RADIUS_i <- 5 #km
+  if(df_i$urban_rural %in% "R") RADIUS_i <- 10 #km
+  
+  OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
+                        "fb_mau_individual_datasets", paste0("fb_",uid_i,"_radius",RADIUS_KM,"km.Rds"))
+
   if(SKIP_IF_ALREAD_SCRAPED & file.exists(OUT_PATH)){
     print(paste("Skip", uid_i))
   } else{
-
-    df_i <- df[df$uid %in% uid_i,]
     
-    # 1:nrow(parameters_df)
+    parameters_df$radius_km <- RADIUS_i
+    
     df_out <- map_df(1:nrow(parameters_df), make_query_location_i, 
                      parameters_df,
                      df_i,

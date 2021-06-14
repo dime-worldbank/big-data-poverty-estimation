@@ -32,12 +32,13 @@ clean_geo <- function(df){
   df <- df@data %>%
     dplyr::filter(SOURCE != "MIS") %>% # Missing lat/lon
     dplyr::rename(cluster_id = DHSCLUST,
+                  uid = DHSID,
                   latitude = LATNUM,
                   longitude = LONGNUM,
                   urban_rural = URBAN_RURA,
                   year = DHSYEAR,
                   country_code = DHSCC) %>%
-    dplyr::select(cluster_id, latitude, longitude, urban_rural, year, country_code)
+    dplyr::select(cluster_id, uid, latitude, longitude, urban_rural, year, country_code)
   
   return(df)
 }
@@ -46,7 +47,7 @@ merge_clean <- function(hh_df, geo_df){
   
   df_out <- geo_df %>%
     left_join(hh_df, by = "cluster_id") %>%
-    dplyr::mutate(uid = paste0(country_code, year, cluster_id)) %>%
+    #dplyr::mutate(uid = paste0(country_code, year, cluster_id)) %>%
     mutate_if(is.factor, as.character) %>%
     dplyr::select(uid, cluster_id, everything())
   
@@ -111,10 +112,15 @@ write.csv(dhs_all_df, file.path(secure_file_path, "Data", "DHS",  "FinalData - P
 
 ## Geo Only
 df_geoonly <- dhs_all_df %>%
-  dplyr::select(uid, latitude, longitude, urban_rural)
+  dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code)
 
 saveRDS(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
 write.csv(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)
+
+
+
+
+
 
 
 

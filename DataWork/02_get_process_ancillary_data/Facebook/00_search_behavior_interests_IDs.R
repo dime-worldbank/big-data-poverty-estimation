@@ -114,3 +114,11 @@ write.csv(behaviors_df %>% dplyr::select(id, name, description, audience_size),
                     "behaviors.csv"), row.names = F)
 
 
+
+
+
+behaviors_df <- readRDS(file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+                  "behaviors.Rds"))
+interests_df <- readRDS(
+        file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+                  "interests.Rds"))

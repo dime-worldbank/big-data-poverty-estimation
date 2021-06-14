@@ -172,7 +172,7 @@ parameters_df_interests <- data.frame(
   publisher_platforms = "'facebook','messenger'",
   messenger_positions = "'messenger_home'",
   interest = c("{'id':6003012317397}", # Gambling
-               "{'id':6004115167424}", # Physical exercise
+               #"{'id':6004115167424}", # Physical exercise
                "{'id':6003384248805}", # Fitness and wellness
                "{'id':6007828099136}" # Luxury Goods
   ), 
@@ -188,6 +188,8 @@ parameters_df <- bind_rows(
   parameters_df_behaviors,
   parameters_df_interests
 )
+
+parameters_df$param_id <- 1:nrow(parameters_df)
 
 # parameters_df <- bind_rows(
 #   parameters_df_all,
@@ -212,7 +214,7 @@ make_query_location_i <- function(param_i,
   # --creation_act: Creation act (associated with API key/account)
   # --token: API token/key
   
-  parameters_df_i <- param_df[param_i,]
+  parameters_df_i <- param_df[param_df$param_id %in% param_i,]
   
   # Stall if not connected to internet
   while(!curl::has_internet()){ Sys.sleep(30); print("Looking for internet") }
@@ -248,7 +250,7 @@ make_query_location_i <- function(param_i,
                     "}")
     
     query_val <- url(query) %>% fromJSON
-    
+
     #### If there is no error
     if(is.null(query_val$error)){
       
@@ -320,7 +322,7 @@ for(uid_i in unique(df$uid)){
     
     parameters_df$radius_km <- RADIUS_i
     
-    df_out <- map_df(1:nrow(parameters_df), make_query_location_i, 
+    df_out <- map_df(parameters_df$param_id, make_query_location_i, 
                      parameters_df,
                      df_i,
                      version,

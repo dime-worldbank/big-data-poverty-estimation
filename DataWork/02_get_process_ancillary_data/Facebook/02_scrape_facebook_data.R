@@ -271,7 +271,7 @@ make_query_location_i <- function(param_i,
       query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
       
       ## Print result and sleep (sleep needed b/c of rate limiting)
-      print(paste0(param_i,": ", query_val_df$estimate_mau," ", query_val_df$estimate_dau, " ", API_KEY_EMAIL))
+      print(paste0(param_i,": ", coords_df$uid, " ", query_val_df$estimate_mau," ", query_val_df$estimate_dau, " ", API_KEY_EMAIL))
       Sys.sleep(sleep_time) # really just need 18; 20 just in case
       
       #### If there is an error, print the error and make output null  

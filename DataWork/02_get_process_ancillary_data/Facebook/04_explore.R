@@ -29,39 +29,10 @@ cor_df <- survey_pov_long %>%
   dplyr::filter(fb_variable %>% str_detect("mau"))
 
 survey_pov %>%
+  dplyr::filter(urban_rural %in% "U") %>%
   ggplot() +
-  geom_point(aes(x = estimate_mau_18_prop,
+  geom_point(aes(x = log(estimate_mau_3),
                  y = wealth_index_score))
-
-
-
-
-
-
-# opm_pov <- opm_pov %>%
-#   dplyr::select(cluster_id, contains("mau"), pscores) %>%
-#   pivot_longer(cols = -cluster_id) %>%
-#   dplyr::filter(value =! Inf)
-
-opm_pov$pscores %>% hist()
-opm_pov$estimate_mau_20210417054957_11 %>% hist()
-
-ggplot() +
-  geom_point(data = opm_pov,
-             aes(x = pscores,
-                 y = estimate_mau_20210415044235_5))
-
-opm_pov %>%
-  names() %>%
-  str_subset("mau")
-
-lm(pscores ~ estimate_dau_20210414121920_3, data = opm_pov %>%
-     dplyr::filter(estimate_dau_20210414121920_3 != Inf)) %>%
-  summary()
-
-
-
-
 
 
 

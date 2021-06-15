@@ -17,7 +17,7 @@ SKIP_IF_ALREAD_SCRAPED <- T
 
 # "robmarty3@gmail.com"
 # "robertandrewmarty3@gmail.com"
-API_KEY_EMAIL <- "robmarty3@gmail.com"
+API_KEY_EMAIL <- "robertandrewmarty@gmail.com"
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
@@ -34,7 +34,7 @@ api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), string
          Details == API_KEY_EMAIL)
 
 token <- api_keys$Key[api_keys$Account %in% "token"] %>% str_squish()
-creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"] %>% str_squish()
+creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"] %>% str_replace_all("ACT_", "") %>% str_squish()
 version <- api_keys$Key[api_keys$Account %in% "version"] %>% str_squish()
 
 # Parameters -------------------------------------------------------------------
@@ -306,7 +306,7 @@ sleep_time_after_loc <- sleep_time_after_loc + 1
 #Sys.sleep(3600)
 
 # Implement Function and Export ------------------------------------------------
-for(country_code_i in c("PH")){
+for(country_code_i in c("PK")){
   
   df_c <- df[df$country_code %in% country_code_i,]
   

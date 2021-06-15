@@ -112,7 +112,7 @@ write.csv(dhs_all_df, file.path(secure_file_path, "Data", "DHS",  "FinalData - P
 
 ## Geo Only
 df_geoonly <- dhs_all_df %>%
-  dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code)
+  dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code, year)
 
 saveRDS(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
 write.csv(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)

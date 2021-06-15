@@ -26,8 +26,6 @@ if(SURVEY_NAME %in% "DHS"){
   df <- df[df$most_recent_survey %in% T,]
 }
 
-df <- df[df$country_code %in% c("PH", "PK"),]
-
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",

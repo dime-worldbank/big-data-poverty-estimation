@@ -107,9 +107,6 @@ dhs_all_df <- dhs_all_df %>%
 saveRDS(dhs_all_df, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 write.csv(dhs_all_df, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-saveRDS(gdrive_file_path, file.path(secure_file_path, "Data", "DHS",  "FinalData", "survey_socioeconomic_geo.Rds"))
-write.csv(gdrive_file_path, file.path(secure_file_path, "Data", "DHS",  "FinalData", "survey_socioeconomic_geo.csv"), row.names = F)
-
 saveRDS(dhs_all_df, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.Rds"))
 write.csv(dhs_all_df, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.csv"), row.names = F)
 

@@ -299,7 +299,7 @@ number_locs_per_hour <- ceiling(200/nrow(parameters_df))
 seconds_in_hour <- 60*60
 sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
-sleep_time_after_loc <- sleep_time_after_loc + 1
+sleep_time_after_loc <- sleep_time_after_loc - 130
 
 #Sys.sleep(3600)
 

@@ -304,7 +304,10 @@ sleep_time_after_loc <- sleep_time_after_loc + 1
 #Sys.sleep(3600)
 
 # Implement Function and Export ------------------------------------------------
-for(country_code_i in c("PH")){
+country_code_all <- df$country_code %>% unique()
+country_code_all <- country_code_all[!(country_code_all %in% "IA")]
+
+for(country_code_i in country_code_all){
   
   df_c <- df[df$country_code %in% country_code_i,]
   

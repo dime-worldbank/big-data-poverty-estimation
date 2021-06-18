@@ -8,6 +8,17 @@ clean_hh <- function(df){
   
   df <- df %>%
     dplyr::rename(cluster_id = hv001,
+                  water_source = hv201,
+                  floor_material = hv213,
+                  toilet_type = hv205,
+                  has_electricity = hv206,
+                  has_radio = hv207,
+                  has_tv = hv208,
+                  has_fridge = hv209,
+                  has_motorbike = hv211,
+                  has_car = hv212,
+                  n_hh_members = hv009,
+                  n_rooms_sleeping = hv216,
                   wealth_index = hv270,
                   wealth_index_score = hv271)
   
@@ -69,7 +80,21 @@ process_dhs <- function(dir){
   geo_path <- files_all %>% str_subset("[A-Z]{2}GE") %>% str_subset(".shp$")
   
   # Load and clean data
-  hh_df <- read_dta(hh_path, col_select = c(hv001, hv270, hv271)) %>% clean_hh()
+  hh_df <- read_dta(hh_path, col_select = c(hv001, 
+                                            hv201,
+                                            hv205,
+                                            hv213,
+                                            hv206,
+                                            hv207,
+                                            hv208,
+                                            hv209,
+                                            hv211,
+                                            hv212,
+                                            hv221,
+                                            hv009,
+                                            hv216,
+                                            hv270, 
+                                            hv271)) %>% clean_hh()
   geo_sdf <- readOGR(geo_path) %>% clean_geo()
   
   # Merge data
@@ -86,6 +111,9 @@ country_year_dirs <- lapply(countries, function(country_i){
   country_year_dir <- file.path(dhs_dir, "RawData", country_i) %>% list.files(full.names = T)
 }) %>% 
   unlist()
+
+## Remove archive folders
+country_year_dirs <- country_year_dirs[!grepl("archive", country_year_dirs)]
 
 ## Process Data
 dhs_all_df <- map_df(country_year_dirs, process_dhs)

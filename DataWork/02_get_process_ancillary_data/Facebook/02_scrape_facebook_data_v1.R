@@ -307,6 +307,9 @@ sleep_time_after_loc <- sleep_time_after_loc - 100
 country_code_all <- df$country_code %>% unique()
 country_code_all <- country_code_all[!(country_code_all %in% "IA")]
 
+odd <- df$uid %>% str_sub(-2,-1) %>% as.numeric() %>% `%%`(2)
+df <- df[odd %in% 1,]
+
 for(country_code_i in country_code_all){
   
   df_c <- df[df$country_code %in% country_code_i,]

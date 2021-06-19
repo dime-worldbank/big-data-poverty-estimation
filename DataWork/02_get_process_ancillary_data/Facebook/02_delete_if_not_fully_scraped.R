@@ -10,8 +10,7 @@ data <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individ
 
 data_sum <- data %>%
   group_by(uid) %>%
-  dplyr::summarise(N = n()) %>%
-  ungroup()
+  dplyr::summarise(N = n()) 
 
 uids_to_delete <- data_sum %>%
   dplyr::filter(N != 33) %>%

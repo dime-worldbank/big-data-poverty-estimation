@@ -305,7 +305,7 @@ sleep_time_after_loc <- sleep_time_after_loc - 100
 
 # Implement Function and Export ------------------------------------------------
 country_code_all <- df$country_code %>% unique() %>% sort()
-country_code_all <- country_code_all[!(country_code_all %in% "IA")]
+country_code_all <- country_code_all[!(country_code_all %in% c("IA", "ID"))]
 
 odd <- df$uid %>% str_sub(-2,-1) %>% as.numeric() %>% `%%`(2)
 df <- df[odd %in% 0,]

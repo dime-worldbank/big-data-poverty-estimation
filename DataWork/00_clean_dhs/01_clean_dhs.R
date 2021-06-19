@@ -6,6 +6,14 @@
 # Functions to Clean Data ------------------------------------------------------
 clean_hh <- function(df){
   
+  if(grepl("KH", df$hv000[1])){
+    # DH doesn't record anything for hv201 (water source); however, has water source
+    # during dry and wet times. Use dry (sh102)
+    df <- df %>%
+      dplyr::select(-hv201) %>%
+      dplyr::rename(hv201 = sh102)
+  }
+  
   df <- df %>%
     dplyr::rename(cluster_id = hv001,
                   water_source = hv201,
@@ -22,19 +30,33 @@ clean_hh <- function(df){
                   wealth_index = hv270,
                   wealth_index_score = hv271)
   
-  df_mean <- df %>%
-    dplyr::select(cluster_id, wealth_index, wealth_index_score) %>%
-    group_by(cluster_id) %>%
-    dplyr::summarise_all(mean, na.rm=T) %>%
-    ungroup()
+  df_out <- df %>%
+    dplyr::select(cluster_id, 
+                  water_source,
+                  floor_material,
+                  toilet_type,
+                  has_electricity,
+                  has_radio,
+                  has_tv,
+                  has_fridge,
+                  has_motorbike,
+                  has_car,
+                  n_hh_members,
+                  n_rooms_sleeping,
+                  wealth_index, wealth_index_score) #%>%
+    #group_by(cluster_id) %>%
+    #dplyr::summarise_all(mean, na.rm=T) %>%
+    #ungroup()
   
-  df_nHH <- df %>%
-    group_by(cluster_id) %>%
-    dplyr::summarise(N_households = n()) %>%
-    ungroup()
+  #df_nHH <- df %>%
+  #  group_by(cluster_id) %>%
+  #  dplyr::summarise(N_households = n()) %>%
+  #  ungroup()
   
-  df_out <- df_mean %>%
-    left_join(df_nHH, by = "cluster_id")
+  #df_out <- df_mean %>%
+  #  left_join(df_nHH, by = "cluster_id")
+  
+  print(df_out$water_source)
   
   return(df_out)
 }
@@ -56,10 +78,10 @@ clean_geo <- function(df){
 
 merge_clean <- function(hh_df, geo_df){
   
-  df_out <- geo_df %>%
-    left_join(hh_df, by = "cluster_id") %>%
-    #dplyr::mutate(uid = paste0(country_code, year, cluster_id)) %>%
-    mutate_if(is.factor, as.character) %>%
+  df_out <- hh_df %>%
+    left_join(geo_df, by = "cluster_id") %>%
+    #mutate_if(is.factor, as.character) %>%
+    mutate_at(vars(urban_rural), as.character) %>%
     dplyr::select(uid, cluster_id, everything())
   
   return(df_out)
@@ -80,21 +102,28 @@ process_dhs <- function(dir){
   geo_path <- files_all %>% str_subset("[A-Z]{2}GE") %>% str_subset(".shp$")
   
   # Load and clean data
-  hh_df <- read_dta(hh_path, col_select = c(hv001, 
-                                            hv201,
-                                            hv205,
-                                            hv213,
-                                            hv206,
-                                            hv207,
-                                            hv208,
-                                            hv209,
-                                            hv211,
-                                            hv212,
-                                            hv221,
-                                            hv009,
-                                            hv216,
-                                            hv270, 
-                                            hv271)) %>% clean_hh()
+  hh_vars <- c("hv000",
+               "hv001",
+               "hv201",
+               "hv205",
+               "hv213",
+               "hv206",
+               "hv207",
+               "hv208",
+               "hv209",
+               "hv211",
+               "hv212",
+               "hv221",
+               "hv009",
+               "hv216",
+               "hv270",
+               "hv271")
+  
+  if(grepl("RawData/KH", dir)){
+    hh_vars <- c(hh_vars, "sh102")
+  }
+  
+  hh_df <- read_dta(hh_path, col_select = all_of(hh_vars)) %>% clean_hh()
   geo_sdf <- readOGR(geo_path) %>% clean_geo()
   
   # Merge data
@@ -105,7 +134,7 @@ process_dhs <- function(dir){
 }
 
 # Process Data -----------------------------------------------------------------
-## Create vecotr of paths to country-year folders
+## Create vector of paths to country-year folders
 countries <- file.path(dhs_dir, "RawData") %>% list.files()
 country_year_dirs <- lapply(countries, function(country_i){
   country_year_dir <- file.path(dhs_dir, "RawData", country_i) %>% list.files(full.names = T)

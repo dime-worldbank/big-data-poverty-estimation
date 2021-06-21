@@ -14,7 +14,7 @@ clean_hh <- function(df){
       dplyr::rename(hv201 = sh102)
   }
   
-  df <- df %>%
+  df_out <- df %>%
     dplyr::rename(cluster_id = hv001,
                   water_source = hv201,
                   floor_material = hv213,
@@ -28,9 +28,7 @@ clean_hh <- function(df){
                   n_hh_members = hv009,
                   n_rooms_sleeping = hv216,
                   wealth_index = hv270,
-                  wealth_index_score = hv271)
-  
-  df_out <- df %>%
+                  wealth_index_score = hv271) %>%
     dplyr::select(cluster_id, 
                   water_source,
                   floor_material,
@@ -43,10 +41,17 @@ clean_hh <- function(df){
                   has_car,
                   n_hh_members,
                   n_rooms_sleeping,
-                  wealth_index, wealth_index_score) #%>%
-    #group_by(cluster_id) %>%
-    #dplyr::summarise_all(mean, na.rm=T) %>%
-    #ungroup()
+                  wealth_index, wealth_index_score) %>%
+    # value labels sometime different. For example, in some surveys, for floor
+    # material, cement is 34 and in others cement is 35.
+    mutate(floor_material = floor_material %>% as_factor() %>% as.character(),
+           water_source = water_source %>% as_factor() %>% as.character(),
+           toilet_type = toilet_type %>% as_factor() %>% as.character())
+  
+  #%>%
+  #group_by(cluster_id) %>%
+  #dplyr::summarise_all(mean, na.rm=T) %>%
+  #ungroup()
   
   #df_nHH <- df %>%
   #  group_by(cluster_id) %>%
@@ -55,8 +60,6 @@ clean_hh <- function(df){
   
   #df_out <- df_mean %>%
   #  left_join(df_nHH, by = "cluster_id")
-  
-  print(df_out$water_source)
   
   return(df_out)
 }
@@ -159,19 +162,61 @@ dhs_all_df <- dhs_all_df %>%
   ungroup() %>%
   dplyr::select(-latest_survey_country)
 
+# Asset Index ------------------------------------------------------------------
+#### Cleanup variables
+
+# Number of sleeping rooms; if 0, say 1
+dhs_all_df$n_rooms_sleeping[dhs_all_df$n_rooms_sleeping %in% 0] <- 1
+
+# Floor material
+dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material %>% str_detect("earth")
+dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material_not_earth %in% FALSE
+
+# Water source
+dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source %in% "piped into dwelling")
+
+dhs_all_df <- dhs_all_df %>%
+  mutate_at(vars(contains("has")), tidyr::replace_na, 0) %>%
+  mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping) %>%
+  dplyr::filter(!is.na(n_rooms_sleeping))
+
+pca_1 <- dhs_all_df %>% 
+  dplyr::select(contains("has"), 
+                n_sleeping_rooms_pp,
+                floor_material_not_earth,
+                water_source_piped_dwelling) %>%
+  prcomp(scale = T)
+
+dhs_all_df$asset_pca_1 <- pca_1$x[,1]
+
+# Aggregate --------------------------------------------------------------------
+dhs_all_df_coll <- dhs_all_df %>%
+  group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey) %>%
+  summarise_if(is.numeric, mean, na.rm=T)
+
+# dhs_all_df_coll %>%
+#   dplyr::filter(country_code == "KY") %>%
+#   ggplot() +
+#   geom_point(aes(x = asset_pca_1, y = wealth_index_score))
+# # 
+# a <- dhs_all_df_coll %>%
+#   group_by(country_year) %>%
+#   dplyr::summarise(cor = cor(asset_pca_1,
+#                              wealth_index_score))
+
 # Export -----------------------------------------------------------------------
 ## All
-saveRDS(dhs_all_df, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-write.csv(dhs_all_df, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
+saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+write.csv(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-saveRDS(dhs_all_df, file.path(gdrive_file_path, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-write.csv(dhs_all_df, file.path(gdrive_file_path, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
+saveRDS(dhs_all_df_coll, file.path(gdrive_file_path, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+write.csv(dhs_all_df_coll, file.path(gdrive_file_path, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-saveRDS(dhs_all_df, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.Rds"))
-write.csv(dhs_all_df, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.csv"), row.names = F)
+saveRDS(dhs_all_df_coll, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.Rds"))
+write.csv(dhs_all_df_coll, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.csv"), row.names = F)
 
 ## Geo Only
-df_geoonly <- dhs_all_df %>%
+df_geoonly <- dhs_all_df_coll %>%
   dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code, year)
 
 saveRDS(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))

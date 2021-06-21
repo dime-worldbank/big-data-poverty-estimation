@@ -67,6 +67,7 @@ library(jsonlite)
 library(httr)
 library(curl)
 library(haven)
+library(sjmisc)
 source(file.path(code_file_path, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")

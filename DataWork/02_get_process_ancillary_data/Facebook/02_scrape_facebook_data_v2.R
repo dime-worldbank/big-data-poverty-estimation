@@ -20,7 +20,8 @@ SKIP_IF_ALREAD_SCRAPED <- T
 API_KEY_EMAIL <- "robertandrewmarty3@gmail.com"
 
 # Load Coordinates -------------------------------------------------------------
-df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
+df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+#df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
 
 if(SURVEY_NAME %in% "DHS"){
   df <- df[df$most_recent_survey %in% T,]
@@ -301,14 +302,17 @@ sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
 sleep_time_after_loc <- sleep_time_after_loc - 100
 
-#Sys.sleep(3600)
+Sys.sleep(500)
+
 
 # Implement Function and Export ------------------------------------------------
 country_code_all <- df$country_code %>% unique() %>% sort()
-country_code_all <- country_code_all[!(country_code_all %in% c("IA", "ID"))]
+country_code_all <- country_code_all[!(country_code_all %in% c("ID"))]
 
 odd <- df$uid %>% str_sub(-2,-1) %>% as.numeric() %>% `%%`(2)
 df <- df[odd %in% 0,]
+
+country_code_all <- c(country_code_all, "IA")
 
 for(country_code_i in country_code_all){
   

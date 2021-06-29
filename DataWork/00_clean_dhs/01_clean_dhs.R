@@ -153,13 +153,14 @@ dhs_all_df <- map_df(country_year_dirs, process_dhs)
 ## Fix country code
 # In some cases, India uses IN country code (when IN is Indonesia, and should be IA)
 dhs_all_df$country_code <- dhs_all_df$country_year %>% substring(1,2)
+dhs_all_df$year <- dhs_all_df$country_year %>% substring(4,7) %>% as.numeric()
 
 ## Add variable for most  recent
 dhs_all_df <- dhs_all_df %>%
-  group_by(country_code) %>%
-  mutate(latest_survey_country = max(year)) %>%
-  mutate(most_recent_survey = latest_survey_country == year) %>%
-  ungroup() %>%
+  dplyr::group_by(country_code) %>%
+  dplyr::mutate(latest_survey_country = max(year)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(most_recent_survey = latest_survey_country == year) %>%
   dplyr::select(-latest_survey_country)
 
 # Asset Index ------------------------------------------------------------------
@@ -204,6 +205,12 @@ dhs_all_df_coll <- dhs_all_df %>%
 #   dplyr::summarise(cor = cor(asset_pca_1,
 #                              wealth_index_score))
 
+# Make Folder Name -------------------------------------------------------------
+# Folder name for storing individual tfrecords. Google drive complains when
+# too many files in an individual folder
+
+dhs_all_df_coll$tf_folder_name <- dhs_all_df_coll$uid %>% substring(1,11)
+
 # Export -----------------------------------------------------------------------
 ## All
 saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
@@ -223,9 +230,9 @@ saveRDS(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII
 write.csv(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)
 
 
-
-
-
-
+# a <- df_geoonly[grepl("BD", df_geoonly$uid),]
+# a$year %>% table()
+# df_geoonly$country_code %>% as.character() %>% table 
+# 
 
 

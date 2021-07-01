@@ -1,3 +1,14 @@
+import ee
+import numpy as np
+import geetools
+from geetools import ui, cloud_mask
+import os, datetime
+import pandas as pd
+import itertools
+import tensorflow as tf
+
+cloud_mask_landsatSR = cloud_mask.landsatSR()
+cloud_mask_sentinel2 = cloud_mask.sentinel2()
 
 # tfrecord helper functions ----------------------------------------------------
 # https://stackoverflow.com/questions/52324515/passing-multiple-inputs-to-keras-model-from-tf-dataset-api
@@ -18,6 +29,15 @@ def _int64_feature(value):
     """Returns an int64_list from a bool / enum / int / uint."""
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
+def chunk_ids(total_length, chunk_size):
+    n_numbers = np.ceil(total_length / chunk_size)
+    n_numbers = int(n_numbers)
+    
+    chunk_ids = list(range(0,n_numbers)) * chunk_size
+    chunk_ids.sort()
+    chunk_ids = chunk_ids[:total_length]
+    
+    return chunk_ids
 
 # Main Functions -----------------------------------------------------------------
 def survey_to_fc(survey_df):
@@ -59,7 +79,7 @@ def normalized_diff(values1, values2):
 
     return (values2 - values1)/(values2 + values1)
 
-def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, out_path, b_b, g_b, r_b, nir_b, other_bs):
+def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, other_bs):
     '''
     Transforms feature collection from neighborhood array to np array. Stacks bands
     so that they are: NTL, blue, green, red, NDVI, other single daytime bands
@@ -188,9 +208,9 @@ def prep_cnn_np(survey_df,
     survey_fc = survey_to_fc(survey_df)
 
     # Define kernel for neighborhood array
-    list = ee.List.repeat(1, KERNEL_SIZE)
-    lists = ee.List.repeat(list, KERNEL_SIZE)
-    kernel = ee.Kernel.fixed(KERNEL_SIZE, KERNEL_SIZE, lists)
+    list = ee.List.repeat(1, kernel_size)
+    lists = ee.List.repeat(list, kernel_size)
+    kernel = ee.Kernel.fixed(kernel_size, kernel_size, lists)
 
     # Define scale
     if satellite in ['l7', 'l8']:
@@ -359,16 +379,7 @@ def prep_cnn_np(survey_df,
     daytime_f = dict_ee['features']
     
     # Extract dta
-    out_ex_proto_list = ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, out_path, b_b, g_b, r_b, nir_b, other_bs)
+    out_ex_proto_list = ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, other_bs)
     
     return out_ex_proto_list
 
-def chunk_ids(total_length, chunk_size):
-    n_numbers = np.ceil(total_length / chunk_size)
-    n_numbers = int(n_numbers)
-    
-    chunk_ids = list(range(0,n_numbers)) * chunk_size
-    chunk_ids.sort()
-    chunk_ids = chunk_ids[:total_length]
-    
-    return chunk_ids

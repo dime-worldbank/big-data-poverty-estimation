@@ -302,7 +302,7 @@ sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
 sleep_time_after_loc <- sleep_time_after_loc - 100
 
-Sys.sleep(500)
+#Sys.sleep(500)
 
 # Implement Function and Export ------------------------------------------------
 country_code_all <- df$country_code %>% unique()
@@ -341,7 +341,7 @@ for(country_code_i in country_code_all){
                        token,
                        sleep_time = sleep_time_after_param)
       
-      saveRDS(df_out, OUT_PATH)
+      #saveRDS(df_out, OUT_PATH)
       rm(df_out)
       
       Sys.sleep(sleep_time_after_loc)

@@ -3,7 +3,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 # Regressors -------------------------------------------------------
 GRID_REGRESS = {
-    'regressors': ['Ridge', 'DecisionTreeRegressor', 'BaggingRegressor',
+    'regressors': ['Ridge', 'GradientBoostingRegressor', 'DecisionTreeRegressor', 'BaggingRegressor',
                     'GradientBoostingRegressor', 'RandomForestRegressor',
                      'AdaBoostRegressor', 'KNeighborsRegressor'],
     'Ridge': [
@@ -29,8 +29,8 @@ GRID_REGRESS = {
     'BaggingRegressor': [
         {'n_estimators': n_estimators, 'max_features': max_features,
         'random_state': 0, 'n_jobs': -1} \
-        for n_estimators in (100, ) \
-        for max_features in (1, 5, 10, )
+        for n_estimators in (10, 100, 500) \
+        for max_features in (1, 5, 10, 15, 20)
     ],
     'GradientBoostingRegressor': [
         {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,

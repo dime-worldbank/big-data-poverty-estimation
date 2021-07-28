@@ -97,6 +97,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         survey_uid = survey_df['uid'].iloc[i]
         #folder_name = survey_df['tf_folder_name'].iloc[i]
         asset_pca_1 = survey_df['asset_pca_1'].iloc[i]
+        uid_i = survey_df['uid'].iloc[i].encode()
         
         d_f_i = daytime_f[i]['properties']
         n_f_i = ntl_f[i]['properties']
@@ -145,6 +146,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
 
         ## Create dictionary
         feature = {
+            'uid' : _bytes_feature(uid_i),
             'asset_pca_1' : _float_feature(asset_pca_1),
             'b_ntl': _bytes_feature(bntl_np_tf),
             'b_rgb': _bytes_feature(brgb_np_tf),
@@ -155,12 +157,12 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         # Other MS Bands
         b_other_list = []
         for b_other_i in other_bs:
-          bi_np = np.array(d_f_i[b_other_i])
-          bi_np = np.expand_dims(bi_np, axis=2)
-          #bi_np_tf = tf.io.serialize_tensor(bi_np)
-          bi_np = bi_np.astype(np.uint16)
-          bi_np_tf = tf.io.encode_png(bi_np, compression = 9)
-          feature['b_' + b_other_i] = _bytes_feature(bi_np_tf)
+            bi_np = np.array(d_f_i[b_other_i])
+            bi_np = np.expand_dims(bi_np, axis=2)
+            #bi_np_tf = tf.io.serialize_tensor(bi_np)
+            bi_np = bi_np.astype(np.uint16)
+            bi_np_tf = tf.io.encode_png(bi_np, compression = 9)
+            feature['b_' + b_other_i] = _bytes_feature(bi_np_tf)
   
         example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
 
@@ -214,9 +216,9 @@ def prep_cnn_np(survey_df,
 
     # Define scale
     if satellite in ['l7', 'l8']:
-      SCALE = 30
+        SCALE = 30
     elif satellite in ['s2']: 
-      SCALE = 10
+        SCALE = 10
 
     # Prep NTL -----------------------------------------------------------------
     

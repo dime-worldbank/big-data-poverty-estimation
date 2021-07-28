@@ -41,8 +41,13 @@ over_nearest <- function(sp_i, gadm_i){
 # Load Data --------------------------------------------------------------------
 dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_hhlevel.Rds"))
 
+## Subset - needs coordinates
 dhs_all_df <- dhs_all_df %>%
   dplyr::filter(!is.na(latitude))
+
+## Remove if issues extracting daytime data 
+dhs_all_df <- dhs_all_df[!(dhs_all_df$uid %in% c("IA201400180079",
+                                                 "IA201400180052")),]
 
 # Add variable most recent and subset to most recent ---------------------------
 

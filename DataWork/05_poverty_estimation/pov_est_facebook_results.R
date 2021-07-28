@@ -8,6 +8,7 @@ survey_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "sur
 
 results_df <- read.csv(file.path(data_dir, "DHS", "FinalData", "results", "results_fbonly.csv"))
 ypred_df <- fread(file.path(data_dir, "DHS", "FinalData", "results", "ypred_fbonly.csv"))
+feat_imp_df <- fread(file.path(data_dir, "DHS", "FinalData", "results", "feature_importance.csv"))
 
 # Results Table ----------------------------------------------------------------
 
@@ -111,3 +112,40 @@ for(est_type_i in c("within_country",
   
 }
 
+# Feature Importance -----------------------------------------------------------
+feat_imp_clean_df <- feat_imp_df %>%
+  dplyr::select(-V1) %>%
+  pivot_longer(cols = -c(param_name, param_id)) %>%
+  dplyr::mutate(country = name %>% 
+                  str_replace_all("_asset_pca_1.joblib", "") %>%
+                  str_replace_all(".*_", ""),
+                est_type = name %>% 
+                  str_replace_all("fbonly_model_", "") %>%
+                  str_replace_all("_[[:alpha:]][[:alpha:]]_asset_pca_1.joblib", "")) %>%
+  dplyr::group_by(est_type, param_name, param_id) %>%
+  dplyr::summarise(value = mean(value))
+
+feat_imp_clean_df$param_name[feat_imp_clean_df$param_name %in% "Behavior: Owns: Galaxy S8; Owns: Galaxy S8+; Facebook access (mobile): iPhone 8; Facebook access (mobile): iPhone 8 Plus; Facebook access (mobile): iPhone X; Owns: Galaxy S9; Owns: Galaxy S9+"] <- 
+  "Behavior: Owns Galaxy S8+ or iPhone 8+"
+
+feat_imp_clean_df$param_name[feat_imp_clean_df$param_name %in% "Behavior: Facebook access (mobile): iPhone 8; Facebook access (mobile): iPhone 8 Plus; Facebook access (mobile): iPhone X"] <- 
+  "Behavior: Owns iPhone 8+"
+
+feat_imp_clean_df$param_name[feat_imp_clean_df$param_name %in% "Behavior: Owns: Galaxy S8; Owns: Galaxy S8+; Owns: Galaxy S9; Owns: Galaxy S9+"] <- 
+  "Behavior: Owns Galaxy S8+"
+
+p <- feat_imp_clean_df %>%
+  dplyr::filter(est_type %in% "other_countries") %>%
+  ggplot() +
+  geom_col(aes(y = reorder(param_name, value),
+               x = value),
+           fill = "dodgerblue4") +
+  labs(x = "Feature Importance",
+       y = NULL,
+       fill = "Country") +
+  theme(axis.text.y = element_text(color = "black"))
+
+ggsave(p, 
+       filename = file.path(figures_dir, "fbonly_featureimportnace_other_countries.png"), 
+       height = 6,
+       width = 6)

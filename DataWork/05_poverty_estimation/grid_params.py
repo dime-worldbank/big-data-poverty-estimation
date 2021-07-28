@@ -3,9 +3,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 # Regressors -------------------------------------------------------
 GRID_REGRESS = {
-    'regressors': ['Ridge', 'GradientBoostingRegressor', 'DecisionTreeRegressor', 'BaggingRegressor',
-                    'GradientBoostingRegressor', 'RandomForestRegressor',
-                     'AdaBoostRegressor', 'KNeighborsRegressor'],
+    'regressors': ['BaggingRegressor','RandomForestRegressor'],
     'Ridge': [
         {'alpha': alpha} \
         for alpha in (1, 5, 10, )
@@ -26,11 +24,17 @@ GRID_REGRESS = {
         for max_depth in (1, 2, 5, ) \
         for max_features in ('sqrt', ) \
     ],
+    #'BaggingRegressor': [
+    #    {'n_estimators': n_estimators, 'max_features': max_features,
+    #    'random_state': 0, 'n_jobs': -1} \
+    #    for n_estimators in (10, 100, 150, 200, 500) \
+    #    for max_features in (1, 5, 10, 15, 20, 25, 30, 32,)
+    #],
     'BaggingRegressor': [
         {'n_estimators': n_estimators, 'max_features': max_features,
         'random_state': 0, 'n_jobs': -1} \
-        for n_estimators in (10, 100, 500) \
-        for max_features in (1, 5, 10, 15, 20)
+        for n_estimators in (10, 100, 150, 200,) \
+        for max_features in (32,)
     ],
     'GradientBoostingRegressor': [
         {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,
@@ -38,7 +42,7 @@ GRID_REGRESS = {
         'random_state': 0} \
         for loss in ('ls', ) \
         for rate in (1e-4, ) \
-        for n_estimators in (100, ) \
+        for n_estimators in (5, 10, 50, 100, ) \
         for criterion in ('friedman_mse', ) \
         for max_features in ('sqrt', ) \
     ],
@@ -46,9 +50,9 @@ GRID_REGRESS = {
         {'n_estimators': n_estimators, 'criterion': criterion,
         'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
         'random_state': 0} \
-        for n_estimators in (100, ) \
+        for n_estimators in (5, 10, 50, 100, ) \
         for criterion in ('mse', ) \
-        for max_depth in (1, ) \
+        for max_depth in (1,2,3, ) \
         for max_features in ('sqrt', )
     ],
     'AdaBoostRegressor': [

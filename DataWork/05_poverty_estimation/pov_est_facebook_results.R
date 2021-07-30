@@ -134,18 +134,24 @@ feat_imp_clean_df$param_name[feat_imp_clean_df$param_name %in% "Behavior: Facebo
 feat_imp_clean_df$param_name[feat_imp_clean_df$param_name %in% "Behavior: Owns: Galaxy S8; Owns: Galaxy S8+; Owns: Galaxy S9; Owns: Galaxy S9+"] <- 
   "Behavior: Owns Galaxy S8+"
 
-p <- feat_imp_clean_df %>%
-  dplyr::filter(est_type %in% "other_countries") %>%
-  ggplot() +
-  geom_col(aes(y = reorder(param_name, value),
-               x = value),
-           fill = "dodgerblue4") +
-  labs(x = "Feature Importance",
-       y = NULL,
-       fill = "Country") +
-  theme(axis.text.y = element_text(color = "black"))
+for(est_type_i in c("within_country",
+                    "other_countries",
+                    "india")){
+  
+  p <- feat_imp_clean_df %>%
+    dplyr::filter(est_type %in% est_type_i) %>%
+    ggplot() +
+    geom_col(aes(y = reorder(param_name, value),
+                 x = value),
+             fill = "dodgerblue4") +
+    labs(x = "Feature Importance",
+         y = NULL,
+         fill = "Country") +
+    theme(axis.text.y = element_text(color = "black"))
+  
+  ggsave(p, 
+         filename = file.path(figures_dir, paste0("fbonly_featureimportnace_",est_type_i,".png")), 
+         height = 6,
+         width = 6)
+}
 
-ggsave(p, 
-       filename = file.path(figures_dir, "fbonly_featureimportnace_other_countries.png"), 
-       height = 6,
-       width = 6)

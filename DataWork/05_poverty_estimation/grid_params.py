@@ -3,7 +3,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 # Regressors -------------------------------------------------------
 GRID_REGRESS = {
-    'regressors': ['BaggingRegressor','RandomForestRegressor'],
+    'regressors': ['Ridge', 'KNeighborsRegressor', 'AdaBoostRegressor', 'BaggingRegressor','RandomForestRegressor', 'GradientBoostingRegressor'],
     'Ridge': [
         {'alpha': alpha} \
         for alpha in (1, 5, 10, )
@@ -34,7 +34,7 @@ GRID_REGRESS = {
         {'n_estimators': n_estimators, 'max_features': max_features,
         'random_state': 0, 'n_jobs': -1} \
         for n_estimators in (10, 100, 150, 200,) \
-        for max_features in (32,)
+        for max_features in (1.0,)
     ],
     'GradientBoostingRegressor': [
         {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,
@@ -42,7 +42,7 @@ GRID_REGRESS = {
         'random_state': 0} \
         for loss in ('ls', ) \
         for rate in (1e-4, ) \
-        for n_estimators in (5, 10, 50, 100, ) \
+        for n_estimators in (5, 10, 50, 100, 1000, ) \
         for criterion in ('friedman_mse', ) \
         for max_features in ('sqrt', ) \
     ],
@@ -50,7 +50,7 @@ GRID_REGRESS = {
         {'n_estimators': n_estimators, 'criterion': criterion,
         'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
         'random_state': 0} \
-        for n_estimators in (5, 10, 50, 100, ) \
+        for n_estimators in (5, 10, 50, 100, 1000, ) \
         for criterion in ('mse', ) \
         for max_depth in (1,2,3, ) \
         for max_features in ('sqrt', )
@@ -69,7 +69,7 @@ GRID_REGRESS = {
     ],
     'KNeighborsRegressor': [
         {'n_neighbors': n_neighbors} \
-        for n_neighbors in (2,5,10,15, ) 
+        for n_neighbors in (2,5,10,15,20, ) 
     ],
     'GaussianNB': [
         {'priors': priors, 'var_smoothing': var_smoothing} \

@@ -6,6 +6,7 @@ if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/D
 if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 
 opm_dir <- file.path(project_file_path, "Data", "OPM")
+osm_dir <- file.path(project_file_path, "Data", "OSM")
 dhs_dir <- file.path(project_file_path, "Data", "DHS")
 gadm_dir <- file.path(project_file_path, "Data", "GADM")
 bisp_indiv_files_dir <- file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets")
@@ -71,6 +72,9 @@ library(haven)
 library(sjmisc)
 library(dbscan)
 library(ggplot2)
+library(geosphere)
+library(radiant.data)
+library(osmar)
 source(file.path(code_file_path, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")

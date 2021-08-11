@@ -11,7 +11,7 @@ survey_sum_df <- survey_df %>%
 # Load Data --------------------------------------------------------------------
 y_df <- read.csv(file.path(dhs_dir, "FinalData", "results", "ypred_fbonly_withincv.csv"), stringsAsFactors = F)
 results_df <- read.csv(file.path(dhs_dir, "FinalData", "results", "results_fbonly_withincv.csv"), stringsAsFactors = F)
-a <- results_df[results_df$regressor %in% "BaggingRegressor",]
+#a <- results_df[results_df$regressor %in% "BaggingRegressor",]
 
 # y_df <- bind_rows(
 #   y_df %>% mutate(feature_type = "fb_only"),
@@ -97,6 +97,14 @@ cat("\\end{tabular} \n")
 sink()
 
 # Figure -----------------------------------------------------------------------
+y_best_df <- y_best_df %>%
+  left_join(survey_df %>%
+              dplyr::select(uid, urban_rural), by = "uid") %>%
+  dplyr::mutate(urban_rural = case_when(
+    urban_rural %in% "U" ~ "Urban",
+    urban_rural %in% "R" ~ "Rural"
+  ))
+
 p <- y_best_df %>%
   dplyr::filter(target %in% "wealth_index_score",
                 feature_type %in% "all") %>% 
@@ -104,13 +112,16 @@ p <- y_best_df %>%
                 value = value / 100000) %>%
   ggplot() +
   geom_point(aes(x = y,
-                 y = value),
+                 y = value,
+                 color = urban_rural),
              size = 0.2,
              alpha = 0.5) +
   theme_minimal() +
   theme(strip.text = element_text(face = "bold")) +
   labs(x = "True Poverty Score",
-       y = "Predicted Poverty Score") +
+       y = "Predicted Poverty Score",
+       color = NULL) +
+  scale_color_manual(values = c("orange2", "dodgerblue3")) +
   facet_wrap(~country_name,
              scales = "free",
              nrow = 2)

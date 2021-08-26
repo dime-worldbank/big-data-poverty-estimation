@@ -1,7 +1,12 @@
-# Explore Facebook Ad API
+# Facebook Marketing API: Scrape Data
 
-# Extractions dau (daily active users) and mau (monthly active users) from locations
-# using specified parameters.
+# DESCRIPTION: Scrape data from Facebook's Marketing API at survey locations. 
+# Extract DAU and MAU across a variety of parameters. Code loops through survey
+# locations and scrapes data across multiple parameters for that survey location.
+# Because of the API rate limits, this code can take a while (weeks). Consequently,
+# a data file is saved for each survey location; this allows the code to easily
+# check the locations where data has already been scraped and to skip those 
+# locations. Another code file appends all these files into one file.
 
 # RATE LIMIT: 200 calls/hour
 # 60*60/200
@@ -11,25 +16,33 @@
 # https://developers.facebook.com/docs/marketing-api/audiences/reference/advanced-targeting
 # https://github.com/SofiaG1l/Using_Facebook_API
 
-# PARAMETERS
+# MAIN PARAMETERS
+SURVEY_NAME   <- "DHS"
+API_KEY_EMAIL <- "robmarty3@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
 
+# SCRAPING PARAMETERS
+# Determine if want to skip locations where data has already been scraped. Also,
+# can decide if want to scrape only locations with a uid that is even or odd,
+# or scrape the UIDs in reverse. These second parameters are useful if want
+# to use multiple API keys and run multiple instances of this script concurrently
+# (in short, to help divide and conquer which locations are scraped).
 SKIP_IF_ALREAD_SCRAPED <- T
-SURVEY_NAME <- "DHS"
 
-# "robmarty3@gmail.com"
-# "robertandrewmarty3@gmail.com"
-API_KEY_EMAIL <- "robmarty3@gmail.com"
+# If only want to scrape locations where the survey uid is even, odd or all.
+SCRAPE_EVEN_ODD <- "odd" # "even", "odd", "all". 
+
+# If want to scrape APIs in reverse order
+SCRAPE_REV <- F
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-#df <- readRDS(file.path(secure_file_path, "Data", SURVEY_NAME,  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
 
 if(SURVEY_NAME %in% "DHS"){
   df <- df[df$most_recent_survey %in% T,]
 }
 
 # Setup Credentials ------------------------------------------------------------
-api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
+api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",
          Details == API_KEY_EMAIL)
 
@@ -183,18 +196,11 @@ parameters_df_interests <- data.frame(
 parameters_df <- bind_rows(
   parameters_df_all,
   parameters_df_educ,
-  #parameters_df_device,
-  #parameters_df_carrier,
   parameters_df_behaviors,
   parameters_df_interests
 )
 
 parameters_df$param_id <- 1:nrow(parameters_df)
-
-# parameters_df <- bind_rows(
-#   parameters_df_all,
-#   parameters_df_behaviors[4,]
-# )
 
 # Function to extract data -----------------------------------------------------
 make_query_location_i <- function(param_i,
@@ -293,9 +299,12 @@ make_query_location_i <- function(param_i,
 }
 
 # Determine Sleep Time ---------------------------------------------------------
-# 200 calls per hour
+# Determine time to pause when scraping the API due to API rate limits.
+
+#### Pause after scrape each parameter
 sleep_time_after_param <- 0.5
 
+#### Pause after each location
 number_locs_per_hour <- ceiling(200/nrow(parameters_df))
 
 seconds_in_hour <- 60*60
@@ -303,29 +312,39 @@ sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
 sleep_time_after_loc <- sleep_time_after_loc - 100
 
-#Sys.sleep(500)
-
 # Implement Function and Export ------------------------------------------------
+## Grab country codes
 country_code_all <- df$country_code %>% unique()
 country_code_all <- country_code_all[!(country_code_all %in% c("ID"))]
 
+## Restrict dataset to script by whether uid is even or odd
 odd <- df$uid %>% str_sub(-2,-1) %>% as.numeric() %>% `%%`(2)
-df <- df[odd %in% 1,]
 
-country_code_all <- c(country_code_all, "IA")
+if(SCRAPE_EVEN_ODD %in% "odd"){
+  df <- df[odd %in% 1,]
+}
+
+if(SCRAPE_EVEN_ODD %in% "even"){
+  df <- df[odd %in% 0,]
+}
+
+## UIDs to scrape
 
 for(country_code_i in country_code_all){
   
   df_c <- df[df$country_code %in% country_code_i,]
   
-  for(uid_i in unique(df_c$uid)){
+  country_uids <- unique(df_c$uid)
+  if(SCRAPE_REV) country_uids <- rev(country_uids)
+  
+  for(uid_i in country_uids){
     
     df_i <- df_c[df_c$uid %in% uid_i,]
     
     if(df_i$urban_rural %in% "U") RADIUS_i <- 5 #km
     if(df_i$urban_rural %in% "R") RADIUS_i <- 10 #km
     
-    OUT_PATH <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
+    OUT_PATH <- file.path(dropbox_dir, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
                           "fb_mau_individual_datasets", paste0("fb_",uid_i,"_radius",RADIUS_KM,"km.Rds"))
     
     if(SKIP_IF_ALREAD_SCRAPED & file.exists(OUT_PATH)){
@@ -342,7 +361,7 @@ for(country_code_i in country_code_all){
                        token,
                        sleep_time = sleep_time_after_param)
       
-      #saveRDS(df_out, OUT_PATH)
+      saveRDS(df_out, OUT_PATH)
       rm(df_out)
       
       Sys.sleep(sleep_time_after_loc)

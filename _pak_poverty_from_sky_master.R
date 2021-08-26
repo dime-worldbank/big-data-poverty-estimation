@@ -1,35 +1,47 @@
 # Poverty Estimation from Satellite Imagery in Pakistan
 
-# Filepaths --------------------------------------------------------------------
-# Project file path
-if(Sys.info()[["user"]] == "WB521633") project_file_path <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
-if(Sys.info()[["user"]] == "robmarty") project_file_path <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
+# Root Directories -------------------------------------------------------------
+#### Root Paths
+# * Dropbox [dropbox_dir]: Where most data files are saved.
+# * Google Drive [gdrive_dir]: We use Google Colab for processing ML models; here,
+#   files for colab are saved in Google Drive
+# * Secure [secure_dir]: Needed for PII data (World Bank OneDrive). Only needed
+#   for OPM data
+# * Github [github_dir]: Path to github repo
+# * API Keys [api_key_dir]: Path where API keys are stored (api_keys.csv")
 
-opm_dir <- file.path(project_file_path, "Data", "OPM")
-osm_dir <- file.path(project_file_path, "Data", "OSM")
-dhs_dir <- file.path(project_file_path, "Data", "DHS")
-gadm_dir <- file.path(project_file_path, "Data", "GADM")
-bisp_indiv_files_dir <- file.path(project_file_path, "Data", "BISP", "FinalData", "Individual Datasets")
-data_dir <- file.path(project_file_path, "Data")
-tables_file_path <- file.path(project_file_path, "Outputs", "Results", "Tables")
-figures_file_path <- file.path(project_file_path, "Outputs", "Results", "Figures")
+if(Sys.info()[["user"]] == "robmarty"){
+  dropbox_dir <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
+  gdrive_dir <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
+  secure_dir <- "~/Documents/World Bank/Pakistan Poverty from Sky" 
+  github_dir <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
+}
 
-# Google Drive File Path
-if(Sys.info()[["user"]] == "robmarty") gdrive_file_path <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
+if(Sys.info()[["user"]] == "WB521633"){
+  dropbox_dir <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
+  #gdrive_dir
+  secure_dir <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data" 
+  github_dir <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky"
+}
 
-gdrive_cnn_file_path <- file.path(gdrive_file_path, "Data", "CNN")
+# Paths from Root --------------------------------------------------------------
 
-# Secure Directory
-if(Sys.info()[["user"]] == "WB521633") secure_file_path <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data" 
-if(Sys.info()[["user"]] == "robmarty") secure_file_path <- "~/Documents/World Bank/Pakistan Poverty from Sky"
+#### Dropbox Paths
+data_dir         <- file.path(dropbox_dir, "Data")
+opm_dir          <- file.path(data_dir, "OPM")
+osm_dir          <- file.path(data_dir, "OSM")
+dhs_dir          <- file.path(data_dir, "DHS")
+gadm_dir         <- file.path(data_dir, "GADM")
+fb_marketing_dir <- file.path(data_dir, "Facebook Marketing")
+fb_rwi_dir       <- file.path(data_dir, "Facebook Relative Wealth Index")
 
-# Code File Path
-if(Sys.info()[["user"]] == "WB521633") code_file_path <- "C:/Users/wb521633/OneDrive - WBG/Documents/GitHub/Pakistan-Poverty-from-Sky"
-if(Sys.info()[["user"]] == "robmarty") code_file_path <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
+tables_dir  <- file.path(dropbox_dir, "Outputs", "Results", "Tables")
+figures_dir <- file.path(dropbox_dir, "Outputs", "Results", "Figures")
 
-# Webscraping File Path
-if(Sys.info()[["user"]] == "WB521633") webscraping_api_filepath <- "C:/Users/wb521633/Dropbox/World Bank/Webscraping/Files for Server"
-if(Sys.info()[["user"]] == "robmarty") webscraping_api_filepath <- "~/Dropbox/World Bank/Webscraping/Files for Server"
+api_key_dir <- file.path(dropbox_dir, "API Keys")
+
+#### Google Drive Paths
+gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 
 # Parameters -------------------------------------------------------------------
 PAK_UTM_PROJ <- "+init=epsg:24313"
@@ -75,7 +87,14 @@ library(ggplot2)
 library(geosphere)
 library(radiant.data)
 library(osmar)
-source(file.path(code_file_path, "Functions", "functions.R"))
+library(tidyverse)
+library(lubridate)
+library(jsonlite)
+library(httr)
+library(curl)
+library(haven)
+library(httr)
+source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
 

@@ -18,10 +18,10 @@ if(Sys.info()[["user"]] == "robmarty"){
 }
 
 if(Sys.info()[["user"]] == "WB521633"){
-  dropbox_dir <- "C:/Users/wb521633/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
+  dropbox_dir <- "C:/Users/wb521633/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
   #gdrive_dir
   secure_dir <- "C:/Users/wb521633/OneDrive - WBG/Pakistan Poverty from Sky - Survey Data" 
-  github_dir <- "C:/Users/wb521633/GitHub/Pakistan-Poverty-from-Sky"
+  github_dir <- "C:/Users/wb521633/Documents/GitHub/Pakistan-Poverty-from-Sky"
 }
 
 # Paths from Root --------------------------------------------------------------

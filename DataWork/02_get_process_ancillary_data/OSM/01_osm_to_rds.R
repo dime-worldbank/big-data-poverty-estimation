@@ -12,8 +12,6 @@ country_year_dirs <- list.files(file.path(project_file_path, "Data", "OSM", "Raw
   str_replace_all(".shp", "") %>%
   str_subset("-free")
 
-country_year_dirs <- country_year_dirs %>% str_subset("nepal")
-
 for(dir_i in country_year_dirs){
   print(paste(dir_i, "---------------------------------------------------------"))
   

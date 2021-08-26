@@ -14,6 +14,7 @@
 # PARAMETERS
 
 SKIP_IF_ALREAD_SCRAPED <- T
+SURVEY_NAME <- "DHS"
 
 # "robmarty3@gmail.com"
 # "robertandrewmarty3@gmail.com"

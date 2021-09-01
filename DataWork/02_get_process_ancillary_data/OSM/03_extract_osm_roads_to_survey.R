@@ -11,10 +11,12 @@ survey_df <- survey_df %>%
   dplyr::filter(!is.na(latitude))
 
 # Load OSM ---------------------------------------------------------------------
-for(country_code in c("PK")){
+country_code = "BD"
+for(country_code in c("BD")){
   
   if(country_code %in% "BD"){
     osm_country_dir <- "bangladesh-170101-free"
+    UTM_PROJ <- PAK_UTM_PROJ # TODO: Change this!
   } 
   if(country_code %in% "IA"){
     osm_country_dir <- "india-150101-free"
@@ -68,27 +70,28 @@ for(country_code in c("PK")){
                                           "cycleway")),]
   
   ## Add compass bearing
-  osm_df$bearing <- lapply(1:nrow(osm_df), function(i){
-    if((i %% 1000) == 0) print(i)
-    
-    osm_coords_df_i <- osm_df[i,] %>%
-      coordinates() %>%
-      map_df(as.data.frame)
-    coordinates(osm_coords_df_i) <- ~X1 + X2
-    crs(osm_coords_df_i) <- CRS("+init=epsg:4326")
-    
-    bearing_i <- bearing(osm_coords_df_i) 
-    dist_i <- distGeo(osm_coords_df_i) 
-    
-    out <- weighted.mean(bearing_i, dist_i, na.rm=T)
-    
-    return(out)
-  }) %>% 
-    unlist() %>%
-    abs()
+  # osm_df$bearing <- lapply(1:nrow(osm_df), function(i){
+  #   if((i %% 1000) == 0) print(i)
+  #   
+  #   osm_coords_df_i <- osm_df[i,] %>%
+  #     coordinates() %>%
+  #     map_df(as.data.frame)
+  #   coordinates(osm_coords_df_i) <- ~X1 + X2
+  #   crs(osm_coords_df_i) <- CRS("+init=epsg:4326")
+  #   
+  #   bearing_i <- bearing(osm_coords_df_i) 
+  #   dist_i <- distGeo(osm_coords_df_i) 
+  #   
+  #   out <- weighted.mean(bearing_i, dist_i, na.rm=T)
+  #   
+  #   return(out)
+  # }) %>% 
+  #   unlist() %>%
+  #   abs()
   
   ## Project
   osm_df <- osm_df %>% spTransform(UTM_PROJ)
+  osm_sf <- osm_df %>% st_as_sf()
 
   # Length of Roads of Different Types -------------------------------------------
   extract_road_length <- function(road_type, osm_roads_sf, survey_sf, buffer_sf){
@@ -114,15 +117,14 @@ for(country_code in c("PK")){
       road_in_buffer <- st_intersection(osm_roads_sf_typei_subset[intersects_tf,], buffer_sf_i)
       
       if(nrow(road_in_buffer) > 0){
-        length_all <- road_in_buffer %>% st_length() 
-        length_out <- length_all %>% sum() %>% as.numeric()
-        
-        bearing_sd_out <- weighted.sd(road_in_buffer$bearing,length_out) # standard deviation, weighted by length
+        length_out <- road_in_buffer %>% st_length() %>% sum() %>% as.numeric() 
+
+        #bearing_sd_out <- weighted.sd(road_in_buffer$bearing,length_out) # standard deviation, weighted by length
         
         N_segments_out <- road_in_buffer %>% nrow()
       } else{
         length_out <- 0
-        bearing_sd_out <- 0
+        #bearing_sd_out <- 0
         N_segments_out <- 0
       }
       
@@ -130,7 +132,7 @@ for(country_code in c("PK")){
       dist_out <- st_distance(survey_sf_i, osm_roads_sf_typei) %>% min()
       
       return(data.frame(length = length_out,
-                        bearing_sd = bearing_sd_out,
+                        #bearing_sd = bearing_sd_out,
                         N_segments = N_segments_out,
                         dist = dist_out))
     }) 
@@ -143,7 +145,7 @@ for(country_code in c("PK")){
     buffer_sf[[paste0(road_type, "_length")]]   <- road_length_dist_df$length
     buffer_sf[[paste0(road_type, "_distance")]] <- road_length_dist_df$dist
     buffer_sf[[paste0(road_type, "_N_segments")]] <- road_length_dist_df$N_segments
-    buffer_sf[[paste0(road_type, "_bearing_sd")]] <- road_length_dist_df$bearing_sd
+    #buffer_sf[[paste0(road_type, "_bearing_sd")]] <- road_length_dist_df$bearing_sd
     
     return(buffer_sf)
   }
@@ -180,12 +182,6 @@ for(country_code in c("PK")){
     saveRDS(rd_length_m_df, file.path(project_file_path, "Data", SURVEY_NAME, 
                                       "FinalData", "Individual Datasets", 
                                       paste0("osm_",country_code,"_road_",buffer_size_m_i,"m_buff.Rds")))
-    
-    write.csv(rd_length_m_df, file.path(project_file_path, "Data", SURVEY_NAME, 
-                                        "FinalData", "Individual Datasets", 
-                                        paste0("osm_",country_code,"_road_",buffer_size_m_i,"m_buff.csv")),
-              row.names = F)
-    
   }
 }
 

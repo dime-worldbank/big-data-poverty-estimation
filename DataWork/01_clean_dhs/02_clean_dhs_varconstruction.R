@@ -178,3 +178,36 @@ write.csv(df_geoonly, file.path(secure_file_path, "Data", "DHS",  "FinalData - P
 
 
 
+head(df)
+
+dfa <- df %>%
+  dplyr::filter(uid %in% c("IA201400180079",
+                           "IA201400180052",
+                           "IA201400180112",
+                           "IA201400180081",
+                           "IA201400180011",
+                           "IA201400180048",
+                           "IA201400180058",
+                           "IA201400180028",
+                           "IA201400180072",
+                           "IA201400180047",
+                           "IA201400180012",
+                           "IA201400180040",
+                           "IA201400180055",
+                           "IA201400180140",
+                           "IA201400180030",
+                           "IA201400180104",
+                           "IA201400180123",
+                           "IA201400180062",
+                           "IA201400180080",
+                           "IA201400180050",
+                           "IA201400180116"))
+
+leaflet() %>%
+  addTiles() %>%
+  addCircles(data = df[df$NAME_2 %in% "Lakshadweep",])
+
+dfa$gadm_uid
+
+
+(df$GID_2 %in% "IND.18.1_1") %>% table()

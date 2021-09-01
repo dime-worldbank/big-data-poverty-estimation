@@ -18,7 +18,7 @@
 
 # MAIN PARAMETERS
 SURVEY_NAME   <- "DHS"
-API_KEY_EMAIL <- "robertandrewmarty@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
+API_KEY_EMAIL <- "robertandrew311@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
 
 # SCRAPING PARAMETERS
 # Determine if want to skip locations where data has already been scraped. Also,
@@ -29,7 +29,7 @@ API_KEY_EMAIL <- "robertandrewmarty@gmail.com" # robmarty3@gmail.com, robertandr
 SKIP_IF_ALREAD_SCRAPED <- T
 
 # If only want to scrape locations where the survey uid is even, odd or all.
-SCRAPE_EVEN_ODD <- "even" # "even", "odd", "all". 
+SCRAPE_EVEN_ODD <- "odd" # "even", "odd", "all". 
 
 # If want to scrape APIs in reverse order
 SCRAPE_REV <- T

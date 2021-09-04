@@ -45,6 +45,16 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 
 # Parameters -------------------------------------------------------------------
 PAK_UTM_PROJ <- "+init=epsg:24313"
+PK_UTM_PROJ <- PAK_UTM_PROJ
+
+BD_UTM_PROJ <- "+init=epsg:32646" # Bangladesh
+IA_UTM_PROJ <- "+init=epsg:24347" # India
+KH_UTM_PROJ <- "+init=epsg:3148" # Cambodia
+KY_UTM_PROJ <- "+init=epsg:32644" # Kyrgyzstan
+MM_UTM_PROJ <- "+init=epsg:23946" # Myanmar
+NP_UTM_PROJ <- "+init=epsg:32645" # Nepal
+PH_UTM_PROJ <- "+init=epsg:32651" # Philippines
+TJ_UTM_PROJ <- "+init=epsg:32643" # Tajikistan
 
 # Packages ---------------------------------------------------------------------
 library(rgdal)

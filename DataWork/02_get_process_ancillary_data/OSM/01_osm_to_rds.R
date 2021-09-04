@@ -9,19 +9,21 @@ OVERWRITE_FILES <- F
 
 ## Loop through country-year directories
 country_year_dirs <- list.files(file.path(osm_dir, "RawData")) %>% 
-  str_replace_all(".shp", "") %>%
+  #str_replace_all(".shp", "") %>%
   str_subset("-free")
 
 for(dir_i in country_year_dirs){
   print(paste(dir_i, "---------------------------------------------------------"))
   
   ## Create final Data Directory
-  finaldata_dir <- file.path(osm_dir, "FinalData", dir_i)
+  finaldata_dir <- file.path(osm_dir, "FinalData", dir_i) %>% 
+    str_replace_all(".shp", "")
   dir.create(finaldata_dir)
   
   ## Loop through files; load raw data, save as Rds
-  files <- list.files(file.path(osm_dir, "RawData", paste0(dir_i, ".shp")), pattern=".shp") %>% str_replace_all(".shp", "")
-  
+  files <- list.files(file.path(osm_dir, "RawData", dir_i), pattern=".shp") %>%
+    str_replace_all(".shp", "")
+
   ## Only use roads and pois
   files <- files %>% str_subset("pois|roads")
   
@@ -31,7 +33,7 @@ for(dir_i in country_year_dirs){
     OUT_PATH <- file.path(finaldata_dir, paste0(file_i, ".Rds"))
     
     if(!file.exists(OUT_PATH) | OVERWRITE_FILES){
-      data_sdf <- readOGR(dsn = file.path(osm_dir, "RawData", paste0(dir_i, ".shp")), layer = file_i)
+      data_sdf <- readOGR(dsn = file.path(osm_dir, "RawData", dir_i), layer = file_i)
       saveRDS(data_sdf, OUT_PATH)
     }
     

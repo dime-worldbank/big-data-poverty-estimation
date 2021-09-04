@@ -24,6 +24,8 @@ for(country_code in rev(c("BD", paste0("IA", 1:10), "KH", "KY", "MM", "NP", "PH"
                             paste0("osm_",country_code,"_road_",buffer_size_m_i,"m_buff.Rds"))
     }
     
+    print(OUT_PATH)
+    
     if(!file.exists(OUT_PATH) | RE_EXTRACT_IF_EXISTS){
       
       # Load Survey Data -------------------------------------------------------
@@ -85,7 +87,8 @@ for(country_code in rev(c("BD", paste0("IA", 1:10), "KH", "KY", "MM", "NP", "PH"
       
       # Prep Data --------------------------------------------------------------
       #### Survey
-      survey_df <- survey_df[survey_df$country_code %in% country_code,]
+      country_code_clean <- country_code %>% substring(1,2)
+      survey_df <- survey_df[survey_df$country_code %in% country_code_clean,]
       coordinates(survey_df) <- ~longitude+latitude
       crs(survey_df) <- "+init=epsg:4326"
       

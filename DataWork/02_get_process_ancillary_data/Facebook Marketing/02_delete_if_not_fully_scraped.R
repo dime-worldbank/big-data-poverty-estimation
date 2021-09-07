@@ -3,7 +3,7 @@
 
 SURVEY_NAME = "DHS"
 
-data <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
+data <- file.path(data_dir, SURVEY_NAME,  "FinalData", "Individual Datasets",
                   "fb_mau_individual_datasets") %>%
   list.files(full.names = T, pattern = ".*Rds") %>%
   map_df(readRDS)

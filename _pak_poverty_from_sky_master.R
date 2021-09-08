@@ -59,6 +59,7 @@ NP_UTM_PROJ <- "+init=epsg:32645" # Nepal
 PH_UTM_PROJ <- "+init=epsg:32651" # Philippines
 SN_UTM_PROJ <- "+init=epsg:32628" # Senegal
 TJ_UTM_PROJ <- "+init=epsg:32643" # Tajikistan
+TL_UTM_PROJ <- "+init=epsg:32752" # Timor Leste
 UG_UTM_PROJ <- "+init=epsg:21095" # Uganda
 
 define_country_proj <- function(country_code){
@@ -75,6 +76,7 @@ define_country_proj <- function(country_code){
   if(country_code %in% "PK") UTM_PROJ <- PK_UTM_PROJ
   if(country_code %in% "SN") UTM_PROJ <- SN_UTM_PROJ
   if(country_code %in% "TJ") UTM_PROJ <- TJ_UTM_PROJ
+  if(country_code %in% "TL") UTM_PROJ <- TL_UTM_PROJ
   if(country_code %in% "UG") UTM_PROJ <- UG_UTM_PROJ
   
   return(UTM_PROJ)

@@ -18,7 +18,7 @@ extract_globcover <- function(country_code_i, buffer_m){
   ## Project, buffer, then back to WGS
   # Go back to WGS so don't have to project larger raster
   UTM_PROJ <- define_country_proj(country_code_i)
-
+  
   coordinates(df_country) <- ~longitude+latitude
   crs(df_country) <- CRS("+init=epsg:4326")
   df_country <- df_country %>%
@@ -86,10 +86,12 @@ for(buffer_i in c(5000)){
                           "globcover", 
                           paste0("gc_", country_i, "_", buffer_i, "m.Rds"))
     
-    if(replace_if_extracted | !file.exists(OUT_PATH) )
     
-    df_glob_i <- extract_globcover(country_i, 5000)
-    saveRDS(df_glob_i, OUT_PATH)
+    
+    if(replace_if_extracted | !file.exists(OUT_PATH)){
+      df_glob_i <- extract_globcover(country_i, 5000)
+      saveRDS(df_glob_i, OUT_PATH)
+    }
   }
 }
 

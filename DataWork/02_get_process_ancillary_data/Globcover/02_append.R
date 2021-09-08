@@ -7,5 +7,3 @@ gc_all_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets"
 
 ## Export data
 saveRDS(gc_all_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "globcover.Rds"))
-
-

@@ -68,11 +68,13 @@ dhs_all_df <- dhs_all_df %>%
 dhs_all_df$n_rooms_sleeping[dhs_all_df$n_rooms_sleeping %in% 0] <- 1
 
 # Floor material
-dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material %>% str_detect("earth")
+# 11 = earth
+dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material %in% 11
 dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material_not_earth %in% FALSE
 
 # Water source
-dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source %in% "piped into dwelling")
+# 11 = piped into dwelling
+dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source %in% 11)
 
 dhs_all_df <- dhs_all_df %>%
   mutate_at(vars(contains("has")), tidyr::replace_na, 0) %>%
@@ -102,17 +104,19 @@ dhs_gadm_cw <- bind_rows(
   data.frame(code_dhs = "KH", code_gadm = "KHM"),
   data.frame(code_dhs = "KY", code_gadm = "KGZ"),
   data.frame(code_dhs = "MM", code_gadm = "MMR"),
+  data.frame(code_dhs = "NG", code_gadm = "NGA"),
   data.frame(code_dhs = "NP", code_gadm = "NPL"),
   data.frame(code_dhs = "PH", code_gadm = "PHL"),
   data.frame(code_dhs = "PK", code_gadm = "PAK"),
+  data.frame(code_dhs = "SN", code_gadm = "SEN"),
   data.frame(code_dhs = "TJ", code_gadm = "TJK"),
-  data.frame(code_dhs = "TL", code_gadm = "TLS")
+  data.frame(code_dhs = "TL", code_gadm = "TLS"),
+  data.frame(code_dhs = "UG", code_gadm = "UGA")
 ) %>%
   mutate(code_dhs = code_dhs %>% as.character,
          code_gadm = code_gadm %>% as.character)
 
-dhs_all_df_coll <- map_df(c("BD", "IA", "KH", "KY", "MM", "NP",
-                            "PH", "PK", "TJ", "TL"), function(cc_dhs){
+dhs_all_df_coll <- map_df(unique(dhs_all_df$country_code), function(cc_dhs){
                               print(cc_dhs)
                               
                               cc_gadm <- dhs_gadm_cw$code_gadm[dhs_gadm_cw$code_dhs %in% cc_dhs]

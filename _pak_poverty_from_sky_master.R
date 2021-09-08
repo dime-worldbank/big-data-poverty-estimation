@@ -15,6 +15,7 @@ if(Sys.info()[["user"]] == "robmarty"){
   gdrive_dir <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
   secure_dir <- "~/Documents/World Bank/Pakistan Poverty from Sky" 
   github_dir <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
+  overleaf_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Paper"
 }
 
 if(Sys.info()[["user"]] == "WB521633"){
@@ -34,9 +35,10 @@ dhs_dir          <- file.path(data_dir, "DHS")
 gadm_dir         <- file.path(data_dir, "GADM")
 fb_marketing_dir <- file.path(data_dir, "Facebook Marketing")
 fb_rwi_dir       <- file.path(data_dir, "Facebook Relative Wealth Index")
+globcover_dir    <- file.path(data_dir, "Globcover")
 
-tables_dir  <- file.path(dropbox_dir, "Outputs", "Results", "Tables")
-figures_dir <- file.path(dropbox_dir, "Outputs", "Results", "Figures")
+tables_dir  <- file.path(overleaf_dir, "tables")
+figures_dir <- file.path(overleaf_dir, "figures")
 
 api_key_dir <- file.path(dropbox_dir, "API Keys")
 
@@ -52,9 +54,31 @@ IA_UTM_PROJ <- "+init=epsg:24347" # India
 KH_UTM_PROJ <- "+init=epsg:3148" # Cambodia
 KY_UTM_PROJ <- "+init=epsg:32644" # Kyrgyzstan
 MM_UTM_PROJ <- "+init=epsg:23946" # Myanmar
+NG_UTM_PROJ <- "+init=epsg:26332" # Nigeria
 NP_UTM_PROJ <- "+init=epsg:32645" # Nepal
 PH_UTM_PROJ <- "+init=epsg:32651" # Philippines
+SN_UTM_PROJ <- "+init=epsg:32628" # Senegal
 TJ_UTM_PROJ <- "+init=epsg:32643" # Tajikistan
+UG_UTM_PROJ <- "+init=epsg:21095" # Uganda
+
+define_country_proj <- function(country_code){
+  UTM_PROJ <- NULL
+  
+  if(country_code %in% "BD") UTM_PROJ <- BD_UTM_PROJ
+  if(country_code %in% "IA") UTM_PROJ <- IA_UTM_PROJ
+  if(country_code %in% "KH") UTM_PROJ <- KH_UTM_PROJ
+  if(country_code %in% "KY") UTM_PROJ <- KY_UTM_PROJ
+  if(country_code %in% "MM") UTM_PROJ <- MM_UTM_PROJ
+  if(country_code %in% "NG") UTM_PROJ <- NG_UTM_PROJ
+  if(country_code %in% "NP") UTM_PROJ <- NP_UTM_PROJ
+  if(country_code %in% "PH") UTM_PROJ <- PH_UTM_PROJ
+  if(country_code %in% "PK") UTM_PROJ <- PK_UTM_PROJ
+  if(country_code %in% "SN") UTM_PROJ <- SN_UTM_PROJ
+  if(country_code %in% "TJ") UTM_PROJ <- TJ_UTM_PROJ
+  if(country_code %in% "UG") UTM_PROJ <- UG_UTM_PROJ
+  
+  return(UTM_PROJ)
+}
 
 # Packages ---------------------------------------------------------------------
 library(rgdal)

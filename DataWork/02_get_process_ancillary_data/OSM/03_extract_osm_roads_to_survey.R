@@ -8,7 +8,7 @@ RE_EXTRACT_IF_EXISTS <- F
 # Load OSM ---------------------------------------------------------------------
 country_code = "IA"
 buffer_size_m_i <- 5000
-for(country_code in rev(c("BD", paste0("IA", 1:10), "KH", "KY", "MM", "NP", "PH", "PK", "TJ"))){
+for(country_code in c("BD", paste0("IA", 1:10), "KH", "KY", "MM", "NP", "PH", "PK", "TJ")){
   for(buffer_size_m_i in buffer_size_osm_m){
     
     if(country_code %>% str_detect("IA")){

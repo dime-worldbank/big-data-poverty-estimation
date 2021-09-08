@@ -20,7 +20,7 @@ if(length(uids_to_delete) > 0){
   
   uids_to_delete_rx <- uids_to_delete %>% paste(collapse = "|")
   
-  files_to_delete <- file.path(project_file_path, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
+  files_to_delete <- file.path(data_dir, SURVEY_NAME,  "FinalData", "Individual Datasets",
                                "fb_mau_individual_datasets") %>%
     list.files(full.names = T, pattern = ".*Rds") %>%
     str_subset(uids_to_delete_rx)

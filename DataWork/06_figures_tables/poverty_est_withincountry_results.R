@@ -9,21 +9,8 @@ survey_sum_df <- survey_df %>%
                    survey_N = n())
 
 # Load Data --------------------------------------------------------------------
-y_df <- read.csv(file.path(dhs_dir, "FinalData", "results", "ypred_fbonly_withincv.csv"), stringsAsFactors = F)
-results_df <- read.csv(file.path(dhs_dir, "FinalData", "results", "results_fbonly_withincv.csv"), stringsAsFactors = F)
-#a <- results_df[results_df$regressor %in% "BaggingRegressor",]
-
-# y_df <- bind_rows(
-#   y_df %>% mutate(feature_type = "fb_only"),
-#   y_df %>% mutate(feature_type = "sat_only"),
-#   y_df %>% mutate(feature_type = "all")
-# )
-# 
-# results_df <- bind_rows(
-#   results_df %>% mutate(feature_type = "fb_only"),
-#   results_df %>% mutate(feature_type = "sat_only"),
-#   results_df %>% mutate(feature_type = "all")
-# )
+results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "results", "results.Rds"))
+y_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "results", "predicted_values.Rds"))
 
 y_df <- y_df %>%
   dplyr::mutate(country_name = case_when(
@@ -38,6 +25,7 @@ y_df <- y_df %>%
     country_code == "TJ" ~ "Tajikistan",
     country_code == "TL" ~ "Timor Leste"
   ))
+
 results_df <- results_df %>%
   dplyr::mutate(country_name = case_when(
     country == "BD" ~ "Bangladesh",
@@ -55,7 +43,6 @@ results_df <- results_df %>%
 rsq <- function (x, y) cor(x, y) ^ 2
 
 y_long_df <- y_df %>%
-  dplyr::select(-X) %>%
   pivot_longer(cols = -c(uid, country_name, country_code, y, target, feature_type)) %>%
   dplyr::mutate(param_id = name %>% str_replace_all("y_", "")) 
 
@@ -81,15 +68,17 @@ r2_max_df_t <- r2_max_df %>%
   dplyr::filter(target %in% "wealth_index_score") %>%
   arrange(country_name) %>%
   dplyr::mutate(tex = paste(country_name, "&", survey_year, "&", survey_N, "&", 
-                            round(sat_only, 2), "&",
-                            round(fb_only, 2), "&",
+                            round(l8, 2), "&",
+                            round(l8_viirs, 2), "&",
+                            round(osm, 2), "&",
+                            round(fb, 2), "&",
                             round(all, 2), "\\\\ \n"))
 
-sink(file.path(tables_file_path, "fb_withincv_wealth_index_score.tex"))
-cat("\\begin{tabular}{lcc | ccc} \n")
+sink(file.path(tables_dir, "fb_withincv_wealth_index_score.tex"))
+cat("\\begin{tabular}{lcc | ccccc} \n")
 cat("\\hline \n")
-cat("        & Survey & Survey  & \\multicolumn{3}{c}{R$^2$ Across Diff. Feature Sets} \\\\ \n")
-cat("Country &  Year & N        & Sat. Only & FB Only & All \\\\ \n")
+cat("        & Survey & Survey  & \\multicolumn{5}{c}{R$^2$ Across Diff. Feature Sets} \\\\ \n")
+cat("Country &  Year & N        & DTL & DTL and NTL  & OSM & FB & All \\\\ \n")
 cat("\\hline \n")
 for(i in 1:nrow(r2_max_df_t)) cat(r2_max_df_t$tex[i])
 cat("\\hline \n")
@@ -103,7 +92,8 @@ y_best_df <- y_best_df %>%
   dplyr::mutate(urban_rural = case_when(
     urban_rural %in% "U" ~ "Urban",
     urban_rural %in% "R" ~ "Rural"
-  ))
+  )) %>%
+  dplyr::mutate(country_name = paste0(country_name, "\nR^2 = ", round(r2, 2)))
 
 p <- y_best_df %>%
   dplyr::filter(target %in% "wealth_index_score",
@@ -125,7 +115,7 @@ p <- y_best_df %>%
   facet_wrap(~country_name,
              scales = "free",
              nrow = 2)
-ggsave(p, filename = file.path(figures_file_path, "fb_withincv_wealth_index_score.png"),
+ggsave(p, filename = file.path(figures_dir, "fb_withincv_wealth_index_score.png"),
        height = 6, width = 12)
 
 

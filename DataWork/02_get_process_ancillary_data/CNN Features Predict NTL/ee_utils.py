@@ -97,6 +97,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         survey_uid = survey_df['uid'].iloc[i]
         #folder_name = survey_df['tf_folder_name'].iloc[i]
         asset_pca_1 = survey_df['asset_pca_1'].iloc[i]
+        viirs_avg_rad = survey_df['viirs_avg_rad'].iloc[i]
         uid_i = survey_df['uid'].iloc[i].encode()
         
         d_f_i = daytime_f[i]['properties']
@@ -148,6 +149,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         feature = {
             'uid' : _bytes_feature(uid_i),
             'asset_pca_1' : _float_feature(asset_pca_1),
+            'viirs_avg_rad' : _float_feature(viirs_avg_rad),
             'b_ntl': _bytes_feature(bntl_np_tf),
             'b_rgb': _bytes_feature(brgb_np_tf),
             'b_ndvi': _bytes_feature(bndvi_np_tf),

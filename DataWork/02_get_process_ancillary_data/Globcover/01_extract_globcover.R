@@ -4,7 +4,7 @@ replace_if_extracted <- F
 SURVEY_NAME <- "DHS"
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 # Function to Extract Globcover ------------------------------------------------
 country_code_i <- "IA"

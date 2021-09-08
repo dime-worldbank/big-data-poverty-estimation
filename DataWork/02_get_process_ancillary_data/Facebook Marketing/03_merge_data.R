@@ -1,7 +1,7 @@
 # Merge Data Extracted from Facebook API
 
 # Load Data ----------------------------------------------------------------------
-df_long <- file.path(project_file_path, "Data", SURVEY_NAME, "FinalData", "Individual Datasets", 
+df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
                      "fb_mau_individual_datasets") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%

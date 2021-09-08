@@ -1,8 +1,9 @@
-# Facebook Correlation
+# Map of Survey Locations
 
-## Survey
+# Load data --------------------------------------------------------------------
 survey_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
+# Prep data --------------------------------------------------------------------
 survey_df <- survey_df %>%
   dplyr::mutate(country_name = case_when(
     country_code == "BD" ~ "Bangladesh",
@@ -17,7 +18,8 @@ survey_df <- survey_df %>%
     country_code == "TL" ~ "Timor Leste"
   ))
 
-
+# Figure -----------------------------------------------------------------------
+#### Basemap
 shift <- 1
 basemap <- get_stamenmap(bbox = c(left = min(survey_df$longitude) - shift,
                                   bottom = min(survey_df$latitude) - shift,
@@ -27,6 +29,7 @@ basemap <- get_stamenmap(bbox = c(left = min(survey_df$longitude) - shift,
                          crop = FALSE,
                          zoom = 5)
 
+#### Figure
 p <- ggmap(basemap) +
   geom_point(data = survey_df,
              aes(x = longitude,
@@ -35,5 +38,9 @@ p <- ggmap(basemap) +
              size = 0.2) +
   theme_void() +
   labs(color = "Country")
-ggsave(p, filename = file.path(figures_file_path, "dhs_map.png"),
+ggsave(p, filename = file.path(figures_dir, "dhs_map.png"),
        height = 6, width = 10)
+
+
+
+

@@ -3,6 +3,12 @@
 # Clean DHS survey data. Create Household Level 
 # dataframe with relevant socioeconomic variables.
 
+# Don't contain hv216 (n rooms for sleeping). These are earlier DHS rounds,
+# and likely just too early to be included in this paper.
+countries_to_remove <- c("MA_2003-04_DHS_09092021_1726_82518",
+                         "MB_2005_DHS_09092021_1725_82518") %>%
+  paste0(collapse = "|")
+
 # Functions to Clean Data ------------------------------------------------------
 clean_hh <- function(df){
   
@@ -46,7 +52,8 @@ clean_hh <- function(df){
     # material, cement is 34 and in others cement is 35.
     mutate(floor_material = floor_material %>% as_factor() %>% as.character(),
            water_source = water_source %>% as_factor() %>% as.character(),
-           toilet_type = toilet_type %>% as_factor() %>% as.character())
+           toilet_type = toilet_type %>% as_factor() %>% as.character()) %>%
+    dplyr::mutate(cluster_id = cluster_id %>% as.character())
   
   #%>%
   #group_by(cluster_id) %>%
@@ -74,7 +81,8 @@ clean_geo <- function(df){
                   urban_rural = URBAN_RURA,
                   year = DHSYEAR,
                   country_code = DHSCC) %>%
-    dplyr::select(cluster_id, uid, latitude, longitude, urban_rural, year, country_code)
+    dplyr::select(cluster_id, uid, latitude, longitude, urban_rural, year, country_code) %>%
+    dplyr::mutate(cluster_id = cluster_id %>% as.character())
   
   return(df)
 }
@@ -85,8 +93,9 @@ merge_clean <- function(hh_df, geo_df){
     left_join(geo_df, by = "cluster_id") %>%
     #mutate_if(is.factor, as.character) %>%
     mutate_at(vars(urban_rural), as.character) %>%
-    dplyr::select(uid, cluster_id, everything())
-  
+    dplyr::select(uid, cluster_id, everything()) %>%
+    dplyr::mutate(year = year %>% as.character())
+
   return(df_out)
 }
 
@@ -148,6 +157,8 @@ country_year_dirs <- lapply(countries, function(country_i){
 country_year_dirs <- country_year_dirs[!grepl("archive", country_year_dirs)]
 
 ## Process Data
+country_year_dirs <- country_year_dirs[!grepl(countries_to_remove, country_year_dirs)]
+
 dhs_all_df <- map_df(country_year_dirs, process_dhs)
 
 ## Fix country code

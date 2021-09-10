@@ -373,7 +373,7 @@ for(country_code_i in c("GA", "NG", country_code_all)){
                        token,
                        sleep_time = sleep_time_after_param)
       
-      saveRDS(df_out, OUT_PATH)
+      if(nrow(df_out) == nrow(parameters_df)) saveRDS(df_out, OUT_PATH)
       rm(df_out)
       
       Sys.sleep(sleep_time_after_loc)

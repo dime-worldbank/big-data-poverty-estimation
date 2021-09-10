@@ -29,7 +29,7 @@ API_KEY_EMAIL <- "ieconnectlagosproject10@gmail.com" # robmarty3@gmail.com, robe
 SKIP_IF_ALREAD_SCRAPED <- T
 
 # If only want to scrape locations where the survey uid is even, odd or all.
-SCRAPE_EVEN_ODD <- "all" # "even", "odd", "all". 
+SCRAPE_EVEN_ODD <- "even" # "even", "odd", "all". 
 
 # If want to scrape APIs in reverse order
 change_order <- "start_middle_to_front" # "reverse", "start_middle_to_front", "start_middle_to_back"

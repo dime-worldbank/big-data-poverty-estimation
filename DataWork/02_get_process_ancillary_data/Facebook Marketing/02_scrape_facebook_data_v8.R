@@ -18,7 +18,7 @@
 
 # MAIN PARAMETERS
 SURVEY_NAME   <- "DHS"
-API_KEY_EMAIL <- "dakarbrtie1@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
+API_KEY_EMAIL <- "NONE YET" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
 
 # SCRAPING PARAMETERS
 # Determine if want to skip locations where data has already been scraped. Also,
@@ -32,7 +32,7 @@ SKIP_IF_ALREAD_SCRAPED <- T
 SCRAPE_EVEN_ODD <- "odd" # "even", "odd", "all". 
 
 # If want to scrape APIs in reverse order
-change_order <- "start_middle_to_front" # "reverse", "start_middle_to_front", "start_middle_to_back"
+change_order <- "start_middle_to_back" # "reverse", "start_middle_to_front", "start_middle_to_back"
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))

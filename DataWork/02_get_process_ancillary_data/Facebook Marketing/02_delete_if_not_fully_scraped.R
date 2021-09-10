@@ -6,7 +6,7 @@ SURVEY_NAME = "DHS"
 data <- file.path(data_dir, SURVEY_NAME,  "FinalData", "Individual Datasets",
                   "fb_mau_individual_datasets") %>%
   list.files(full.names = T, pattern = ".*Rds") %>%
-  #str_subset("NG|GA") %>%
+  str_subset("NG|GA") %>%
   map_df(readRDS)
 
 data_sum <- data %>%

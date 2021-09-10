@@ -20,10 +20,13 @@ extract_globcover <- function(country_code_i, buffer_m){
   
   coordinates(df_country) <- ~longitude+latitude
   crs(df_country) <- CRS("+init=epsg:4326")
-  df_country <- df_country %>%
-    spTransform(CRS(UTM_PROJ)) %>%
-    gBuffer(width = buffer_m, byid = T) %>%
-    spTransform(CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+  
+  df_country <- geo.buffer_chunks(df_country, r = buffer_m, chunk_size = 100)
+  
+  #df_country <- df_country %>%
+  #  spTransform(CRS(UTM_PROJ)) %>%
+  #  gBuffer(width = buffer_m, byid = T) %>%
+  #  spTransform(CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
   
   ## Load globcover
   if(year_i > 2018) year_i <- 2018
@@ -77,7 +80,7 @@ extract_globcover <- function(country_code_i, buffer_m){
 }
 
 # Implement Function and Export ------------------------------------------------
-for(buffer_i in c(5000)){
+for(buffer_i in c(2500)){
   for(country_i in unique(df$country_code)){
     print(paste0(country_i, " - ", buffer_i))
     
@@ -85,10 +88,8 @@ for(buffer_i in c(5000)){
                           "globcover", 
                           paste0("gc_", country_i, "_", buffer_i, "m.Rds"))
     
-    
-    
     if(replace_if_extracted | !file.exists(OUT_PATH)){
-      df_glob_i <- extract_globcover(country_i, 5000)
+      df_glob_i <- extract_globcover(country_i, buffer_i)
       saveRDS(df_glob_i, OUT_PATH)
     }
   }

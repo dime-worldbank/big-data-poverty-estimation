@@ -32,7 +32,7 @@ SKIP_IF_ALREAD_SCRAPED <- T
 SCRAPE_EVEN_ODD <- "odd" # "even", "odd", "all". 
 
 # If want to scrape APIs in reverse order
-SCRAPE_REV <- F
+change_order <- "" # "reverse", "start_middle_to_front", "start_middle_to_back"
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
@@ -329,13 +329,25 @@ if(SCRAPE_EVEN_ODD %in% "even"){
 }
 
 ## UIDs to scrape
-
-for(country_code_i in country_code_all){
+for(country_code_i in c("NG", "GA", country_code_all)){
   
   df_c <- df[df$country_code %in% country_code_i,]
   
-  country_uids <- unique(df_c$uid)
-  if(SCRAPE_REV) country_uids <- rev(country_uids)
+  country_uids <- unique(df_c$uid) %>% as.character()
+  
+  if(change_order == "reverse") country_uids <- rev(country_uids)
+  
+  if(change_order == "start_middle_to_front"){
+    mid_point <- floor(length(country_uids)/2)
+    country_uids <- c(rev(country_uids[1:mid_point]),
+                      rev(country_uids[(mid_point+1):length(country_uids)]))
+  }
+  
+  if(change_order == "start_middle_to_back"){
+    mid_point <- floor(length(country_uids)/2)
+    country_uids <- c(rev(country_uids[(mid_point+1):length(country_uids)]),
+                      rev(country_uids[1:mid_point]))
+  }
   
   for(uid_i in country_uids){
     

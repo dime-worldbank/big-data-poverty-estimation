@@ -25,6 +25,8 @@ if(Sys.info()[["user"]] == "WB521633"){
   github_dir <- "C:/Users/wb521633/Documents/GitHub/Pakistan-Poverty-from-Sky"
 }
 
+SURVEY_NAME <- "DHS"
+
 # Paths from Root --------------------------------------------------------------
 
 #### Dropbox Paths

@@ -299,18 +299,18 @@ def prep_cnn_np(survey_df,
                 
         # Bands
         # FOR COLLECTION 2
-        b_b = 'SR_B2'
-        g_b = 'SR_B3' 
-        r_b = 'SR_B4' 
-        nir_b = 'SR_B5'
-        other_bs = ['SR_B6', 'SR_B7', 'ST_B10']
+        #b_b = 'SR_B2'
+        #g_b = 'SR_B3' 
+        #r_b = 'SR_B4' 
+        #nir_b = 'SR_B5'
+        #other_bs = ['SR_B6', 'SR_B7', 'ST_B10']
         
         # FOR COLLECTION 1
-        #b_b = 'B2'
-        #g_b = 'B3' 
-        #r_b = 'B4' 
-        #nir_b = 'B5'
-        #other_bs = ['B6', 'B7', 'B10']
+        b_b = 'B2'
+        g_b = 'B3' 
+        r_b = 'B4' 
+        nir_b = 'B5'
+        other_bs = ['B6', 'B7', 'B10']
         
         BANDS = other_bs.copy()
         BANDS.append(b_b)
@@ -338,9 +338,15 @@ def prep_cnn_np(survey_df,
         #    .median() #\
         #    #.multiply(0.0001)
         
-        image = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')\
+        
+        image = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR')\
             .filterDate(year_minus_str, year_plus_str)\
+            .map(cloud_mask_landsatSR)\
             .median()
+        
+        #image = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')\
+        #    .filterDate(year_minus_str, year_plus_str)\
+        #    .median()
             
     # s2 ----------------------------------------------------------------
     if satellite == "s2":

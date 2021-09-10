@@ -1,14 +1,13 @@
 # Extract Globcover Variables
 
 replace_if_extracted <- F
-SURVEY_NAME <- "DHS"
 
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 # Function to Extract Globcover ------------------------------------------------
-country_code_i <- "IA"
-buffer_m <- 5000
+#country_code_i <- "IA"
+#buffer_m <- 5000
 extract_globcover <- function(country_code_i, buffer_m){
   
   ## Subset to country and grab year

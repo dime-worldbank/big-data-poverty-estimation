@@ -51,35 +51,22 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 PAK_UTM_PROJ <- "+init=epsg:24313"
 PK_UTM_PROJ <- PAK_UTM_PROJ
 
-BD_UTM_PROJ <- "+init=epsg:32646" # Bangladesh
-IA_UTM_PROJ <- "+init=epsg:24347" # India
-KH_UTM_PROJ <- "+init=epsg:3148" # Cambodia
-KY_UTM_PROJ <- "+init=epsg:32644" # Kyrgyzstan
-MM_UTM_PROJ <- "+init=epsg:23946" # Myanmar
-NG_UTM_PROJ <- "+init=epsg:26332" # Nigeria
-NP_UTM_PROJ <- "+init=epsg:32645" # Nepal
-PH_UTM_PROJ <- "+init=epsg:32651" # Philippines
-SN_UTM_PROJ <- "+init=epsg:32628" # Senegal
-TJ_UTM_PROJ <- "+init=epsg:32643" # Tajikistan
-TL_UTM_PROJ <- "+init=epsg:32752" # Timor Leste
-UG_UTM_PROJ <- "+init=epsg:21095" # Uganda
-
 define_country_proj <- function(country_code){
   UTM_PROJ <- NULL
   
-  if(country_code %in% "BD") UTM_PROJ <- BD_UTM_PROJ
-  if(country_code %in% "IA") UTM_PROJ <- IA_UTM_PROJ
-  if(country_code %in% "KH") UTM_PROJ <- KH_UTM_PROJ
-  if(country_code %in% "KY") UTM_PROJ <- KY_UTM_PROJ
-  if(country_code %in% "MM") UTM_PROJ <- MM_UTM_PROJ
-  if(country_code %in% "NG") UTM_PROJ <- NG_UTM_PROJ
-  if(country_code %in% "NP") UTM_PROJ <- NP_UTM_PROJ
-  if(country_code %in% "PH") UTM_PROJ <- PH_UTM_PROJ
-  if(country_code %in% "PK") UTM_PROJ <- PK_UTM_PROJ
-  if(country_code %in% "SN") UTM_PROJ <- SN_UTM_PROJ
-  if(country_code %in% "TJ") UTM_PROJ <- TJ_UTM_PROJ
-  if(country_code %in% "TL") UTM_PROJ <- TL_UTM_PROJ
-  if(country_code %in% "UG") UTM_PROJ <- UG_UTM_PROJ
+  if(country_code %in% "BD") UTM_PROJ <- "+init=epsg:32646" # Bangladesh
+  if(country_code %in% "IA") UTM_PROJ <- "+init=epsg:24347" # India
+  if(country_code %in% "KH") UTM_PROJ <- "+init=epsg:3148" # Cambodia
+  if(country_code %in% "KY") UTM_PROJ <- "+init=epsg:32644" # Kyrgyzstan
+  if(country_code %in% "MM") UTM_PROJ <- "+init=epsg:23946" # Myanmar
+  if(country_code %in% "NG") UTM_PROJ <- "+init=epsg:26332" # Nigeria
+  if(country_code %in% "NP") UTM_PROJ <- "+init=epsg:32645" # Nepal
+  if(country_code %in% "PH") UTM_PROJ <- "+init=epsg:32651" # Philippines
+  if(country_code %in% "PK") UTM_PROJ <- "+init=epsg:24313" # Pakistan
+  if(country_code %in% "SN") UTM_PROJ <- "+init=epsg:32628" # Senegal
+  if(country_code %in% "TJ") UTM_PROJ <- "+init=epsg:32643" # Tajikistan
+  if(country_code %in% "TL") UTM_PROJ <- "+init=epsg:32752" # Timor Leste
+  if(country_code %in% "UG") UTM_PROJ <- "+init=epsg:21095" # Uganda
   
   return(UTM_PROJ)
 }

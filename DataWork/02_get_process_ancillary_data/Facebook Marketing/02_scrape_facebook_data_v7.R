@@ -18,7 +18,7 @@
 
 # MAIN PARAMETERS
 SURVEY_NAME   <- "DHS"
-API_KEY_EMAIL <- "dakarbrtie1@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
+API_KEY_EMAIL <- "ieconnectlagosproject6@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
 
 # SCRAPING PARAMETERS
 # Determine if want to skip locations where data has already been scraped. Also,
@@ -29,10 +29,10 @@ API_KEY_EMAIL <- "dakarbrtie1@gmail.com" # robmarty3@gmail.com, robertandrewmart
 SKIP_IF_ALREAD_SCRAPED <- T
 
 # If only want to scrape locations where the survey uid is even, odd or all.
-SCRAPE_EVEN_ODD <- "odd" # "even", "odd", "all". 
+SCRAPE_EVEN_ODD <- "even" # "even", "odd", "all". 
 
 # If want to scrape APIs in reverse order
-change_order <- "start_middle_to_front" # "reverse", "start_middle_to_front", "start_middle_to_back"
+change_order <- "start_middle_to_back" # "reverse", "start_middle_to_front", "start_middle_to_back"
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
@@ -329,7 +329,7 @@ if(SCRAPE_EVEN_ODD %in% "even"){
 }
 
 ## UIDs to scrape
-for(country_code_i in c("GA", "NG", country_code_all)){
+for(country_code_i in c("NG", "GA", country_code_all)){
   
   df_c <- df[df$country_code %in% country_code_i,]
   

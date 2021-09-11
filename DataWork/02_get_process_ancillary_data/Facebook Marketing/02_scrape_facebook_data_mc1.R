@@ -210,6 +210,7 @@ make_query_location_i <- function(param_i,
                                   version, 
                                   creation_act, 
                                   token,
+                                  API_KEY_EMAIL,
                                   sleep_time = 20){
   
   # Query Facebook Marketing API
@@ -257,7 +258,7 @@ make_query_location_i <- function(param_i,
                     "}")
     
     query_val <- url(query) %>% fromJSON
-    
+
     #### If there is no error
     if(is.null(query_val$error)){
       
@@ -273,10 +274,10 @@ make_query_location_i <- function(param_i,
       query_val_df$uid <- coords_df$uid
       query_val_df$latitude   <- coords_df$latitude
       query_val_df$longitude  <- coords_df$longitude
-      
+
       ## Add time
       query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
-      
+
       ## Print result and sleep (sleep needed b/c of rate limiting)
       print(paste0(param_i,": ", coords_df$uid, " ", query_val_df$estimate_mau," ", query_val_df$estimate_dau, " ", API_KEY_EMAIL))
       Sys.sleep(sleep_time) # really just need 18; 20 just in case
@@ -285,14 +286,25 @@ make_query_location_i <- function(param_i,
     } else{
       print(paste(param_i, "-----------------------------------------------------"))
       print(query_val)
-      query_val_df <- NULL
+      print("Checking error!")
+      
+      query_val_df <- ""
+      
+      # Sometimes lat/lon is not in a valid location. We want to still create
+      # a dataframe for those so we can skip them.
+      if(query_val$error$error_user_title == "Incorrect Location Format"){
+        query_val_df <- data.frame(ERROR = "Incorrect Location Format")
+      } else{
+        query_val_df <- NULL
+      }
+    
     }
     
     query_val_df
     
   },error = function(e){
     print("ERROR")
-    Sys.sleep(1)
+    Sys.sleep(0.1)
     return(NULL)
   })
   
@@ -332,7 +344,7 @@ if(SCRAPE_EVEN_ODD %in% "even"){
 }
 
 ## UIDs to scrape
-KEY_i  <- 1
+KEY_i  <- 4
 
 # Repeat in case missed some due to error, so will go back and check
 country_code_all_rep <- c(country_code_all,
@@ -392,6 +404,7 @@ for(country_code_i in country_code_all_rep){
                        version,
                        creation_act,
                        token,
+                       api_keys_i$Details[1],
                        sleep_time = sleep_time_after_param)
       
       if(nrow(df_out) == nrow(parameters_df)){

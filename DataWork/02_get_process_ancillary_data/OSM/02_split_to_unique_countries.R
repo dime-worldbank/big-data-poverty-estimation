@@ -92,7 +92,7 @@ split_files_to_new_dirs(dirs_vec = dom_hti_dirs,
                         iso_1 = "DOM",
                         iso_2 = "HTI")
 
-## Haiti and Dominican Republic
+## Senegal and Gambia
 sen_gam_dirs <- file.path(osm_dir, "FinalData") %>%
   list.files() %>%
   str_subset("senegal-and-gambia")
@@ -105,11 +105,11 @@ split_files_to_new_dirs(dirs_vec = sen_gam_dirs,
                         iso_2 = "GMB")
 
 ## Timor-Leste (Extracted from Indonesia)
-sen_gam_dirs <- file.path(osm_dir, "FinalData") %>%
+indonesia_dirs <- file.path(osm_dir, "FinalData") %>%
   list.files() %>%
-  str_subset("senegal-and-gambia")
+  str_subset("indonesia")
 
-split_files_to_new_dirs(dirs_vec = sen_gam_dirs,
+split_files_to_new_dirs(dirs_vec = indonesia_dirs,
                         root_name_orig = "indonesia",
                         new_name_1 = "timor-leste",
                         new_name_2 = "indonesia_TEMP",

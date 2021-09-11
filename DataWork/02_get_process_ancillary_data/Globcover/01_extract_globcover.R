@@ -80,7 +80,7 @@ extract_globcover <- function(country_code_i, buffer_m){
 }
 
 # Implement Function and Export ------------------------------------------------
-for(buffer_i in c(2500)){
+for(buffer_i in c(2000, 2500)){
   for(country_i in unique(df$country_code)){
     print(paste0(country_i, " - ", buffer_i))
     

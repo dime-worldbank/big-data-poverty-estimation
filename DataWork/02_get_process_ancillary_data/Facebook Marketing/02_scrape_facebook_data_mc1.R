@@ -34,7 +34,7 @@ SCRAPE_EVEN_ODD <- "all" # "even", "odd", "all".
 change_order <- "" # "reverse", "start_middle_to_front", "start_middle_to_back"
 
 # Load Coordinates -------------------------------------------------------------
-df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 if(SURVEY_NAME %in% "DHS"){
   df <- df[df$most_recent_survey %in% T,]

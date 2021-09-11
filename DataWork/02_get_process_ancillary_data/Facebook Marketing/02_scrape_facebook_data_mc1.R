@@ -45,7 +45,6 @@ api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F)
   filter(Service == "facebook_marketing_ad")
 
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
-KEYS_ACCOUNTS <- KEYS_ACCOUNTS[1:4]
 N_KEYS <- length(KEYS_ACCOUNTS)
 
 #token <- api_keys$Key[api_keys$Account %in% "token"] %>% str_squish()
@@ -334,7 +333,16 @@ if(SCRAPE_EVEN_ODD %in% "even"){
 
 ## UIDs to scrape
 KEY_i  <- 1
-for(country_code_i in c("NG", "GA", country_code_all)){
+
+# Repeat in case missed some due to error, so will go back and check
+country_code_all_rep <- c(country_code_all,
+                          country_code_all,
+                          country_code_all,
+                          country_code_all,
+                          country_code_all) %>% 
+  sort()
+
+for(country_code_i in country_code_all_rep){
   
   df_c <- df[df$country_code %in% country_code_i,]
   

@@ -288,6 +288,13 @@ make_query_location_i <- function(param_i,
       print(query_val)
       print("Checking error!")
       
+      if(!is.null(query_val$error$code)){
+        if((query_val$error$code == 80004) & param_i == 33){
+          print("too many calls, so sleeping a bit!")
+          Sys.sleep(10)
+        } 
+      }
+      
       query_val_df <- ""
       
       # Sometimes lat/lon is not in a valid location. We want to still create
@@ -315,7 +322,7 @@ make_query_location_i <- function(param_i,
 # Determine time to pause when scraping the API due to API rate limits.
 
 #### Pause after scrape each parameter
-sleep_time_after_param <- 0.5
+sleep_time_after_param <- 0
 
 #### Pause after each location
 number_locs_per_hour <- ceiling(200/nrow(parameters_df))
@@ -323,7 +330,7 @@ number_locs_per_hour <- ceiling(200/nrow(parameters_df))
 seconds_in_hour <- 60*60
 sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
-sleep_time_after_loc <- sleep_time_after_loc - 100
+sleep_time_after_loc <- sleep_time_after_loc - 105
 
 sleep_time_after_loc <- sleep_time_after_loc / N_KEYS
 
@@ -344,7 +351,7 @@ if(SCRAPE_EVEN_ODD %in% "even"){
 }
 
 ## UIDs to scrape
-KEY_i  <- 4
+KEY_i  <- 1
 
 # Repeat in case missed some due to error, so will go back and check
 country_code_all_rep <- c(country_code_all,
@@ -389,6 +396,7 @@ for(country_code_i in country_code_all_rep){
     } else{
       
       ## Set keys
+      print(KEY_i)
       account_i <- KEYS_ACCOUNTS[KEY_i]
       api_keys_i <- api_keys[api_keys$Details %in% account_i,]
       

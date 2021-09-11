@@ -18,7 +18,7 @@
 
 # MAIN PARAMETERS
 SURVEY_NAME   <- "DHS"
-API_KEY_EMAIL <- "NONE YET" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
+API_KEY_EMAIL <- "wbieconnect@gmail.com" # robmarty3@gmail.com, robertandrewmarty3@gmail.com, robertandrewmarty@gmail.com
 
 # SCRAPING PARAMETERS
 # Determine if want to skip locations where data has already been scraped. Also,

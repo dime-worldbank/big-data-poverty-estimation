@@ -7,7 +7,7 @@ osm_country_dir <- "india-210101-free"
 osm_df <- readRDS(file.path(osm_dir, "FinalData", 
                             osm_country_dir, "gis_osm_roads_free_1.Rds"))
 
-N_SUBSETS <- 10
+N_SUBSETS <- 30
 
 group_vec <- rep_len(x = 1:N_SUBSETS, length.out = nrow(osm_df))
 

@@ -1,5 +1,7 @@
-# Extract OSM Roads to BISP Households
+# Extract number of POIs and distance to nearest POIs for each survey
+# location and type of POI
 
+## PARAMETERS
 SURVEY_NAME <- "DHS"
 RE_EXTRACT_IF_EXISTS <- F
 
@@ -7,7 +9,7 @@ RE_EXTRACT_IF_EXISTS <- F
 load_osm_poi <- function(country_code, osm_dir_df){
   
   ### A. Define directory
-  osm_country_dir <- osm_dir_df$osm_dirs[osm_dir_df$osm_root_name %in% country_code]
+  osm_country_dir <- osm_dir_df$osm_dirs[osm_dir_df$country_code %in% country_code]
 
   ### B. Load data
   osm1_df <- readRDS(file.path(osm_dir, "FinalData", osm_country_dir, "gis_osm_pois_free_1.Rds"))
@@ -130,7 +132,6 @@ survey_df <- survey_df %>%
   dplyr::filter(!is.na(latitude))
 
 country_codes_all <- survey_df$country_code %>% unique()
-country_codes_all <- "BD"
 
 # Load country_code to OSM dir data --------------------------------------------
 # Make dataset that has [country_code] and [osm_root_name] (root name of OSM dir)
@@ -160,11 +161,11 @@ osm_dir_df <- osm_dir_df %>%
 
 #### N POI
 for(buffer_i in c(5000)){
-  for(country_code_i in country_codes_all){
-    print(paste0(country_code_i, " - ", buffer_i))
+  for(country_code_i in osm_dir_df$country_code){
+    print(paste0("N POI: ", country_code_i, " - ", buffer_i, " =============="))
     
     OUT_PATH <- file.path(data_dir, SURVEY_NAME, 
-                          "FinalData", "Individual Datasets", "osm", 
+                          "FinalData", "Individual Datasets", "osm", "poi", 
                           paste0("osm_",country_code_i,"_n_poi_",buffer_i,"m_buff.Rds"))
     
     if(!file.exists(OUT_PATH) | RE_EXTRACT_IF_EXISTS){
@@ -175,11 +176,11 @@ for(buffer_i in c(5000)){
 }
 
 #### Dist POI
-for(country_code_i in country_codes_all){
-  print(country_code_i)
+for(country_code_i in osm_dir_df$country_code){
+  print(paste0("DIST POI: ", country_code_i, " =============================="))
   
   OUT_PATH <- file.path(data_dir, SURVEY_NAME, 
-                        "FinalData", "Individual Datasets", "osm", 
+                        "FinalData", "Individual Datasets", "osm", "poi", 
                         paste0("osm_",country_code_i,"_dist_poi_buff.Rds"))
   
   if(!file.exists(OUT_PATH) | RE_EXTRACT_IF_EXISTS){

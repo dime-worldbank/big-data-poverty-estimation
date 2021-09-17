@@ -6,10 +6,8 @@ RE_EXTRACT_IF_EXISTS <- F
 # Functions ====================================================================
 load_prep_osm_roads <- function(country_code, 
                                 osm_dir_df, 
-                                cc_epsg,
                                 data_split_into_subsets,
-                                subset_id = NULL,
-                                project = TRUE){
+                                subset_id = NULL){
   # DESCRIPTION: Load and Prep OSM Road Data
   # ARGS
   # -- country_code: Two letter country code
@@ -166,7 +164,7 @@ osm_dir_df <- osm_dir_df %>%
   dplyr::filter(!is.na(country_code))
 
 # 3. Extract density -----------------------------------------------------------
-for(country_code in "IA"){ # country_codes_all
+for(country_code in unique(survey_sf$country_code)){
   
   #### Load road files 
   # Sometimes we split road files into subsets. So either load the subsets or 
@@ -195,7 +193,7 @@ for(country_code in "IA"){ # country_codes_all
     
     OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", 
                           "Individual Datasets", "osm", "roads_distance",
-                          paste0("osm_roaddistance_", buffer_m, "m_", country_code, "_subset_",subset_id_i,".Rds"))
+                          paste0("osm_roaddistance_", country_code, "_subset_",subset_id_i,".Rds"))
     print(OUT_PATH)
     
     if(RE_EXTRACT_IF_EXISTS | !file.exists(OUT_PATH)){
@@ -203,10 +201,8 @@ for(country_code in "IA"){ # country_codes_all
       #### Load OSM
       osm_sf <- load_prep_osm_roads(country_code,
                                     osm_dir_df, 
-                                    cc_epsg = "BLANK",
                                     data_split_into_subsets,
-                                    subset_id_i,
-                                    project = F)
+                                    subset_id_i)
       
       #### Load Survey
       survey_sf_i <- survey_sf[survey_sf$country_code %in% country_code,]
@@ -229,7 +225,7 @@ for(country_code in "IA"){ # country_codes_all
         return(out_df)
       }) %>%
         reduce(left_join, by = "uid")
-    
+      
       #### Export
       saveRDS(osm_distance_country_i, OUT_PATH)
     }

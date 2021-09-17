@@ -7,7 +7,7 @@ RE_EXTRACT_IF_EXISTS <- F
 # Functions ====================================================================
 load_prep_osm_roads <- function(country_code, 
                                 osm_dir_df, 
-                                cc_epsg,
+                                #cc_epsg,
                                 data_split_into_subsets,
                                 subset_id = NULL){
   # DESCRIPTION: Load and Prep OSM Road Data
@@ -51,8 +51,8 @@ load_prep_osm_roads <- function(country_code,
   print(table(osm_df$fclass))
   
   ### E. Project
-  print("Project OSM data")
-  osm_df <- osm_df %>% spTransform(CRS(cc_epsg))
+  #print("Project OSM data")
+  #osm_df <- osm_df %>% spTransform(CRS(cc_epsg))
   
   ### F. To SF
   print("OSM data to SF")
@@ -171,16 +171,16 @@ survey_df_IA <- survey_df_IA %>%
 coordinates(survey_df_IA) <- ~longitude+latitude
 crs(survey_df_IA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
 
-print("Buffering suvery")
+print("Buffering IA suvery")
 survey_buff_df_IA <- geo.buffer_chunks(survey_df_IA, r = buffer_m, chunk_size = 100)
 
 survey_buff_sf_IA <- survey_buff_df_IA %>% st_as_sf()
-survey_buff_sf_agg_IA <- survey_buff_sf_IA %>% st_union()
+#survey_buff_sf_agg_IA <- survey_buff_sf_IA %>% st_union()
 
 # 3. Extract density -----------------------------------------------------------
 country_code <- "IA"
 
-for(country_code in "IA"){ # country_codes_all
+for(country_code in country_codes_all){ # country_codes_all
   
   #### Country-specifc parameters
   # Lots of India survey locations, so subsetting roads to near a survey location
@@ -224,13 +224,13 @@ for(country_code in "IA"){ # country_codes_all
     if(RE_EXTRACT_IF_EXISTS | !file.exists(OUT_PATH)){
       
       #### Grab projection for country i
-      epsg_num <- survey_proj_df$epsg_projection[survey_proj_df$country_code %in% country_code]
-      cc_epsg <- paste0("+init=epsg:",epsg_num)
+      #epsg_num <- survey_proj_df$epsg_projection[survey_proj_df$country_code %in% country_code]
+      #cc_epsg <- paste0("+init=epsg:",epsg_num)
       
       #### Load OSM
       osm_sf <- load_prep_osm_roads(country_code,
                                     osm_dir_df, 
-                                    cc_epsg,
+                                    #cc_epsg = "BLANK",
                                     data_split_into_subsets,
                                     subset_id_i)
       
@@ -247,13 +247,13 @@ for(country_code in "IA"){ # country_codes_all
         
         print("Buffering suvery")
         survey_buff_df_i <- geo.buffer_chunks(survey_df_i, r = buffer_m, chunk_size = 100)
-        survey_buff_df_i <- survey_buff_df_i %>% spTransform(CRS(cc_epsg))
+        #survey_buff_df_i <- survey_buff_df_i %>% spTransform(CRS(cc_epsg))
         
         survey_buff_sf_i <- survey_buff_df_i %>% st_as_sf()
         survey_buff_sf_agg_i <- survey_buff_sf_i %>% st_union()
       } else{
         survey_buff_sf_i <- survey_buff_sf_IA 
-        survey_buff_sf_agg_i <- survey_buff_sf_agg_IA 
+        survey_buff_sf_agg_i <- NULL # survey_buff_sf_agg_IA 
       }
       
       #### Extract density

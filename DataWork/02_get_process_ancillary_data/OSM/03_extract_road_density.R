@@ -131,6 +131,7 @@ survey_df <- survey_df %>%
   dplyr::mutate(uid = uid %>% as.character)
 
 country_codes_all <- survey_df$country_code %>% unique()
+country_codes_all <- country_codes_all[country_codes_all != "GY"]
 
 # 2. Load country_code to OSM dir data -----------------------------------------
 # Make dataset that has [country_code] and [osm_root_name] (root name of OSM dir)
@@ -178,9 +179,7 @@ survey_buff_sf_IA <- survey_buff_df_IA %>% st_as_sf()
 #survey_buff_sf_agg_IA <- survey_buff_sf_IA %>% st_union()
 
 # 3. Extract density -----------------------------------------------------------
-country_code <- "IA"
-
-for(country_code in country_codes_all){ # country_codes_all
+for(country_code in rev(country_codes_all)){ # country_codes_all
   
   #### Country-specifc parameters
   # Lots of India survey locations, so subsetting roads to near a survey location

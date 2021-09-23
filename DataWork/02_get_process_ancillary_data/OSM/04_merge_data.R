@@ -1,16 +1,19 @@
 # Merge data from OSM
 
-SURVEY_NAME <- "DHS"
-
 # Load data --------------------------------------------------------------------
 poi_df <- file.path(data_dir, SURVEY_NAME, 
-                    "FinalData", "Individual Datasets", "osm") %>%
-  list.files(full.names = T) %>%
-  str_subset("poibuildings") %>%
-  map_df(readRDS)
+                    "FinalData", "Individual Datasets", "osm", "poi") %>%
+  list.files(full.names = T,
+             pattern = "*.Rds") %>%
+  lapply(readRDS)
+a <- poi_df %>% bind_rows()
+for(i in 1:10){
+  print(is.data.frame(poi_df[[i]]))
+}
+
 
 road_df <- file.path(data_dir, SURVEY_NAME, 
-                    "FinalData", "Individual Datasets", "osm") %>%
+                    "FinalData", "Individual Datasets", "osm", "roads_density") %>%
   list.files(full.names = T) %>%
   str_subset("road") %>%
   map_df(readRDS)

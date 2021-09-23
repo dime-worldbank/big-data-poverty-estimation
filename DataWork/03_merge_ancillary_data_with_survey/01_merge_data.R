@@ -1,0 +1,101 @@
+# Merge Data with Survey Data
+
+INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets")
+
+# [Load] Survey data -----------------------------------------------------------
+survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
+
+survey_df <- survey_df %>%
+  dplyr::select(uid, country_code, urban_rural, year, latitude, longitude, 
+                wealth_index, asset_pca_1)
+
+# [Load] Facebook --------------------------------------------------------------
+#gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+
+# [Load] OSM -------------------------------------------------------------------
+#gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+
+# [Load] CNN Features ----------------------------------------------------------
+#gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+
+# [Load] Globcover -------------------------------------------------------------
+gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+
+# [Load] Satellite data from GEE ---------------------------------------
+#file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
+
+##### ** VIIRS #####
+viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "viirs_ubuff2500_rbuff2500.Rds"))
+
+viirs_df <- viirs_df %>%
+  rename_at(vars(-uid), ~ paste0("viirs_", .))
+
+##### ** Landsat 8 #####
+l8_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                           "l8_ubuff2500_rbuff2500.Rds"))
+
+l8_df <- l8_df %>%
+  rename_at(vars(-uid), ~ paste0("l8_", .))
+
+##### ** World pop #####
+wp10km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                               "worldpop_ubuff10000_rbuff10000.Rds"))
+
+wp10km_df <- wp10km_df %>%
+  dplyr::rename(worldpop_10km = sum)
+
+##### ** Elevation/Slope #####
+elev_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                             "elevation_ubuff5000_rbuff5000.Rds"))
+
+slope_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "slope_ubuff5000_rbuff5000.Rds"))
+
+elevslope <- full_join(elev_df, slope_df, by = "uid") %>%
+  rename_at(vars(-uid), ~ paste0("elevslope_", .))
+
+##### ** Global human modification index #####
+gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "GlobalHumanModification_ubuff10000_rbuff10000.Rds"))
+
+gbmod_df <- gbmod_df %>%
+  dplyr::rename(globalmod_mean = mean)
+
+##### ** Pollution #####
+poll_prefix <- c("CH4", "CO", "HCHO", "NO2", "ozone", "SO2", "uv_aer") %>%
+  paste(collapse = "|")
+
+pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
+  list.files(pattern = "*.Rds",
+             full.names = T) %>%
+  str_subset(poll_prefix) %>%
+  str_subset("2500") %>%
+  lapply(readRDS) %>%
+  reduce(full_join, by = "uid") %>%
+  rename_at(vars(-uid), ~ paste0("pollution_", .))
+
+## Check for and remove NAs
+for(var in names(pollution_df)){
+  print(var)
+  pollution_df[[var]] %>% is.na %>% table() %>% print()
+  print(" ")
+}
+
+pollution_df <- pollution_df %>%
+  dplyr::select(-c(pollution_CH4_column_volume_mixing_ratio_dry_air,
+                   pollution_CO_column_number_density,
+                   pollution_H2O_column_number_density,
+                   pollution_absorbing_aerosol_index))
+
+# [Merge] Datasets -------------------------------------------------------------
+survey_ancdata_df <- list(survey_df, 
+                          gc_df, viirs_df, l8_df, wp10km_df, elevslope, gbmod_df, pollution_df) %>%
+  reduce(full_join, by = "uid")
+
+# [Export] Data ----------------------------------------------------------------
+saveRDS(survey_ancdata_df, 
+        file.path(data_dir, SURVEY_NAME, "FinalData", "survey_alldata.Rds"))
+
+
+

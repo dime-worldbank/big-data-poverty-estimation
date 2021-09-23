@@ -3,7 +3,7 @@
 
 ## PARAMETERS
 SURVEY_NAME <- "DHS"
-RE_EXTRACT_IF_EXISTS <- F
+RE_EXTRACT_IF_EXISTS <- T
 
 # Define functions -------------------------------------------------------------
 load_osm_poi <- function(country_code, osm_dir_df){
@@ -114,14 +114,14 @@ extract_dist_poi <- function(country_code, survey_df, osm_dir_df){
     osm_df_classi <- osm_df[osm_df$fclass %in% class_i,]
     
     osm_df_classi_agg <- osm_df_classi %>%
-      gBuffer(width = 0.00000001, byid=T) %>%
+      gBuffer(width = 0.000001, byid=T) %>%
       st_as_sf() %>%
       st_union() 
     
     survey_df[[paste0("osm_distmeters_poi_", class_i)]] <- st_distance_chunks(survey_sf, osm_df_classi_agg, 500)
   } 
   
-  return(survey_df)
+  return(survey_df@data)
 }
 
 # Load survey data -------------------------------------------------------------

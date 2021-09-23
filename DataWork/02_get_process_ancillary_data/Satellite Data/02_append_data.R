@@ -55,7 +55,8 @@ for(data_root_names_i in data_root_names){
     list.files(full.names = T) %>%
     str_subset(data_root_names_i) %>%
     map_df(read.csv) %>%
-    mutate_if(is.factor, as.character)
+    mutate_if(is.factor, as.character) %>%
+    distinct(uid, .keep_all = T) # FIX SO DONT NEED THIS
   
   saveRDS(df_tmp, file.path(OUT_PATH, paste0(data_root_names_i, ".Rds")))
   

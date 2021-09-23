@@ -6,7 +6,7 @@
 for(osm_country_dir in c("india-210101-free")){
   print(osm_country_dir)
   
-  if(osm_country_dir %in% "india-210101-free") N_SUBSETS <- 50
+  if(osm_country_dir %in% "india-210101-free") N_SUBSETS <- 250
   
   ## Delete existing subsets
   files_to_rm <- file.path(osm_dir, "FinalData", osm_country_dir) %>%

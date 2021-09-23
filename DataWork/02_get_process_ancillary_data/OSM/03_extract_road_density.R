@@ -270,11 +270,4 @@ for(country_code in rev(country_codes_all)){ # country_codes_all
 }
 
 
-data 
-
-data %>%
-  ggplot(aes(x = years_since_improved, y = b, ymin = p025, ymax=p975,
-             group = indep_var, color=indep_var)) +
-  geom_point(position = position_dodge(width = p_dodge_width),size=1) + 
-  geom_linerange(position = position_dodge(width = p_dodge_width),size=0.5) +
-  geom_vline(xintercept=0,size=.5,alpha=0.5)
+ 

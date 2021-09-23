@@ -3,9 +3,6 @@
 
 set.seed(42)
 
-## PARMETERS
-N_OBS_IN_TFR <- 200 # max number of observations in a tfrecord
-
 over_nearest <- function(sp_i, gadm_i){
   # For each sp_i, takes the nearest polygon from gadm_i. Returns data frame
   # ob sp_i with gadm data merged in
@@ -37,7 +34,6 @@ over_nearest <- function(sp_i, gadm_i){
   return(df_i)
 }
 
-
 # Load Data --------------------------------------------------------------------
 dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_hhlevel.Rds"))
 
@@ -45,12 +41,7 @@ dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "su
 dhs_all_df <- dhs_all_df %>%
   dplyr::filter(!is.na(latitude))
 
-## Remove if issues extracting daytime data 
-dhs_all_df <- dhs_all_df[!(dhs_all_df$uid %in% c("IA201400180079",
-                                                 "IA201400180052")),]
-
 # Add variable most recent and subset to most recent ---------------------------
-
 dhs_all_df <- dhs_all_df %>%
   dplyr::group_by(country_code) %>%
   dplyr::mutate(latest_survey_country = max(year)) %>%
@@ -61,26 +52,46 @@ dhs_all_df <- dhs_all_df %>%
 dhs_all_df <- dhs_all_df %>%
   dplyr::filter(most_recent_survey %in% T)
 
-# Asset Index ------------------------------------------------------------------
-#### Cleanup variables
+# Deal with missing/don't know codes -------------------------------------------
+# e.g., value of 99 that means "don't know" -- these should be NA
 
-# Number of sleeping rooms; if 0, say 1
+#### Time to get water
+# 996; at source --> 0
+# 998/999; don't know -->NA
+dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% 996] <- 0
+dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% c(998,999)] <- NA
+
+# Asset Index ------------------------------------------------------------------
+# (1) High values = wealthier, lower values = poorer
+# (2) Remove NAs
+ 
+## Number of sleeping rooms; if 0, say 1
 dhs_all_df$n_rooms_sleeping[dhs_all_df$n_rooms_sleeping %in% 0] <- 1
 
-# Floor material
+## Floor material
 # 11 = earth
 dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material %in% 11
 dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material_not_earth %in% FALSE
 
-# Water source
+## Water source
 # 11 = piped into dwelling
 dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source %in% 11)
 
+wall_material,
+roof_material,
+toilet_type,
+kitchen_is_sep_room,
+has_bank_account,
+
+
+
+## Transform
 dhs_all_df <- dhs_all_df %>%
   mutate_at(vars(contains("has")), tidyr::replace_na, 0) %>%
   mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping) %>%
   dplyr::filter(!is.na(n_rooms_sleeping))
 
+#### Make indices
 pca_1 <- dhs_all_df %>% 
   dplyr::select(contains("has"), 
                 n_sleeping_rooms_pp,
@@ -183,27 +194,6 @@ dhs_all_df_coll <- map_df(unique(dhs_all_df$country_code), function(cc_dhs){
                               
                               return(df_out)
                             }) 
-
-# Make Folder Name -------------------------------------------------------------
-# Folder name for storing individual tfrecords. Google drive complains when
-# too many files in an individual folder
-
-#dhs_all_df_coll$tf_folder_name <- dhs_all_df_coll$uid %>% substring(1,11)
-#dhs_all_df_coll$tf_folder_name[is.na(dhs_all_df_coll$tf_folder_name)] <- "other"
-#dhs_all_df_coll <- dhs_all_df_coll[!is.na(dhs_all_df_coll$uid),]
-
-dhs_all_df_coll$tfrecord_name <- ""
-
-for(fold_name in unique(dhs_all_df_coll$within_country_fold)){
-  N_in_fold <- sum(dhs_all_df_coll$within_country_fold %in% fold_name)
-  
-  tfrecord_id <- rep(1:10000, times=1, each=N_OBS_IN_TFR)[1:N_in_fold]
-  tfrecord_id <- sample(tfrecord_id)
-  
-  tfrecord_name <- paste0(fold_name, "_", tfrecord_id, ".tfrecord")
-  
-  dhs_all_df_coll$tfrecord_name[dhs_all_df_coll$within_country_fold %in% fold_name] <- tfrecord_name
-}
 
 # Export -----------------------------------------------------------------------
 ## All

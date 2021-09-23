@@ -36,6 +36,7 @@ over_nearest <- function(sp_i, gadm_i){
 
 # Load Data --------------------------------------------------------------------
 dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_hhlevel.Rds"))
+dhs_all_df$has_bank_account <- NULL # dont use for PCA
 
 ## Subset - needs coordinates
 dhs_all_df <- dhs_all_df %>%
@@ -64,42 +65,148 @@ dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% c(998,999)] <- NA
 # Asset Index ------------------------------------------------------------------
 # (1) High values = wealthier, lower values = poorer
 # (2) Remove NAs
- 
+
 ## Number of sleeping rooms; if 0, say 1
 dhs_all_df$n_rooms_sleeping[dhs_all_df$n_rooms_sleeping %in% 0] <- 1
 
+dhs_all_df <- dhs_all_df %>%
+  mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping)
+
 ## Floor material
-# 11 = earth
-dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material %in% 11
-dhs_all_df$floor_material_not_earth <- dhs_all_df$floor_material_not_earth %in% FALSE
+dhs_all_df$floor_material_cat <- floor(as.numeric(dhs_all_df$floor_material)/10)
+dhs_all_df$floor_material_cat[dhs_all_df$floor_material_cat >= 4] <- NA
+
+## Wall material
+dhs_all_df$wall_material_cat <- floor(as.numeric(dhs_all_df$wall_material)/10)
+dhs_all_df$wall_material_cat[dhs_all_df$wall_material_cat >= 4] <- NA
+
+## Roof material
+dhs_all_df$roof_material_cat <- floor(as.numeric(dhs_all_df$roof_material)/10)
+dhs_all_df$roof_material_cat[dhs_all_df$roof_material_cat >= 4] <- NA
 
 ## Water source
 # 11 = piped into dwelling
-dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source %in% 11)
+dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source == 11)
 
-wall_material,
-roof_material,
-toilet_type,
-kitchen_is_sep_room,
-has_bank_account,
+## Toilet Type
+dhs_all_df$flush_toilet_sewer <- as.numeric(dhs_all_df$toilet_type == 11)
+
+## NAs
+if(F){
+  na_df <- dhs_all_df %>%
+    dplyr::select(n_sleeping_rooms_pp, 
+                  floor_material_cat,
+                  wall_material_cat, 
+                  roof_material_cat, 
+                  water_source_piped_dwelling, 
+                  flush_toilet_sewer,
+                  has_electricity,
+                  has_radio,
+                  has_tv,
+                  has_fridge,
+                  has_motorbike,
+                  has_car) %>%
+    dplyr::mutate_all(is.na) %>%
+    dplyr::summarise_all(sum) %>%
+    t %>%
+    as.data.frame()
+  
+  na_df$prop <- na_df$V1 / nrow(dhs_all_df) 
+}
+
+#### Variable sets for PCA
+# Version without roof_material due to high number of missing values
+pca_allvars <- c("has_electricity",
+                 "has_radio",
+                 "has_tv",
+                 "has_fridge",
+                 "has_motorbike",
+                 "has_car",
+                 "floor_material_cat",
+                 "wall_material_cat",
+                 "roof_material_cat",
+                 "water_source_piped_dwelling",
+                 "flush_toilet_sewer",
+                 "n_sleeping_rooms_pp")
+
+pca_allvars_noroof <- c("has_electricity",
+                        "has_radio",
+                        "has_tv",
+                        "has_fridge",
+                        "has_motorbike",
+                        "has_car",
+                        "floor_material_cat",
+                        "wall_material_cat",
+                        #"roof_material_cat",
+                        "water_source_piped_dwelling",
+                        "flush_toilet_sewer",
+                        "n_sleeping_rooms_pp")
+
+pca_physicalvars <- c("has_electricity",
+                      "floor_material_cat",
+                      "wall_material_cat",
+                      "roof_material_cat")
+
+pca_physicalvars_noroof <- c("has_electricity",
+                             "floor_material_cat",
+                             "wall_material_cat")
+
+pca_nonphysicalvars <- c("has_radio",
+                         "has_tv",
+                         "has_fridge",
+                         "has_motorbike",
+                         "has_car",
+                         "water_source_piped_dwelling",
+                         "flush_toilet_sewer",
+                         "n_sleeping_rooms_pp")
+
+#### Compute PCA
+dhs_all_df$ind_id <- 1:nrow(dhs_all_df)
+
+compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
+  
+  pca_df <- dhs_all_df %>% 
+    dplyr::select(all_of(c("ind_id", pca_vars))) %>%
+    drop_na()
+  
+  pca_obj <- pca_df %>%
+    dplyr::select(-ind_id) %>%
+    prcomp(scale = T)
+  
+  out_df <- data.frame(pca = pca_obj$x[,1],
+                       ind_id = pca_df$ind_id)
+  
+  names(out_df)[1] <- var_name
+  
+  return(out_df)
+}
+
+pca01_df <- compute_pca_rm_na(pca_allvars, "pca_allvars_rmna", dhs_all_df)
+
+dhs_all_df <- dhs_all_df %>%
+  left_join(pca01_df, by = "ind_id")
 
 
 
 ## Transform
-dhs_all_df <- dhs_all_df %>%
-  mutate_at(vars(contains("has")), tidyr::replace_na, 0) %>%
-  mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping) %>%
-  dplyr::filter(!is.na(n_rooms_sleeping))
+#dhs_all_df <- dhs_all_df %>%
+  #mutate_at(vars(contains("has")), tidyr::replace_na, 0) %>%
+#  mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping)# %>%
+#dplyr::filter(!is.na(n_rooms_sleeping),
+#              !is.na(water_source_piped_dwelling))
 
 #### Make indices
-pca_1 <- dhs_all_df %>% 
-  dplyr::select(contains("has"), 
-                n_sleeping_rooms_pp,
-                floor_material_not_earth,
-                water_source_piped_dwelling) %>%
-  prcomp(scale = T)
+# PCA with missing values
+# http://juliejosse.com/wp-content/uploads/2018/05/DataAnalysisMissingR.html#pca_with_missing_values
+# https://medium.com/@seb231/principal-component-analysis-with-missing-data-9e28f440ce93
+#pca_1 <- dhs_all_df %>% 
+#  dplyr::select(contains("has"), 
+#                n_sleeping_rooms_pp,
+#                floor_material_not_earth,
+#                water_source_piped_dwelling) %>%
+#  prcomp(scale = T)
 
-dhs_all_df$asset_pca_1 <- pca_1$x[,1]
+#dhs_all_df$asset_pca_1 <- pca_1$x[,1]
 
 # Aggregate --------------------------------------------------------------------
 dhs_all_df_coll <- dhs_all_df %>%
@@ -172,28 +279,28 @@ dhs_gadm_cw <- bind_rows(
          code_gadm = code_gadm %>% as.character)
 
 dhs_all_df_coll <- map_df(unique(dhs_all_df$country_code), function(cc_dhs){
-                              print(cc_dhs)
-                              
-                              cc_gadm <- dhs_gadm_cw$code_gadm[dhs_gadm_cw$code_dhs %in% cc_dhs]
-                              
-                              df_i <- dhs_all_df_coll[dhs_all_df_coll$country_code %in% cc_dhs,]
-                              gadm_i <- readRDS(file.path(data_dir, "GADM", "FinalData", "adm2", paste0("gadm36_",cc_gadm,"_2_sp.rds")))
-                              
-                              gadm_i[,c("GID_0", "GID_1", "GID_2",
-                                        "NAME_0", "NAME_1", "NAME_2")]
-                              
-                              # Random fold
-                              within_country_fold <- rep_len(1:5, length.out = nrow(gadm_i)) %>% sample()
-                              gadm_i$within_country_fold <- paste0(cc_dhs, "_", within_country_fold)
-                              
-                              sp_i <- df_i
-                              coordinates(sp_i) <- ~longitude+latitude
-                              crs(sp_i) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
-                              
-                              df_out <- over_nearest(sp_i, gadm_i)
-                              
-                              return(df_out)
-                            }) 
+  print(cc_dhs)
+  
+  cc_gadm <- dhs_gadm_cw$code_gadm[dhs_gadm_cw$code_dhs %in% cc_dhs]
+  
+  df_i <- dhs_all_df_coll[dhs_all_df_coll$country_code %in% cc_dhs,]
+  gadm_i <- readRDS(file.path(data_dir, "GADM", "FinalData", "adm2", paste0("gadm36_",cc_gadm,"_2_sp.rds")))
+  
+  gadm_i[,c("GID_0", "GID_1", "GID_2",
+            "NAME_0", "NAME_1", "NAME_2")]
+  
+  # Random fold
+  within_country_fold <- rep_len(1:5, length.out = nrow(gadm_i)) %>% sample()
+  gadm_i$within_country_fold <- paste0(cc_dhs, "_", within_country_fold)
+  
+  sp_i <- df_i
+  coordinates(sp_i) <- ~longitude+latitude
+  crs(sp_i) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+  
+  df_out <- over_nearest(sp_i, gadm_i)
+  
+  return(df_out)
+}) 
 
 # Export -----------------------------------------------------------------------
 ## All

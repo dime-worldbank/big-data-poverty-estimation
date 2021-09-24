@@ -49,7 +49,7 @@ load_prep_osm_roads <- function(country_code,
   print(table(osm_df$fclass))
   
   ### E. Project
-  if(project){
+  if(F){
     print("Project OSM data")
     osm_df <- osm_df %>% spTransform(CRS(cc_epsg))
   }
@@ -59,67 +59,6 @@ load_prep_osm_roads <- function(country_code,
   osm_sf <- osm_df %>% st_as_sf()
   
   return(osm_sf)
-}
-
-extract_density_fclass_i <- function(fclass_i, 
-                                     osm_sf, 
-                                     survey_buff_sf, 
-                                     survey_buff_sf_agg,
-                                     subset_roads_near_buffer = TRUE){
-  # DESCRIPTION: Extract road density for class fclass_i from osm_sf for each 
-  # location within survey_buff_sf
-  # ARGS:
-  # -- fclass_i: Road class (eg, "trunk").
-  # -- osm_sf: OSM road network (sf object). Must have "fclass" variable.
-  # -- survey_buff_sf: Buffered dataset (sf object). Must have "uid" variable.
-  # -- survey_buff_sf_agg: Above dataset, but st_union() applied
-  
-  print(fclass_i)
-  
-  #### 1. Subset and prep OSM data
-  ## Subset
-  osm_sf_i <- osm_sf[osm_sf$fclass %in% fclass_i,]
-  
-  ## Subset network to roads within buffer distance
-  # Reduces size of road network, which makes later steps faster. This step only
-  # worthwhile if doing so will really limit the size of the datset. (May not
-  # happen in cases where surveys are densely scattered across a country).
-  if(subset_roads_near_buffer){
-    print("Subseting roads near buffer...")
-    osm_sf_i <- st_intersection_chunks(osm_sf_i, survey_buff_sf_agg, 2000)
-    nrow(osm_sf_i)
-  }
-  
-  #### 2. Extract density for each observation
-  road_density_df <- map_df(1:nrow(survey_buff_sf), function(i){
-    if((i %% 50) == 0) print(paste0(i, " - Extracting: ", fclass_i))
-    
-    survey_buff_sf_i <- survey_buff_sf[i,]
-    
-    #### Extract roads that intersect with buffer
-    intersects_tf <- st_intersects(survey_buff_sf_i, osm_sf_i, sparse = F) %>% as.vector()
-    road_in_buffer <- st_intersection(osm_sf_i[intersects_tf,], survey_buff_sf_i)
-    
-    if(nrow(road_in_buffer) > 0){
-      length_out <- road_in_buffer %>% st_length() %>% sum() %>% as.numeric() 
-      N_segments_out <- road_in_buffer %>% nrow()
-    } else{
-      length_out <- 0
-      N_segments_out <- 0
-    }
-    
-    out <- data.frame(uid = survey_buff_sf_i$uid,
-                      length = length_out,
-                      N_segments = N_segments_out)
-    return(out)
-  })
-  
-  #### 4. Cleanup dataframe
-  road_density_df <- road_density_df %>% 
-    rename_at(vars(-uid), ~ paste0(., '_', fclass_i, "_", buffer_m, "m")) %>%
-    dplyr::mutate(uid = uid %>% as.character())
-  
-  return(road_density_df)
 }
 
 # 1. Load survey data ----------------------------------------------------------

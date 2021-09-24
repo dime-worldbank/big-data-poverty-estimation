@@ -38,6 +38,7 @@ gadm_dir         <- file.path(data_dir, "GADM")
 fb_marketing_dir <- file.path(data_dir, "Facebook Marketing")
 fb_rwi_dir       <- file.path(data_dir, "Facebook Relative Wealth Index")
 globcover_dir    <- file.path(data_dir, "Globcover")
+worldclim_dir    <- file.path(data_dir, "WorldClim")
 
 tables_dir  <- file.path(overleaf_dir, "tables")
 figures_dir <- file.path(overleaf_dir, "figures")

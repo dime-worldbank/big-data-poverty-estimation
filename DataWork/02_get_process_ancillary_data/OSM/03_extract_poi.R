@@ -3,14 +3,14 @@
 
 ## PARAMETERS
 SURVEY_NAME <- "DHS"
-RE_EXTRACT_IF_EXISTS <- T
+RE_EXTRACT_IF_EXISTS <- F
 
 # Define functions -------------------------------------------------------------
 load_osm_poi <- function(country_code, osm_dir_df){
   
   ### A. Define directory
   osm_country_dir <- osm_dir_df$osm_dirs[osm_dir_df$country_code %in% country_code]
-
+  
   ### B. Load data
   osm1_df <- readRDS(file.path(osm_dir, "FinalData", osm_country_dir, "gis_osm_pois_free_1.Rds"))
   osm2_df <- readRDS(file.path(osm_dir, "FinalData", osm_country_dir, "gis_osm_pois_a_free_1.Rds"))
@@ -109,16 +109,33 @@ extract_dist_poi <- function(country_code, survey_df, osm_dir_df){
   
   # 3. Distance to Class --------------------------------------------------------
   for(class_i in unique(osm_df$fclass[!is.na(osm_df$fclass)])){
-    print(class_i)
     
     osm_df_classi <- osm_df[osm_df$fclass %in% class_i,]
     
-    osm_df_classi_agg <- osm_df_classi %>%
-      gBuffer(width = 0.000001, byid=T) %>%
-      st_as_sf() %>%
-      st_union() 
+    print(paste0(class_i, " - ", nrow(osm_df_classi)))
     
-    survey_df[[paste0("osm_distmeters_poi_", class_i)]] <- st_distance_chunks(survey_sf, osm_df_classi_agg, 500)
+    ## Grab one observation; replace geometry in next step
+    osm_df_classi_agg <- osm_df_classi[1,] %>% st_as_sf()
+    
+    osm_df_classi_combine <- osm_df_classi %>%
+      st_as_sf() %>%
+      st_combine()
+    
+    osm_df_classi_agg$geometry <- st_geometry(osm_df_classi_combine)
+    
+    #osm_df_classi_agg <- osm_df_classi %>%
+    #  gBuffer_chunks(width = 0.0001, chunk_size = 2000) %>%
+    #  raster::aggregate(by = "one") %>%
+    #  st_as_sf()
+    
+    
+    if(nrow(osm_df_classi) <= 50000){
+      buffer_chunk_n <- 3000
+    } else{
+      buffer_chunk_n <- 1000
+    }
+    
+    survey_df[[paste0("osm_distmeters_poi_", class_i)]] <- st_distance_chunks(survey_sf, osm_df_classi_agg, buffer_chunk_n)
   } 
   
   return(survey_df@data)
@@ -188,5 +205,7 @@ for(country_code_i in osm_dir_df$country_code){
     saveRDS(survey_df_i, OUT_PATH)
   }
 }
+
+
 
 

@@ -36,7 +36,6 @@ over_nearest <- function(sp_i, gadm_i){
 
 # Load Data --------------------------------------------------------------------
 dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_hhlevel.Rds"))
-dhs_all_df$has_bank_account <- NULL # dont use for PCA
 
 ## Subset - needs coordinates
 dhs_all_df <- dhs_all_df %>%
@@ -62,15 +61,38 @@ dhs_all_df <- dhs_all_df %>%
 dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% 996] <- 0
 dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% c(998,999)] <- NA
 
+#### Assets
+dhs_all_df$has_bank_account[dhs_all_df$has_bank_account %in% 8:9] <- NA
+dhs_all_df$has_car[dhs_all_df$has_car %in% 9] <- NA
+dhs_all_df$has_electricity[dhs_all_df$has_electricity %in% 9] <- NA
+dhs_all_df$has_fridge[dhs_all_df$has_fridge %in% 9] <- NA
+dhs_all_df$has_motorbike[dhs_all_df$has_motorbike %in% 9] <- NA
+dhs_all_df$has_radio[dhs_all_df$has_radio %in% 9] <- NA
+dhs_all_df$has_tv[dhs_all_df$has_tv %in% 9] <- NA
+
 # Asset Index ------------------------------------------------------------------
 # (1) High values = wealthier, lower values = poorer
 # (2) Remove NAs
 
-## Number of sleeping rooms; if 0, say 1
-dhs_all_df$n_rooms_sleeping[dhs_all_df$n_rooms_sleeping %in% 0] <- 1
+##### ** Prep Variables #####
 
+## Number of sleeping rooms; if 0, say 1
 dhs_all_df <- dhs_all_df %>%
-  mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping)
+  dplyr::mutate(n_rooms_sleeping = n_rooms_sleeping %>% as.numeric(),
+                
+                n_rooms_sleeping = case_when(
+                  n_rooms_sleeping %in% 0 ~ 1,
+                  n_rooms_sleeping %in% 99 ~ NA_real_,
+                  TRUE ~ n_rooms_sleeping
+                ),
+                
+                n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping,
+                
+                n_sleeping_rooms_pp_cat = case_when(
+                  (n_sleeping_rooms_pp >= 0 & n_sleeping_rooms_pp < 1) ~ 3,
+                  (n_sleeping_rooms_pp >= 1 & n_sleeping_rooms_pp < 2) ~ 2,
+                  (n_sleeping_rooms_pp >= 2) ~ 1
+                ))
 
 ## Floor material
 dhs_all_df$floor_material_cat <- floor(as.numeric(dhs_all_df$floor_material)/10)
@@ -91,10 +113,22 @@ dhs_all_df$water_source_piped_dwelling <- as.numeric(dhs_all_df$water_source == 
 ## Toilet Type
 dhs_all_df$flush_toilet_sewer <- as.numeric(dhs_all_df$toilet_type == 11)
 
+## Time to get drinking water
+dhs_all_df <- dhs_all_df %>%
+  dplyr::mutate(water_time_to_get_cat = case_when(
+    water_time_to_get == 0 ~ 3,
+    water_time_to_get > 0 & water_time_to_get <= 30 ~ 2,
+    water_time_to_get > 30 ~ 1
+  ))
+
+## Years of Education
+dhs_all_df$educ_years_hh_max_scale <- scale(dhs_all_df$educ_years_hh_max) %>%
+  as.numeric()
+
 ## NAs
 if(F){
   na_df <- dhs_all_df %>%
-    dplyr::select(n_sleeping_rooms_pp, 
+    dplyr::select(n_sleeping_rooms_pp_cat, 
                   floor_material_cat,
                   wall_material_cat, 
                   roof_material_cat, 
@@ -114,10 +148,10 @@ if(F){
   na_df$prop <- na_df$V1 / nrow(dhs_all_df) 
 }
 
-#### Variable sets for PCA
+##### ** Variable sets for PCA #####
+
 # Version without roof_material due to high number of missing values
 pca_allvars <- c("has_electricity",
-                 "has_radio",
                  "has_tv",
                  "has_fridge",
                  "has_motorbike",
@@ -125,22 +159,24 @@ pca_allvars <- c("has_electricity",
                  "floor_material_cat",
                  "wall_material_cat",
                  "roof_material_cat",
+                 "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 "n_sleeping_rooms_pp")
+                 "n_sleeping_rooms_pp_cat",
+                 "educ_years_hh_max_scale")
 
 pca_allvars_noroof <- c("has_electricity",
-                        "has_radio",
                         "has_tv",
                         "has_fridge",
                         "has_motorbike",
                         "has_car",
                         "floor_material_cat",
                         "wall_material_cat",
-                        #"roof_material_cat",
+                        "water_time_to_get_cat",
                         "water_source_piped_dwelling",
                         "flush_toilet_sewer",
-                        "n_sleeping_rooms_pp")
+                        "n_sleeping_rooms_pp_cat",
+                        "educ_years_hh_max_scale")
 
 pca_physicalvars <- c("has_electricity",
                       "floor_material_cat",
@@ -151,19 +187,44 @@ pca_physicalvars_noroof <- c("has_electricity",
                              "floor_material_cat",
                              "wall_material_cat")
 
-pca_nonphysicalvars <- c("has_radio",
-                         "has_tv",
+pca_nonphysicalvars <- c("has_tv",
                          "has_fridge",
                          "has_motorbike",
                          "has_car",
+                         "water_time_to_get_cat",
                          "water_source_piped_dwelling",
                          "flush_toilet_sewer",
-                         "n_sleeping_rooms_pp")
+                         "n_sleeping_rooms_pp_cat",
+                         "educ_years_hh_max_scale")
 
-#### Compute PCA
+##### ** Compute PCA #####
 dhs_all_df$ind_id <- 1:nrow(dhs_all_df)
 
+compute_pca_impute_missing <- function(pca_vars, dhs_all_df){
+  
+  pca_df <- dhs_all_df %>%
+    dplyr::select(all_of(pca_vars)) %>%
+    mutate_all(as.numeric) 
+  
+  # file:///Users/robmarty/Downloads/v70i01.pdf
+  # Estimate number of dimensions; takes a while, so take a random sample
+  N_use <- ceiling(nrow(pca_df)*0.1)
+  
+  ncomp <- pca_df %>%
+    arrange(runif(n())) %>%
+    head(N_use) %>%
+    estim_ncpPCA()
+  
+  #ncomp <- estim_ncpPCA(pca_df)
+  res.imp <- imputePCA(pca_df, ncp = ncomp$ncp)
+  res.pca <- prcomp(res.imp$completeObs, scale = T)
+  out <- res.pca$x[,1]*(-1)
+  
+  return(out)
+}
+
 compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
+  # Compute PCA where removing missing values
   
   pca_df <- dhs_all_df %>% 
     dplyr::select(all_of(c("ind_id", pca_vars))) %>%
@@ -173,7 +234,7 @@ compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
     dplyr::select(-ind_id) %>%
     prcomp(scale = T)
   
-  out_df <- data.frame(pca = pca_obj$x[,1],
+  out_df <- data.frame(pca = pca_obj$x[,1]*(-1),
                        ind_id = pca_df$ind_id)
   
   names(out_df)[1] <- var_name
@@ -181,32 +242,43 @@ compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
   return(out_df)
 }
 
-pca01_df <- compute_pca_rm_na(pca_allvars, "pca_allvars_rmna", dhs_all_df)
-
+## PCA - Removing NAs
 dhs_all_df <- dhs_all_df %>%
-  left_join(pca01_df, by = "ind_id")
+  left_join(compute_pca_rm_na(pca_allvars, "pca_allvars_rmna", dhs_all_df), 
+            by = "ind_id") %>%
+  left_join(compute_pca_rm_na(pca_allvars_noroof, "pca_allvars_noroof_rmna", dhs_all_df), 
+            by = "ind_id") %>%
+  left_join(compute_pca_rm_na(pca_physicalvars, "pca_physicalvars_rmna", dhs_all_df), 
+            by = "ind_id") %>%
+  left_join(compute_pca_rm_na(pca_physicalvars_noroof, "pca_physicalvars_noroof_rmna", dhs_all_df), 
+            by = "ind_id") %>%
+  left_join(compute_pca_rm_na(pca_nonphysicalvars, "pca_nonphysicalvars_rmna", dhs_all_df), 
+            by = "ind_id")
 
+## PCA - Imputing Missing NAs
+dhs_all_df$pca_allvars             <- compute_pca_impute_missing(pca_allvars, dhs_all_df)
+dhs_all_df$pca_allvars_noroof      <- compute_pca_impute_missing(pca_allvars_noroof, dhs_all_df)
+dhs_all_df$pca_physicalvars        <- compute_pca_impute_missing(pca_physicalvars, dhs_all_df)
+dhs_all_df$pca_physicalvars_noroof <- compute_pca_impute_missing(pca_physicalvars_noroof, dhs_all_df)
+dhs_all_df$pca_nonphysicalvars     <- compute_pca_impute_missing(pca_nonphysicalvars, dhs_all_df)
 
+a <- dhs_all_df[dhs_all_df$country_code %in% "IA",]
+for(var in c("pca_allvars_rmna",
+             "pca_allvars_noroof_rmna",
+             "pca_physicalvars_rmna",
+             "pca_physicalvars_noroof_rmna",
+             "pca_nonphysicalvars_rmna",
 
-## Transform
-#dhs_all_df <- dhs_all_df %>%
-  #mutate_at(vars(contains("has")), tidyr::replace_na, 0) %>%
-#  mutate(n_sleeping_rooms_pp = n_hh_members / n_rooms_sleeping)# %>%
-#dplyr::filter(!is.na(n_rooms_sleeping),
-#              !is.na(water_source_piped_dwelling))
-
-#### Make indices
-# PCA with missing values
-# http://juliejosse.com/wp-content/uploads/2018/05/DataAnalysisMissingR.html#pca_with_missing_values
-# https://medium.com/@seb231/principal-component-analysis-with-missing-data-9e28f440ce93
-#pca_1 <- dhs_all_df %>% 
-#  dplyr::select(contains("has"), 
-#                n_sleeping_rooms_pp,
-#                floor_material_not_earth,
-#                water_source_piped_dwelling) %>%
-#  prcomp(scale = T)
-
-#dhs_all_df$asset_pca_1 <- pca_1$x[,1]
+             "pca_allvars",
+             "pca_allvars_noroof",
+             "pca_physicalvars",
+             "pca_physicalvars_noroof",
+             "pca_nonphysicalvars")){
+  print(var)
+  cor.test(dhs_all_df$wealth_index_score, dhs_all_df[[var]]) %>% print()
+  cor.test(a$wealth_index_score, a[[var]]) %>% print()
+  Sys.sleep(2)
+}
 
 # Aggregate --------------------------------------------------------------------
 dhs_all_df_coll <- dhs_all_df %>%
@@ -301,6 +373,17 @@ dhs_all_df_coll <- map_df(unique(dhs_all_df$country_code), function(cc_dhs){
   
   return(df_out)
 }) 
+
+# Country Name -----------------------------------------------------------------
+dhs_all_df_coll$country_name <- countrycode(dhs_all_df_coll$country_code, origin = "iso2c", destination = "country.name")
+
+dhs_all_df_coll <- dhs_all_df_coll %>%
+  mutate(country_name = case_when(
+    country_code == "BU" ~ "Burundi",
+    country_code == "DR" ~ "Dominican Republic",
+    country_code == "IA" ~ "India",
+    country_code == "NM" ~ "Namibia",
+    TRUE ~ country_name))
 
 # Export -----------------------------------------------------------------------
 ## All

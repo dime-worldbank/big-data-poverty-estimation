@@ -5,10 +5,6 @@ INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datase
 # [Load] Survey data -----------------------------------------------------------
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
-survey_df <- survey_df %>%
-  dplyr::select(uid, country_code, urban_rural, year, latitude, longitude, 
-                wealth_index, asset_pca_1)
-
 # [Load] Facebook --------------------------------------------------------------
 #gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
 

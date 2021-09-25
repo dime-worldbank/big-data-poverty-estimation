@@ -65,7 +65,7 @@ load_prep_osm_roads <- function(country_code,
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 survey_df <- survey_df %>%
-  dplyr::select(uid, country_code, year, urban_rural, latitude, longitude) %>%
+  dplyr::select(uid, country_code, year, urban_rural, latitude, longitude, GID_2) %>%
   dplyr::filter(!is.na(latitude)) %>%
   dplyr::mutate(uid = uid %>% as.character)
 
@@ -146,7 +146,9 @@ for(country_code in unique(survey_sf$country_code)){
       #### Load Survey
       survey_sf_i <- survey_sf[survey_sf$country_code %in% country_code,]
       
-      #### Extract density
+      if(country_code == "IA") survey_sf_i <- survey_sf_i[survey_sf_i$GID_2 %in% subset_id_i,]
+      
+      #### Extract distance
       osm_distance_country_i <- lapply(unique(osm_sf$fclass), function(fclass_i){
         print(fclass_i)
         

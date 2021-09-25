@@ -126,7 +126,7 @@ extract_density_fclass_i <- function(fclass_i,
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 survey_df <- survey_df %>%
-  dplyr::select(uid, country_code, year, urban_rural, latitude, longitude) %>%
+  dplyr::select(uid, country_code, year, urban_rural, latitude, longitude, GID_2) %>%
   dplyr::filter(!is.na(latitude)) %>%
   dplyr::mutate(uid = uid %>% as.character)
 
@@ -164,28 +164,28 @@ osm_dir_df <- osm_dir_df %>%
 # India is broken into subsets, so to avoid re-buffering the survey data
 # (which takes a bit of time), just do once
 
-survey_df_IA <- survey_df[survey_df$country_code %in% "IA",]
-
-survey_df_IA <- survey_df_IA %>%
-  dplyr::select(uid, latitude, longitude)
-
-coordinates(survey_df_IA) <- ~longitude+latitude
-crs(survey_df_IA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
-
-print("Buffering IA suvery")
-survey_buff_df_IA <- geo.buffer_chunks(survey_df_IA, r = buffer_m, chunk_size = 100)
-
-survey_buff_sf_IA <- survey_buff_df_IA %>% st_as_sf()
+# survey_df_IA <- survey_df[survey_df$country_code %in% "IA",]
+# 
+# survey_df_IA <- survey_df_IA %>%
+#   dplyr::select(uid, latitude, longitude)
+# 
+# coordinates(survey_df_IA) <- ~longitude+latitude
+# crs(survey_df_IA) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
+# 
+# print("Buffering IA suvery")
+# survey_buff_df_IA <- geo.buffer_chunks(survey_df_IA, r = buffer_m, chunk_size = 100)
+# 
+# survey_buff_sf_IA <- survey_buff_df_IA %>% st_as_sf()
 #survey_buff_sf_agg_IA <- survey_buff_sf_IA %>% st_union()
 
 # 3. Extract density -----------------------------------------------------------
-for(country_code in rev(country_codes_all)){ # country_codes_all
+for(country_code in country_codes_all){ 
   
   #### Country-specifc parameters
   # Lots of India survey locations, so subsetting roads to near a survey location
   # doesn't have as much value added to increase the speed of code.
   if(country_code %in% "IA"){
-    subset_roads_near_buffer <- F
+    subset_roads_near_buffer <- T
   } else{
     subset_roads_near_buffer <- T
   }
@@ -235,25 +235,23 @@ for(country_code in rev(country_codes_all)){ # country_codes_all
       
       #### Prep survey data
       # Subset and buffer
-      if(country_code != "IA"){
-        survey_df_i <- survey_df[survey_df$country_code %in% country_code,]
-        
-        survey_df_i <- survey_df_i %>%
-          dplyr::select(uid, latitude, longitude)
-        
-        coordinates(survey_df_i) <- ~longitude+latitude
-        crs(survey_df_i) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
-        
-        print("Buffering suvery")
-        survey_buff_df_i <- geo.buffer_chunks(survey_df_i, r = buffer_m, chunk_size = 100)
-        #survey_buff_df_i <- survey_buff_df_i %>% spTransform(CRS(cc_epsg))
-        
-        survey_buff_sf_i <- survey_buff_df_i %>% st_as_sf()
-        survey_buff_sf_agg_i <- survey_buff_sf_i %>% st_union()
-      } else{
-        survey_buff_sf_i <- survey_buff_sf_IA 
-        survey_buff_sf_agg_i <- NULL # survey_buff_sf_agg_IA 
-      }
+      survey_df_i <- survey_df[survey_df$country_code %in% country_code,]
+      
+      if(country_code == "IA") survey_df_i <- survey_df_i[survey_df_i$GID_2 %in% subset_id_i,]
+      if(nrow(survey_df_i) %in% 0) next
+      
+      survey_df_i <- survey_df_i %>%
+        dplyr::select(uid, latitude, longitude)
+      
+      coordinates(survey_df_i) <- ~longitude+latitude
+      crs(survey_df_i) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "
+      
+      print("Buffering suvery")
+      survey_buff_df_i <- geo.buffer_chunks(survey_df_i, r = buffer_m, chunk_size = 100)
+      #survey_buff_df_i <- survey_buff_df_i %>% spTransform(CRS(cc_epsg))
+      
+      survey_buff_sf_i <- survey_buff_df_i %>% st_as_sf()
+      survey_buff_sf_agg_i <- survey_buff_sf_i %>% st_union()
       
       #### Extract density
       osm_density_country_i <- lapply(unique(osm_sf$fclass),
@@ -270,4 +268,3 @@ for(country_code in rev(country_codes_all)){ # country_codes_all
 }
 
 
- 

@@ -1,7 +1,5 @@
 # Subset India road network file to points near roads
 
-buffer_m <- 5000
-
 re_extract_if_exists <- F
 
 # Load / Prep Data -------------------------------------------------------------
@@ -40,14 +38,15 @@ for(gid_i in sort(unique(gadm$GID_2))){
     gadm_i$GID_2 <- NULL
     
     ## Buffer
-    gadm_buff_i <- gBuffer(gadm_i, width = 50/111.12, byid=T) 
+    # 161 km is roughly 100 miles
+    gadm_buff_i <- gBuffer(gadm_i, width = 161/111.12, byid=T) 
     
-    gadm_buff_i_box <- rgeos::bbox2SP(bbox = gadm_buff_i %>% bbox(),
-                                      proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
-    gadm_buff_i_box$id <- 1
+    #gadm_buff_i_box <- rgeos::bbox2SP(bbox = gadm_buff_i %>% bbox(),
+    #                                  proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+    #gadm_buff_i_box$id <- 1
     
     ## Restrict Roads
-    osm_df_OVER_gadm <- over_chunks(osm_df, gadm_buff_i, fn_type = "none", chunk_size = 5000)
+    osm_df_OVER_gadm <- over_chunks(osm_df, gadm_buff_i, fn_type = "none", chunk_size = 7000)
     osm_df_in_gadm <- osm_df[osm_df_OVER_gadm$id %in% 1,]
     
     ## Save
@@ -56,4 +55,6 @@ for(gid_i in sort(unique(gadm$GID_2))){
                       paste0("gis_osm_roads_free_1_SUBSET_",gid_i,".Rds")))
   }
 }
+
+
 

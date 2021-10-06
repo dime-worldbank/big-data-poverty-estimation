@@ -262,28 +262,29 @@ dhs_all_df$pca_physicalvars        <- compute_pca_impute_missing(pca_physicalvar
 dhs_all_df$pca_physicalvars_noroof <- compute_pca_impute_missing(pca_physicalvars_noroof, dhs_all_df)
 dhs_all_df$pca_nonphysicalvars     <- compute_pca_impute_missing(pca_nonphysicalvars, dhs_all_df)
 
-a <- dhs_all_df[dhs_all_df$country_code %in% "IA",]
-for(var in c("pca_allvars_rmna",
-             "pca_allvars_noroof_rmna",
-             "pca_physicalvars_rmna",
-             "pca_physicalvars_noroof_rmna",
-             "pca_nonphysicalvars_rmna",
-
-             "pca_allvars",
-             "pca_allvars_noroof",
-             "pca_physicalvars",
-             "pca_physicalvars_noroof",
-             "pca_nonphysicalvars")){
-  print(var)
-  cor.test(dhs_all_df$wealth_index_score, dhs_all_df[[var]]) %>% print()
-  cor.test(a$wealth_index_score, a[[var]]) %>% print()
-  Sys.sleep(2)
+if(F){
+  a <- dhs_all_df[dhs_all_df$country_code %in% "IA",]
+  for(var in c("pca_allvars_rmna",
+               "pca_allvars_noroof_rmna",
+               "pca_physicalvars_rmna",
+               "pca_physicalvars_noroof_rmna",
+               "pca_nonphysicalvars_rmna",
+               
+               "pca_allvars",
+               "pca_allvars_noroof",
+               "pca_physicalvars",
+               "pca_physicalvars_noroof",
+               "pca_nonphysicalvars")){
+    print(var)
+    cor.test(dhs_all_df$wealth_index_score, dhs_all_df[[var]]) %>% print()
+    cor.test(a$wealth_index_score, a[[var]]) %>% print()
+    Sys.sleep(2)
+  }
 }
 
 # Aggregate --------------------------------------------------------------------
 dhs_all_df_coll <- dhs_all_df %>%
-  group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey,
-           latitude, longitude) %>%
+  group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey) %>%
   summarise_if(is.numeric, mean, na.rm=T) %>%
   ungroup()
 
@@ -385,6 +386,10 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
     country_code == "NM" ~ "Namibia",
     TRUE ~ country_name))
 
+# Cleanup Variables ------------------------------------------------------------
+dhs_all_df_coll <- dhs_all_df_coll %>%
+  dplyr::mutate(uid = uid %>% as.character())
+
 # Export -----------------------------------------------------------------------
 ## All
 saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
@@ -393,13 +398,13 @@ write.csv(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets"
 saveRDS(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 write.csv(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-saveRDS(dhs_all_df_coll, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.Rds"))
-write.csv(dhs_all_df_coll, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.csv"), row.names = F)
+#saveRDS(dhs_all_df_coll, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.Rds"))
+#write.csv(dhs_all_df_coll, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.csv"), row.names = F)
 
 ## Geo Only
-df_geoonly <- dhs_all_df_coll %>%
-  dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code, year)
+#df_geoonly <- dhs_all_df_coll %>%
+#  dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code, year)
 
-saveRDS(df_geoonly, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
-write.csv(df_geoonly, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)
+#saveRDS(df_geoonly, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
+#write.csv(df_geoonly, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)
 

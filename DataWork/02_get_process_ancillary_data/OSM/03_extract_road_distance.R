@@ -1,8 +1,6 @@
 # Extract road density and distance to nearest road for each survey location
 # and road type
 
-RE_EXTRACT_IF_EXISTS <- F
-
 # Functions ====================================================================
 load_prep_osm_roads <- function(country_code, 
                                 osm_dir_df, 
@@ -69,6 +67,11 @@ survey_df <- survey_df %>%
   dplyr::filter(!is.na(latitude)) %>%
   dplyr::mutate(uid = uid %>% as.character)
 
+if(SURVEY_NAME %in% "OPM"){
+  survey_df <- survey_df %>%
+    distinct(uid, .keep_all = T)
+}
+
 coordinates(survey_df) <- ~longitude+latitude
 crs(survey_df) <- CRS("+init=epsg:4326")
 survey_sf <- survey_df %>% st_as_sf()
@@ -79,7 +82,7 @@ country_codes_all <- survey_df$country_code %>% unique()
 # Make dataset that has [country_code] and [osm_root_name] (root name of OSM dir)
 
 ## Survey Details
-survey_details_df <- read_xlsx(file.path(data_dir, SURVEY_NAME, "Survey Details", "survey_details.xlsx"))
+survey_details_df <- read_xlsx(file.path(cntry_dtls_dir, "survey_details.xlsx"))
 survey_proj_df <- survey_details_df %>%
   dplyr::select(country_code, epsg_projection)
 
@@ -103,7 +106,10 @@ osm_dir_df <- osm_dir_df %>%
   dplyr::filter(!is.na(country_code))
 
 # 3. Extract density -----------------------------------------------------------
-for(country_code in unique(survey_sf$country_code)){
+country_codes_all <- unique(survey_sf$country_code)
+country_codes_all <- country_codes_all[country_codes_all != "GY"]
+
+for(country_code in country_codes_all){
   
   #### Load road files 
   # Sometimes we split road files into subsets. So either load the subsets or 
@@ -135,7 +141,7 @@ for(country_code in unique(survey_sf$country_code)){
                           paste0("osm_roaddistance_", country_code, "_subset_",subset_id_i,".Rds"))
     print(OUT_PATH)
     
-    if(RE_EXTRACT_IF_EXISTS | !file.exists(OUT_PATH)){
+    if(REPLACE_IF_EXTRACTED | !file.exists(OUT_PATH)){
       
       #### Load OSM
       osm_sf <- load_prep_osm_roads(country_code,

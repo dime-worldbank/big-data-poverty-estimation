@@ -6,10 +6,18 @@ INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datase
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
 # [Load] Facebook --------------------------------------------------------------
-#gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
+fb_prop_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau_prop.Rds"))
+
+fb_df <- fb_df %>%
+  rename_at(vars(-uid), ~ paste0("fb_", .))
+
+fb_prop_df <- fb_prop_df %>%
+  rename_at(vars(-uid), ~ paste0("fb_prop_", .))
 
 # [Load] OSM -------------------------------------------------------------------
-#gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
+osm_road_df <- readRDS(file.path(INV_DATA_DIR, "osm_road.Rds"))
 
 # [Load] CNN Features ----------------------------------------------------------
 #gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
@@ -17,7 +25,10 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
 
-# [Load] Satellite data from GEE ---------------------------------------
+# [Load] WorldClim -------------------------------------------------------------
+wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
+
+# [Load] Satellite data from GEE -----------------------------------------------
 #file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
 
 ##### ** VIIRS #####
@@ -25,14 +36,14 @@ viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
                               "viirs_ubuff2500_rbuff2500.Rds"))
 
 viirs_df <- viirs_df %>%
-  rename_at(vars(-uid), ~ paste0("viirs_", .))
+  rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
 
 ##### ** Landsat 8 #####
 l8_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                            "l8_ubuff2500_rbuff2500.Rds"))
 
 l8_df <- l8_df %>%
-  rename_at(vars(-uid), ~ paste0("l8_", .))
+  rename_at(vars(-uid, -year), ~ paste0("l8_", .))
 
 ##### ** World pop #####
 wp10km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -43,13 +54,15 @@ wp10km_df <- wp10km_df %>%
 
 ##### ** Elevation/Slope #####
 elev_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                             "elevation_ubuff5000_rbuff5000.Rds"))
+                             "elevation_ubuff5000_rbuff5000.Rds")) %>%
+  dplyr::rename(elev = mean)
 
 slope_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "slope_ubuff5000_rbuff5000.Rds"))
+                              "slope_ubuff5000_rbuff5000.Rds")) %>%
+  dplyr::rename(slope = mean)
 
-elevslope <- full_join(elev_df, slope_df, by = "uid") %>%
-  rename_at(vars(-uid), ~ paste0("elevslope_", .))
+elevslope <- full_join(elev_df, slope_df, by = c("uid", "year")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("elevslope_", .))
 
 ##### ** Global human modification index #####
 gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -68,8 +81,8 @@ pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
   str_subset(poll_prefix) %>%
   str_subset("2500") %>%
   lapply(readRDS) %>%
-  reduce(full_join, by = "uid") %>%
-  rename_at(vars(-uid), ~ paste0("pollution_", .))
+  reduce(full_join, by = c("uid", "year")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("pollution_", .))
 
 ## Check for and remove NAs
 for(var in names(pollution_df)){
@@ -86,12 +99,32 @@ pollution_df <- pollution_df %>%
 
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 
-                          gc_df, viirs_df, l8_df, wp10km_df, elevslope, gbmod_df, pollution_df) %>%
+                          fb_df, 
+                          fb_prop_df, 
+                          osm_poi_df, 
+                          osm_road_df) %>%
   reduce(full_join, by = "uid")
+
+survey_ancdata_df <- list(survey_ancdata_df,
+                          gc_df, 
+                          wc_df, 
+                          viirs_df, 
+                          l8_df, 
+                          wp10km_df, 
+                          elevslope, 
+                          gbmod_df, 
+                          pollution_df) %>%
+  reduce(full_join, by = c("uid", "year"))
+
+if(F){
+  survey_ancdata_df <- list(survey_df, 
+                            gc_df, osm_poi_df, osm_road_df) %>%
+    reduce(full_join, by = "uid")
+}
 
 # [Export] Data ----------------------------------------------------------------
 saveRDS(survey_ancdata_df, 
-        file.path(data_dir, SURVEY_NAME, "FinalData", "survey_alldata.Rds"))
+        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
 
 
 

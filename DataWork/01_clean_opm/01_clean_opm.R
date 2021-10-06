@@ -3,11 +3,14 @@
 # Clean Oxford Policy Management (OPM) survey data. Create Household Level 
 # dataframe with relevant socioeconomic variables.
 
+set.seed(42)
+
 # Load Data --------------------------------------------------------------------
 bisp_plist <- read_dta(file.path(opm_dir, "RawData - Deidentified", 'bisp_combined_plist.dta'))
 bisp_povscore <- read_dta(file.path(opm_dir, "RawData - Deidentified", 'UID_pscores.dta'))
 
-bisp_df <- merge(bisp_plist, bisp_povscore, by=c("period", "uid"))
+bisp_df <- bisp_plist %>%
+  left_join(bisp_povscore, by = c("period", "uid"))
 
 # Clean Main Data --------------------------------------------------------------
 names(bisp_df) <- names(bisp_df) %>% tolower
@@ -32,7 +35,8 @@ bisp_df <- bisp_df %>%
                    pscores = mean(pscores, na.rm=T),
                    N_adults = sum(adult %in% 1),
                    N_children = sum(adult %in% 0)) %>%
-  mutate(year = period %>% as_factor %>% as.character %>% as.numeric,
+  ungroup() %>%
+  mutate(year = period %>% haven::as_factor() %>% as.character %>% as.numeric,
          hh_size = N_adults + N_children) %>%
   as.data.frame()
 
@@ -43,17 +47,17 @@ asset_df <- read_dta(file.path(opm_dir, "RawData - Deidentified", 'male', '06_Mo
 #### Prep Data
 asset_df <- asset_df %>%
   dplyr::mutate(asset = LLN %>% 
-                  as_factor() %>% 
+                  haven::as_factor() %>% 
                   as.character() %>%
                   tolower() %>%
                   str_replace_all("[[:punct:]]", "") %>%
                   str_replace_all(" ", "_") %>%
                   str_replace_all("__", "_"),
                 own = LNONE %>% 
-                  as_factor() %>% 
+                  haven::as_factor() %>% 
                   as.character(),
                 year = period %>% 
-                  as_factor %>% 
+                  haven::as_factor() %>% 
                   as.character %>% 
                   as.numeric) %>%
   dplyr::select(uid, year, asset, own)
@@ -135,15 +139,16 @@ consum_all <- bind_rows(consum_fm_a,
 ## Total Consumption
 consum_sum_all <- consum_all %>%
   dplyr::select(uid, period, v11, v21, v31, v41, days) %>%
-  mutate_if(is.numeric, ~replace_na(., 0)) %>%
-  mutate(consumption_total = v11 + v21 + v31 + v41) %>%
+  dplyr::mutate_if(is.numeric, ~ tidyr::replace_na(., 0)) %>%
+  dplyr::mutate(consumption_total = v11 + v21 + v31 + v41) %>%
   
   ## Adjust comsumption based on days reported
-  mutate(consumption_total = consumption_total*(30/days)) %>%
+  dplyr::mutate(consumption_total = consumption_total*(30/days)) %>%
   
   ## Aggregate
-  group_by(uid, period) %>%
-  dplyr::summarise(consumption_total = sum(consumption_total)) 
+  dplyr::group_by(uid, period) %>%
+  dplyr::summarise(consumption_total = sum(consumption_total)) %>%
+  ungroup()
 
 bisp_df <- merge(bisp_df, consum_sum_all, by = c("uid", "period"),
                  all.x=T, all.y=T)
@@ -195,18 +200,50 @@ bisp_df <- bisp_df %>%
            str_detect(years_surveyed, "2014") &
            str_detect(years_surveyed, "2016"))
 
-# Merge in Coordinates & GADM Data ---------------------------------------------
-#### Coords
-opm_coords <- read.csv(file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "GPS_uid_crosswalk.csv"))
+# Merge in Coordinates ---------------------------------------------------------
+## Load Data
+opm_coords <- read_dta(file.path(secure_dir, "Data", "OPM", "RawData - PII", "GPS_uid_crosswalk.dta"))
+pak_adm0 <- readRDS(file.path(gadm_dir, "RawData", "gadm36_PAK_0_sp.rds"))
 
+## To crs:4326
+opm_coords <- opm_coords %>%
+  filter(!is.na(GPSN)) %>%
+  
+  mutate(latitude = get_lat_lon(GPSN),
+         longitude = get_lat_lon(GPSE),
+         uid = uid %>% as.numeric()) %>%
+  
+  dplyr::select(uid, latitude, longitude) %>%
+  
+  filter(latitude <= 100,
+         longitude <= 100)
+
+## Restrict to Coordinates in Pakistan & Tile ID
+opm_coords_sdf <- opm_coords
+coordinates(opm_coords_sdf) <- ~longitude+latitude
+crs(opm_coords_sdf) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+dist_to_pak <- gDistance(opm_coords_sdf, pak_adm0, byid=T) %>% as.vector()
+opm_coords <- opm_coords[dist_to_pak == 0,]
+
+## Merge
 bisp_df <- bisp_df %>%
   left_join(opm_coords, by = "uid")
 
-#### GADM
+# Merge in GADM ----------------------------------------------------------------
 pak_adm3 <- readRDS(file.path(gadm_dir, "RawData", 'gadm36_PAK_3_sp.rds'))
 
+## Add within country fold at ADM2 level
+pak_adm2_df <- pak_adm3@data %>%
+  distinct(GID_2)
+
+within_country_fold <- rep_len(1:5, length.out = nrow(pak_adm2_df)) %>% sample()
+pak_adm2_df$within_country_fold <- paste0("PK_", within_country_fold)
+
+pak_adm3 <- merge(pak_adm3, pak_adm2_df, by = "GID_2")
+
 bisp_df_geo <- bisp_df %>%
-  dplyr::select(uid, latitude, longitude, tile_id) %>%
+  dplyr::select(uid, latitude, longitude) %>%
   dplyr::filter(!is.na(latitude)) %>%
   distinct()
 
@@ -215,38 +252,110 @@ crs(bisp_df_geo) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs
 
 bisp_df_geo_OVER_pak_adm3 <- over(bisp_df_geo, pak_adm3)
 bisp_df_geo_OVER_pak_adm3$uid <- bisp_df_geo$uid 
-bisp_df_geo_OVER_pak_adm3$tile_id <- bisp_df_geo$tile_id 
 
 bisp_df_geo_OVER_pak_adm3 <- bisp_df_geo_OVER_pak_adm3 %>%
-  dplyr::select(uid, tile_id,
+  dplyr::select(uid,
+                within_country_fold,
                 GID_1, NAME_1,
                 GID_2, NAME_2,
-                GID_3, NAME_3) %>%
-  dplyr::rename(gadm_id_1 = GID_1,
-                gadm_id_2 = GID_2,
-                gadm_id_3 = GID_3,
-                gadm_name_1 = NAME_1,
-                gadm_name_2 = NAME_2,
-                gadm_name_3 = NAME_3)
+                GID_3, NAME_3) 
 
 bisp_df <- left_join(bisp_df,
                      bisp_df_geo_OVER_pak_adm3,
                      by = "uid")
 
+# Aggregate to PSU -------------------------------------------------------------
+bisp_df$uid <- paste0(bisp_df$psu, "_", bisp_df$GID_3)
+
+bisp_mean_df <- bisp_df %>%
+  dplyr::group_by(uid, locality, year, survey_round,
+                  GID_3, GID_2, GID_1, 
+                  NAME_3, NAME_2, NAME_1,
+                  within_country_fold) %>%
+  dplyr::summarise_at(vars(pscores, 
+                           income_last_month, 
+                           consumption_total,
+                           consumption_adult_equiv,
+                           contains("asset_")), mean, na.rm = T)
+
+bisp_latlon_df <- bisp_df %>%
+  dplyr::group_by(uid) %>%
+  dplyr::summarise_at(vars(latitude, longitude), median, na.rm = T)
+
+bisp_sum_df <- bisp_df %>%
+  dplyr::group_by(uid, locality, year, survey_round) %>%
+  mutate(N = 1) %>%
+  dplyr::summarise_at(vars(N), sum, na.rm = T)
+
+bisp_agg_df <- bisp_mean_df %>%
+  left_join(bisp_latlon_df, by = c("uid")) %>%
+  left_join(bisp_sum_df, by = c("uid", "locality", "year", "survey_round")) %>%
+  dplyr::rename(urban_rural = locality) %>%
+  dplyr::mutate(urban_rural = urban_rural %>% 
+                  haven::as_factor() %>% 
+                  as.character() %>% 
+                  substring(1,1),
+                country_code = "PK") 
+
+## Remove if no coordinates
+bisp_agg_df <- bisp_agg_df %>%
+  dplyr::filter(!is.na(latitude),
+                !is.na(longitude))
+
+bisp_agg_df <- bisp_agg_df %>%
+  ungroup()
+
+## Add country name
+bisp_agg_df$country_name <- "Pakistan"
+
+# CHECK DIST BETWEEN PSUs
+if(F){
+  df <- map_df(unique(bisp_df$psu_gadm3), function(i){
+    bisp_df_i <- bisp_df[bisp_df$psu_gadm3 %in% i,]
+    
+    lat_max <- max(bisp_df_i$latitude)
+    lon_max <- max(bisp_df_i$longitude)
+    
+    lat_min <- min(bisp_df_i$latitude)
+    lon_min <- min(bisp_df_i$longitude)
+    
+    d <- sqrt((lat_max - lat_min)^2 + (lon_max - lon_min)^2)*111.12
+    
+    return(data.frame(psu = i,
+                      dist = d))
+  })
+  
+  mean(df$dist < 10)
+  
+  leaflet() %>%
+    addTiles() %>%
+    #addCircles(data = bisp_df[bisp_df$psu != 1,], color = "red") %>%
+    addCircles(data = bisp_df[bisp_df$psu_gadm3 %in% "57PAK.7.8.4_1",])  
+}
+
+
 # Export -----------------------------------------------------------------------
-## Without Lat/Lon
-saveRDS(bisp_df %>% 
-          dplyr::select(-c(latitude, longitude)), 
-        file.path(opm_dir, "FinalData", "Individual Datasets", "opm_socioeconomic.Rds"))
+saveRDS(bisp_agg_df, file.path(opm_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+write.csv(bisp_agg_df, file.path(opm_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-write.csv(bisp_df %>% 
-            dplyr::select(-c(latitude, longitude)), 
-          file.path(opm_dir, "FinalData", "Individual Datasets", "opm_socioeconomic.csv"), row.names = F)
+saveRDS(bisp_agg_df, file.path(gdrive_dir, "Data", "OPM", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+write.csv(bisp_agg_df, file.path(gdrive_dir, "Data", "OPM", "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-## With Lat/Lon
-saveRDS(bisp_df, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "opm_socioeconomic_geo.Rds"))
 
-write.csv(bisp_df, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "opm_socioeconomic_geo.csv"), row.names = F)
+
+# ## Without Lat/Lon
+# saveRDS(bisp_df %>% 
+#           dplyr::select(-c(latitude, longitude)), 
+#         file.path(opm_dir, "FinalData", "Individual Datasets", "opm_socioeconomic.Rds"))
+# 
+# write.csv(bisp_df %>% 
+#             dplyr::select(-c(latitude, longitude)), 
+#           file.path(opm_dir, "FinalData", "Individual Datasets", "opm_socioeconomic.csv"), row.names = F)
+# 
+# ## With Lat/Lon
+# saveRDS(bisp_df, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "opm_socioeconomic_geo.Rds"))
+# 
+# write.csv(bisp_df, file.path(secure_file_path, "Data", "OPM", "FinalData - PII", "opm_socioeconomic_geo.csv"), row.names = F)
 
 
 

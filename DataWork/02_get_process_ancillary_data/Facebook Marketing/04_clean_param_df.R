@@ -1,11 +1,10 @@
 # Merge Data Extracted from Facebook API
 
 # Load Data ----------------------------------------------------------------------
-SURVEY_NAME = 'DHS'
 param_df <- read.csv(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.csv"), stringsAsFactors = F)
 
-behaviors_df <- read.csv(file.path(data_dir, "Facebook", "FinalData", "interests_demographics_behaviors_ids", "behaviors.csv"), stringsAsFactors = F)
-interests_df <- read.csv(file.path(data_dir, "Facebook", "FinalData", "interests_demographics_behaviors_ids", "interests.csv"), stringsAsFactors = F)
+behaviors_df <- read.csv(file.path(data_dir, "Facebook Marketing", "FinalData", "interests_demographics_behaviors_ids", "behaviors.csv"), stringsAsFactors = F)
+interests_df <- read.csv(file.path(data_dir, "Facebook Marketing", "FinalData", "interests_demographics_behaviors_ids", "interests.csv"), stringsAsFactors = F)
 
 # Add behavior/interests names -------------------------------------------------
 behaviors_df <- behaviors_df %>% mutate(id = id %>% as.character())

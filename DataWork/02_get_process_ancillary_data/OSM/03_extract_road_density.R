@@ -2,7 +2,6 @@
 # and road type
 
 buffer_m = 5000
-RE_EXTRACT_IF_EXISTS <- F
 
 # Functions ====================================================================
 load_prep_osm_roads <- function(country_code, 
@@ -130,6 +129,11 @@ survey_df <- survey_df %>%
   dplyr::filter(!is.na(latitude)) %>%
   dplyr::mutate(uid = uid %>% as.character)
 
+if(SURVEY_NAME %in% "OPM"){
+  survey_df <- survey_df %>%
+    distinct(uid, .keep_all = T)
+}
+
 country_codes_all <- survey_df$country_code %>% unique()
 country_codes_all <- country_codes_all[country_codes_all != "GY"]
 
@@ -137,7 +141,7 @@ country_codes_all <- country_codes_all[country_codes_all != "GY"]
 # Make dataset that has [country_code] and [osm_root_name] (root name of OSM dir)
 
 ## Survey Details
-survey_details_df <- read_xlsx(file.path(data_dir, SURVEY_NAME, "Survey Details", "survey_details.xlsx"))
+survey_details_df <- read_xlsx(file.path(cntry_dtls_dir, "survey_details.xlsx"))
 survey_proj_df <- survey_details_df %>%
   dplyr::select(country_code, epsg_projection)
 
@@ -220,7 +224,7 @@ for(country_code in country_codes_all){
                           paste0("osm_roaddensity_", buffer_m, "m_", country_code, "_subset_",subset_id_i,".Rds"))
     print(OUT_PATH)
     
-    if(RE_EXTRACT_IF_EXISTS | !file.exists(OUT_PATH)){
+    if(REPLACE_IF_EXTRACTED | !file.exists(OUT_PATH)){
       
       #### Grab projection for country i
       #epsg_num <- survey_proj_df$epsg_projection[survey_proj_df$country_code %in% country_code]

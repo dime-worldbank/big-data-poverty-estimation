@@ -5,7 +5,19 @@ df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
                      "fb_mau_individual_datasets") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
-  map_df(readRDS)
+  map_df(function(path){
+    df <- readRDS(path) 
+    
+    # If there was an error, example incorrect location, won't have uid
+    if(is.null(df$uid)){
+      df_out <- data.frame(NULL)
+    } else{
+      df_out <- df %>%
+        dplyr::select(uid, param_id, estimate_dau, estimate_mau)
+    }
+    
+    return(df_out)  
+  })
 
 # To Wide ----------------------------------------------------------------------
 df_wide <- df_long %>%
@@ -31,14 +43,15 @@ saveRDS(df_wide_prop, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual 
 write.csv(df_wide_prop, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_dau_mau_prop.csv"), row.names = F)
 
 # Indicates parameters for each "param_version"
-param_df <- df_long %>%
-  dplyr::select(-c(estimate_dau, estimate_mau, estimate_ready, latitude, longitude, api_call_time_utc)) %>%
-  dplyr::distinct(param_id, .keep_all = T) %>%
-  dplyr::select(param_id, everything())
-
-saveRDS(param_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.Rds"))
-write.csv(param_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.csv"), row.names = F)
-
+if(F){
+  param_df <- df_long %>%
+    dplyr::select(-c(estimate_dau, estimate_mau, latitude, longitude, api_call_time_utc)) %>%
+    dplyr::distinct(param_id, .keep_all = T) %>%
+    dplyr::select(param_id, everything())
+  
+  saveRDS(param_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.Rds"))
+  write.csv(param_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.csv"), row.names = F)
+}
 
 
 

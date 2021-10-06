@@ -6,7 +6,7 @@
 # scraping data.
 
 # Setup Credentials ------------------------------------------------------------
-api_keys <- read.csv(file.path(webscraping_api_filepath, "api_keys.csv"), stringsAsFactors=F) %>%
+api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",
          Details == "robmarty3@gmail.com")
 
@@ -44,23 +44,23 @@ behaviors_df <- GET(
 
 # Export -----------------------------------------------------------------------
 saveRDS(demographics_df,
-        file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+        file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                   "demographics.Rds"))
 write.csv(demographics_df %>% dplyr::select(id, name, type, description, audience_size),
-        file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+        file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                   "demographics.csv"), row.names = F)
 
 saveRDS(interests_df,
-        file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+        file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                   "interests.Rds"))
 write.csv(interests_df %>% dplyr::select(id, name, type, audience_size),
-          file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+          file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                     "interests.csv"), row.names = F)
 
 saveRDS(behaviors_df,
-        file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+        file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                   "behaviors.Rds"))
 write.csv(behaviors_df %>% dplyr::select(id, name, description, audience_size),
-          file.path(project_file_path, "Data", "Facebook",  "FinalData", "interests_demographics_behaviors_ids",
+          file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                     "behaviors.csv"), row.names = F)
 

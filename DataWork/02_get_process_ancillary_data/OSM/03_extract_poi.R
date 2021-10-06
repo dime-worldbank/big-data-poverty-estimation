@@ -1,10 +1,6 @@
 # Extract number of POIs and distance to nearest POIs for each survey
 # location and type of POI
 
-## PARAMETERS
-SURVEY_NAME <- "DHS"
-RE_EXTRACT_IF_EXISTS <- F
-
 # Define functions -------------------------------------------------------------
 load_osm_poi <- function(country_code, osm_dir_df){
   
@@ -148,13 +144,19 @@ survey_df <- survey_df %>%
   dplyr::select(uid, country_code, year, urban_rural, latitude, longitude) %>%
   dplyr::filter(!is.na(latitude))
 
+if(SURVEY_NAME %in% "OPM"){
+  survey_df <- survey_df %>%
+    distinct(uid, .keep_all = T)
+}
+
 country_codes_all <- survey_df$country_code %>% unique()
+country_codes_all <- country_codes_all[country_codes_all != "GY"]
 
 # Load country_code to OSM dir data --------------------------------------------
 # Make dataset that has [country_code] and [osm_root_name] (root name of OSM dir)
 
 ## Survey Details
-survey_details_df <- read_xlsx(file.path(data_dir, SURVEY_NAME, "Survey Details", "survey_details.xlsx"))
+survey_details_df <- read_xlsx(file.path(cntry_dtls_dir, "survey_details.xlsx"))
 survey_details_df <- survey_details_df %>%
   dplyr::select(country_code, osm_root_name)
 
@@ -178,14 +180,14 @@ osm_dir_df <- osm_dir_df %>%
 
 #### N POI
 for(buffer_i in c(5000)){
-  for(country_code_i in osm_dir_df$country_code){
+  for(country_code_i in country_codes_all){
     print(paste0("N POI: ", country_code_i, " - ", buffer_i, " =============="))
     
     OUT_PATH <- file.path(data_dir, SURVEY_NAME, 
                           "FinalData", "Individual Datasets", "osm", "poi", 
                           paste0("osm_",country_code_i,"_n_poi_",buffer_i,"m_buff.Rds"))
     
-    if(!file.exists(OUT_PATH) | RE_EXTRACT_IF_EXISTS){
+    if(!file.exists(OUT_PATH) | REPLACE_IF_EXTRACTED){
       survey_df_i <- extract_n_poi(buffer_i, country_code_i, survey_df, osm_dir_df)
       saveRDS(survey_df_i, OUT_PATH)
     }
@@ -193,14 +195,14 @@ for(buffer_i in c(5000)){
 }
 
 #### Dist POI
-for(country_code_i in osm_dir_df$country_code){
+for(country_code_i in country_codes_all){
   print(paste0("DIST POI: ", country_code_i, " =============================="))
   
   OUT_PATH <- file.path(data_dir, SURVEY_NAME, 
                         "FinalData", "Individual Datasets", "osm", "poi", 
                         paste0("osm_",country_code_i,"_dist_poi_buff.Rds"))
   
-  if(!file.exists(OUT_PATH) | RE_EXTRACT_IF_EXISTS){
+  if(!file.exists(OUT_PATH) | REPLACE_IF_EXTRACTED){
     survey_df_i <- extract_dist_poi(country_code_i, survey_df, osm_dir_df)
     saveRDS(survey_df_i, OUT_PATH)
   }

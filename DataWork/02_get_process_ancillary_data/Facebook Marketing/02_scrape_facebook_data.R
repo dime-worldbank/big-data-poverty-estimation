@@ -16,28 +16,16 @@
 # https://developers.facebook.com/docs/marketing-api/audiences/reference/advanced-targeting
 # https://github.com/SofiaG1l/Using_Facebook_API
 
-# MAIN PARAMETERS
-SURVEY_NAME   <- "DHS"
-
-# SCRAPING PARAMETERS
-# Determine if want to skip locations where data has already been scraped. Also,
-# can decide if want to scrape only locations with a uid that is even or odd,
-# or scrape the UIDs in reverse. These second parameters are useful if want
-# to use multiple API keys and run multiple instances of this script concurrently
-# (in short, to help divide and conquer which locations are scraped).
-SKIP_IF_ALREAD_SCRAPED <- T
-
-# If only want to scrape locations where the survey uid is even, odd or all.
-SCRAPE_EVEN_ODD <- "all" # "even", "odd", "all". 
-
-# If want to scrape APIs in reverse order
-change_order <- "" # "reverse", "start_middle_to_front", "start_middle_to_back"
-
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 if(SURVEY_NAME %in% "DHS"){
   df <- df[df$most_recent_survey %in% T,]
+}
+
+if(SURVEY_NAME %in% "OPM"){
+  df <- df %>%
+    distinct(uid, .keep_all = T)
 }
 
 # Setup Credentials ------------------------------------------------------------
@@ -258,7 +246,7 @@ make_query_location_i <- function(param_i,
                     "}")
     
     query_val <- url(query) %>% fromJSON
-
+    
     #### If there is no error
     if(is.null(query_val$error)){
       
@@ -274,10 +262,10 @@ make_query_location_i <- function(param_i,
       query_val_df$uid <- coords_df$uid
       query_val_df$latitude   <- coords_df$latitude
       query_val_df$longitude  <- coords_df$longitude
-
+      
       ## Add time
       query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
-
+      
       ## Print result and sleep (sleep needed b/c of rate limiting)
       print(paste0(param_i,": ", coords_df$uid, " ", query_val_df$estimate_mau," ", query_val_df$estimate_dau, " ", API_KEY_EMAIL))
       Sys.sleep(sleep_time) # really just need 18; 20 just in case
@@ -304,7 +292,7 @@ make_query_location_i <- function(param_i,
       } else{
         query_val_df <- NULL
       }
-    
+      
     }
     
     query_val_df
@@ -339,20 +327,6 @@ sleep_time_after_loc <- sleep_time_after_loc / N_KEYS
 country_code_all <- df$country_code %>% unique()
 country_code_all <- country_code_all[!(country_code_all %in% c("ID"))]
 
-## Restrict dataset to script by whether uid is even or odd
-odd <- df$uid %>% str_sub(-2,-1) %>% as.numeric() %>% `%%`(2)
-
-if(SCRAPE_EVEN_ODD %in% "odd"){
-  df <- df[odd %in% 1,]
-}
-
-if(SCRAPE_EVEN_ODD %in% "even"){
-  df <- df[odd %in% 0,]
-}
-
-## UIDs to scrape
-KEY_i  <- 1
-
 # Repeat in case missed some due to error, so will go back and check
 country_code_all_rep <- c(country_code_all,
                           country_code_all,
@@ -361,25 +335,14 @@ country_code_all_rep <- c(country_code_all,
                           country_code_all) %>% 
   sort()
 
+## UIDs to scrape
+KEY_i  <- 1
+
 for(country_code_i in country_code_all_rep){
   
   df_c <- df[df$country_code %in% country_code_i,]
   
   country_uids <- unique(df_c$uid) %>% as.character()
-  
-  if(change_order == "reverse") country_uids <- rev(country_uids)
-  
-  if(change_order == "start_middle_to_front"){
-    mid_point <- floor(length(country_uids)/2)
-    country_uids <- c(rev(country_uids[1:mid_point]),
-                      rev(country_uids[(mid_point+1):length(country_uids)]))
-  }
-  
-  if(change_order == "start_middle_to_back"){
-    mid_point <- floor(length(country_uids)/2)
-    country_uids <- c(rev(country_uids[(mid_point+1):length(country_uids)]),
-                      rev(country_uids[1:mid_point]))
-  }
   
   for(uid_i in country_uids){
     
@@ -391,9 +354,7 @@ for(country_code_i in country_code_all_rep){
     OUT_PATH <- file.path(dropbox_dir, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
                           "fb_mau_individual_datasets", paste0("fb_",uid_i,"_radius",RADIUS_KM,"km.Rds"))
     
-    if(SKIP_IF_ALREAD_SCRAPED & file.exists(OUT_PATH)){
-      print(paste("Skip", uid_i))
-    } else{
+    if(REPLACE_IF_EXTRACTED | !file.exists(OUT_PATH)){
       
       ## Set keys
       print(KEY_i)

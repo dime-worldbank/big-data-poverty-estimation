@@ -97,6 +97,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         survey_uid = survey_df['uid'].iloc[i]
         #folder_name = survey_df['tf_folder_name'].iloc[i]
         viirs_ntl_group = int(survey_df['ntl_group'].iloc[i])
+        survey_year_i = int(survey_df['year'].iloc[i])
         uid_i = survey_df['uid'].iloc[i].encode()
         
         d_f_i = daytime_f[i]['properties']
@@ -148,6 +149,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         feature = {
             'uid' : _bytes_feature(uid_i),
             'viirs_ntl_group' : _int64_feature(viirs_ntl_group),
+            'year' : _int64_feature(survey_year_i),
             'b_ntl': _bytes_feature(bntl_np_tf),
             'b_rgb': _bytes_feature(brgb_np_tf),
             'b_ndvi': _bytes_feature(bndvi_np_tf),

@@ -3,21 +3,6 @@
 # Load data --------------------------------------------------------------------
 survey_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
-# Prep data --------------------------------------------------------------------
-survey_df <- survey_df %>%
-  dplyr::mutate(country_name = case_when(
-    country_code == "BD" ~ "Bangladesh",
-    country_code == "IA" ~ "India",
-    country_code == "KH" ~ "Cambodia",
-    country_code == "KY" ~ "Kyrgyzstan",
-    country_code == "MM" ~ "Myanmar",
-    country_code == "NP" ~ "Nepal",
-    country_code == "PH" ~ "Philippines",
-    country_code == "PK" ~ "Pakistan",
-    country_code == "TJ" ~ "Tajikistan",
-    country_code == "TL" ~ "Timor Leste"
-  ))
-
 # Figure -----------------------------------------------------------------------
 #### Basemap
 shift <- 1
@@ -27,7 +12,7 @@ basemap <- get_stamenmap(bbox = c(left = min(survey_df$longitude) - shift,
                                   top = max(survey_df$latitude) + shift),
                          maptype = "toner-lite", 
                          crop = FALSE,
-                         zoom = 5)
+                         zoom = 4)
 
 #### Figure
 p <- ggmap(basemap) +

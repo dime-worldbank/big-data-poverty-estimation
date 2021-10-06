@@ -1,18 +1,12 @@
 # Extract WorldClim Variables
 
-replace_if_extracted <- F
-
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 # Function to Extract Globcover ------------------------------------------------
 #country_code_i <- "ZM"
 #buffer_m <- 2500
-extract_worldclim <- function(country_code_i, buffer_m){
-  
-  ## Subset to country and grab year
-  df_country <- df[df$country_code %in% country_code_i,]
-  year_i <- df_country$year[1]
+extract_worldclim <- function(df_country, year_i, buffer_m){
   
   ## Project, buffer, then back to WGS
   # Go back to WGS so don't have to project larger raster
@@ -34,27 +28,34 @@ extract_worldclim <- function(country_code_i, buffer_m){
   }
   
   df_out <- df_country@data %>%
-    dplyr::select(uid, contains("worldclim_"))
+    dplyr::select(uid, year, contains("worldclim_"))
   
   return(df_out)
 }
 
 # Implement Function and Export ------------------------------------------------
 for(buffer_i in c(2500)){
-  for(country_i in sort(unique(df$country_code))){
-    print(paste0(country_i, " - ", buffer_i))
+  for(country_i in unique(df$country_code)){
     
-    OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
-                          "worldclim", 
-                          paste0("worldclim_", country_i, "_", buffer_i, "m.Rds"))
+    df_country <- df[df$country_code %in% country_i,]
     
-    if(replace_if_extracted | !file.exists(OUT_PATH)){
-      df_glob_i <- extract_worldclim(country_i, buffer_i)
-      saveRDS(df_glob_i, OUT_PATH)
+    for(year_i in unique(df_country$year)){
+      print(paste0(country_i, " - ", buffer_i, " - ", year_i))
+      
+      OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
+                            "worldclim", 
+                            paste0("worldclim_", country_i, "_", buffer_i, "m_",year_i,".Rds"))
+      
+      if(REPLACE_IF_EXTRACTED | !file.exists(OUT_PATH)){
+        df_wc_i <- extract_worldclim(df_country[df_country$year %in% year_i,], 
+                                       year_i,
+                                       buffer_i)
+        saveRDS(df_wc_i, OUT_PATH)
+      }
+      
     }
   }
 }
-
 
 
 

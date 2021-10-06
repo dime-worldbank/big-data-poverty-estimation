@@ -1,32 +1,21 @@
 # Extract Globcover Variables
 
-replace_if_extracted <- F
-
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 # Function to Extract Globcover ------------------------------------------------
 #country_code_i <- "IA"
 #buffer_m <- 5000
-extract_globcover <- function(country_code_i, buffer_m){
-  
-  ## Subset to country and grab year
-  df_country <- df[df$country_code %in% country_code_i,]
-  year_i <- df_country$year[1]
+extract_globcover <- function(df_country, 
+                              year_i,
+                              buffer_m){
   
   ## Project, buffer, then back to WGS
   # Go back to WGS so don't have to project larger raster
-  UTM_PROJ <- define_country_proj(country_code_i)
-  
   coordinates(df_country) <- ~longitude+latitude
   crs(df_country) <- CRS("+init=epsg:4326")
   
   df_country <- geo.buffer_chunks(df_country, r = buffer_m, chunk_size = 100)
-  
-  #df_country <- df_country %>%
-  #  spTransform(CRS(UTM_PROJ)) %>%
-  #  gBuffer(width = buffer_m, byid = T) %>%
-  #  spTransform(CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
   
   ## Load globcover
   if(year_i > 2018) year_i <- 2018
@@ -74,7 +63,7 @@ extract_globcover <- function(country_code_i, buffer_m){
   }
   
   df_out <- df_country@data %>%
-    dplyr::select(uid, contains("gc_"))
+    dplyr::select(uid, year, contains("gc_"))
   
   return(df_out)
 }
@@ -82,15 +71,23 @@ extract_globcover <- function(country_code_i, buffer_m){
 # Implement Function and Export ------------------------------------------------
 for(buffer_i in c(2000, 2500)){
   for(country_i in unique(df$country_code)){
-    print(paste0(country_i, " - ", buffer_i))
     
-    OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
-                          "globcover", 
-                          paste0("gc_", country_i, "_", buffer_i, "m.Rds"))
+    df_country <- df[df$country_code %in% country_i,]
     
-    if(replace_if_extracted | !file.exists(OUT_PATH)){
-      df_glob_i <- extract_globcover(country_i, buffer_i)
-      saveRDS(df_glob_i, OUT_PATH)
+    for(year_i in unique(df_country$year)){
+      print(paste0(country_i, " - ", buffer_i, " - ", year_i))
+      
+      OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
+                            "globcover", 
+                            paste0("gc_", country_i, "_", buffer_i, "m_",year_i,".Rds"))
+      
+      if(REPLACE_IF_EXTRACTED | !file.exists(OUT_PATH)){
+        df_glob_i <- extract_globcover(df_country[df_country$year %in% year_i,], 
+                                       year_i,
+                                       buffer_i)
+        saveRDS(df_glob_i, OUT_PATH)
+      }
+      
     }
   }
 }

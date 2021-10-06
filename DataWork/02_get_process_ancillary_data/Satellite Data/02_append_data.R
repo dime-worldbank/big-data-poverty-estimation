@@ -70,14 +70,11 @@ for(data_root_names_i in data_root_names){
 # Delete if don't have all the data --------------------------------------------
 if(DELETE_IF_NOT_ALL_DATA){
   
-  if(SURVEY_NAME == "DHS"){
-    survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
-                                   "Individual Datasets", "survey_socioeconomic.Rds"))
-    
-    data_to_rm <- df_nrow$name[df_nrow$N_rows < nrow(survey_df)] %>%
-      paste(collapse = "|")
-  }
+  survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
+                                 "Individual Datasets", "survey_socioeconomic.Rds"))
   
+  data_to_rm <- df_nrow$name[df_nrow$N_rows < nrow(survey_df)] %>%
+    paste(collapse = "|")
   
   gee_to_rm <- GEE_PATH %>%
     list.files(full.names = T) %>%

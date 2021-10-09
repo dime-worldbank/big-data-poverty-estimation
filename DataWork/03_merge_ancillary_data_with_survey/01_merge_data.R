@@ -71,6 +71,33 @@ gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
 gbmod_df <- gbmod_df %>%
   dplyr::rename(globalmod_mean = mean)
 
+##### ** Weather #####
+weather_q1 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                "ecmwf_weather_q1_ubuff10000_rbuff10000.Rds")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("weather_q1_", .))
+
+weather_q2 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                "ecmwf_weather_q2_ubuff10000_rbuff10000.Rds")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("weather_q2_", .))
+
+weather_q3 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                "ecmwf_weather_q3_ubuff10000_rbuff10000.Rds")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("weather_q3_", .))
+
+weather_q4 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                "ecmwf_weather_q4_ubuff10000_rbuff10000.Rds")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("weather_q4_", .))
+
+weather_annual <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                             "ecmwf_weather_ubuff10000_rbuff10000.Rds")) %>%
+  rename_at(vars(-uid, -year), ~ paste0("weather_all_", .))
+
+weather <- weather_annual %>%
+  left_join(weather_q1, by = c("uid", "year")) %>%
+  left_join(weather_q2, by = c("uid", "year")) %>%
+  left_join(weather_q3, by = c("uid", "year")) %>%
+  left_join(weather_q4, by = c("uid", "year"))
+
 ##### ** Pollution #####
 poll_prefix <- c("CH4", "CO", "HCHO", "NO2", "ozone", "SO2", "uv_aer") %>%
   paste(collapse = "|")
@@ -110,6 +137,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           wc_df, 
                           viirs_df, 
                           l8_df, 
+                          weather,
                           wp10km_df, 
                           elevslope, 
                           gbmod_df, 
@@ -118,8 +146,19 @@ survey_ancdata_df <- list(survey_ancdata_df,
 
 if(F){
   survey_ancdata_df <- list(survey_df, 
-                            gc_df, osm_poi_df, osm_road_df) %>%
+                            gc_df, 
+                            osm_poi_df, 
+                            osm_road_df) %>%
     reduce(full_join, by = "uid")
+  
+  survey_ancdata_df <- list(survey_ancdata_df, 
+                            viirs_df,
+                            l8_df,
+                            wp10km_df,
+                            elevslope,
+                            gbmod_df,
+                            pollution_df) %>%
+    reduce(full_join, by = c("uid", "year"))
 }
 
 # [Export] Data ----------------------------------------------------------------

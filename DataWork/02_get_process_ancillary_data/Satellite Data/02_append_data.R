@@ -56,7 +56,7 @@ for(data_root_names_i in data_root_names){
     str_subset(data_root_names_i) %>%
     map_df(read.csv) %>%
     mutate_if(is.factor, as.character) %>%
-    distinct(uid, .keep_all = T) # FIX SO DONT NEED THIS
+    distinct(uid, year, .keep_all = T) # FIX SO DONT NEED THIS
   
   saveRDS(df_tmp, file.path(OUT_PATH, paste0(data_root_names_i, ".Rds")))
   
@@ -75,6 +75,9 @@ if(DELETE_IF_NOT_ALL_DATA){
   
   data_to_rm <- df_nrow$name[df_nrow$N_rows < nrow(survey_df)] %>%
     paste(collapse = "|")
+  
+  print("Removing...")
+  print(data_to_rm)
   
   gee_to_rm <- GEE_PATH %>%
     list.files(full.names = T) %>%

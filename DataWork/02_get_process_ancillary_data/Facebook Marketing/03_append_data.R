@@ -1,11 +1,12 @@
 # Merge Data Extracted from Facebook API
 
-# Load Data ----------------------------------------------------------------------
+# Load Data --------------------------------------------------------------------
+i <<- 1
 df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
                      "fb_mau_individual_datasets") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
-  map_df(function(path){
+  map_dfr(function(path){
     df <- readRDS(path) 
     
     # If there was an error, example incorrect location, won't have uid
@@ -16,8 +17,12 @@ df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
         dplyr::select(uid, param_id, estimate_dau, estimate_mau)
     }
     
+    i <<- i + 1
+    if((i %% 100) %in% 0) print(paste0("Append FB: ", i))
+    
     return(df_out)  
   })
+rm(i)
 
 # To Wide ----------------------------------------------------------------------
 df_wide <- df_long %>%

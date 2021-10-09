@@ -21,8 +21,8 @@ GRID_REGRESS = {
         'max_features': max_features, 'random_state': 0} \
         for criterion in ('mse', ) \
         for splitter in ('best', ) \
-        for max_depth in (1, 2, 5, ) \
-        for max_features in ('sqrt', ) \
+        for max_depth in (1, 2, 5, 10) \
+        for max_features in ('sqrt', 'auto', 'log2', ) \
     ],
     #'BaggingRegressor': [
     #    {'n_estimators': n_estimators, 'max_features': max_features,
@@ -33,8 +33,8 @@ GRID_REGRESS = {
     'BaggingRegressor': [
         {'n_estimators': n_estimators, 'max_features': max_features,
         'random_state': 0, 'n_jobs': -1} \
-        for n_estimators in (10, 100, 150, 200,) \
-        for max_features in (1.0,)
+        for n_estimators in (10, 100, 150, 200, 500,) \
+        for max_features in (1, 5, 10, 15, 20, 25, 30, 32,)
     ],
     'GradientBoostingRegressor': [
         {'loss': loss, 'learning_rate': rate, 'n_estimators': n_estimators,
@@ -51,15 +51,15 @@ GRID_REGRESS = {
         'max_depth': max_depth, 'max_features': max_features, 'n_jobs': -1,
         'random_state': 0} \
         for n_estimators in (5, 10, 50, 100, 1000, ) \
-        for criterion in ('mse', ) \
-        for max_depth in (1,2,3, ) \
-        for max_features in ('sqrt', )
+        for criterion in ('mse', 'squared_error', ) \
+        for max_depth in (1,2,3,5,10, ) \
+        for max_features in ('sqrt','sqrt', 'auto', 'log2', )
     ],
     'AdaBoostRegressor': [
         {'n_estimators': n_estimators, 
          'base_estimator': base_estimator,
         'random_state': 0} \
-        for n_estimators in (5, 10, 20) \
+        for n_estimators in (5, 10, 20, 50, 100,) \
         for base_estimator in (None, 
                                 DecisionTreeRegressor(max_depth=2), 
                                 DecisionTreeRegressor(max_depth=5),

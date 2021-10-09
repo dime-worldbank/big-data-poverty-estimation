@@ -1,6 +1,6 @@
 # Poverty Estimation from Satellite Imagery in Pakistan
 
-SURVEY_NAME <- "OPM"
+SURVEY_NAME <- "DHS"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -154,6 +154,9 @@ library(missMDA)
 library(DescTools)
 library(FactoMineR)
 library(countrycode)
+library(furrr)
+library(progressr)
+library(ggridges)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
@@ -300,7 +303,7 @@ if(F){
   # ** 2.2 CNN Features Predict NTL --------------------------------------------
   # Extracts features from CNN model that uses daytime imagery to predict NTL
   # DEPENDS ON: 02_get_process_ancillary_data/Satellite Data/ being run first
-  # -- 01_create_ntlgroup_tfrecord_name.R: Great dataset that randomly picks
+  # -- 01_create_ntlgroup_tfrecord_name.R: Create dataset that randomly picks
   #    survey locations for CNN (creates balanced dataset across NTL values)
   #    and groups locations together for different TF records. Adds in nighttime
   #    lights value used for CNN.

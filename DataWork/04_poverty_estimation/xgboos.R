@@ -119,15 +119,24 @@ run_model <- function(df,
 }
 
 # Implement Functions ----------------------------------------------------------
-estimation_type_vec <- c("within_country_cv",
-                         "global_country_pred",
-                         "continent_africa_country_pred",
-                         "continent_americas_country_pred",
-                         "continent_eurasia_country_pred", 
-                         "continent")
-target_vars_vec <- c("pca_allvars")
 feature_types <- c("all", "osm")
-countries_vec <- c("all", unique(df$country_code))
+
+if(SURVEY_NAME == "DHS"){
+  estimation_type_vec <- c("within_country_cv",
+                           "global_country_pred",
+                           "continent_africa_country_pred",
+                           "continent_americas_country_pred",
+                           "continent_eurasia_country_pred", 
+                           "continent")
+  target_vars_vec <- c("pca_allvars")
+  countries_vec <- c("all", unique(df$country_code))
+}
+
+if(SURVEY_NAME == "OPM"){
+  estimation_type_vec <- "within_country_cv"
+  target_vars_vec <- c("pscores")
+  countries_vec <- "PK"
+}
 
 for(estimation_type_i in estimation_type_vec){
   for(target_var_i in target_vars_vec){

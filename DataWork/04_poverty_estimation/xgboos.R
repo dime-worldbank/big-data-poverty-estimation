@@ -99,7 +99,7 @@ run_model <- function(df,
                                   feature_type = feature_type_i,
                                   target_var = target_var_i,
                                   country = country_i)
-
+    
     ## Feature Importance
     feat_imp_fold_df                 <- xgb.importance(model = bstDense)
     feat_imp_fold_df$fold            <- fold_i
@@ -143,6 +143,22 @@ for(estimation_type_i in estimation_type_vec){
         
         # Only implement continent on all countries
         if((estimation_type_i == "continent") & (country_i != "all")) next
+        
+        # Skip: If continent, country_pred, must be in same continent ----------
+        if(estimation_type_i == "continent_africa_country_pred"){
+          continent_i <- df$continent_adj[df$country_code %in% country_i][1]
+          if(continent_i != "Africa") next
+        }
+        
+        if(estimation_type_i == "continent_americas_country_pred"){
+          continent_i <- df$continent_adj[df$country_code %in% country_i][1]
+          if(continent_i != "Americas") next
+        }
+        
+        if(estimation_type_i == "continent_eurasia_country_pred"){
+          continent_i <- df$continent_adj[df$country_code %in% country_i][1]
+          if(continent_i != "Eurasia") next
+        }
         
         # Define Out Paths -----------------------------------------------------
         file_name_suffix <- paste0(estimation_type_i,"_",

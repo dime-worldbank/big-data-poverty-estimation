@@ -75,7 +75,9 @@ for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS")){
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "roads_density") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "roads_distance") %>% dir.create()
   
-  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "individual_files") %>% dir.create()
+  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "predictions") %>% dir.create()
+  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "feature_importance") %>% dir.create()
+  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "accuracy") %>% dir.create()
   
   ### GOOGLE DRIVE
   file.path(gdrive_dir, "Data", survey_name_i) %>% dir.create()

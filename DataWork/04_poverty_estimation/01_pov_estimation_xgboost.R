@@ -86,7 +86,8 @@ run_model <- function(df,
                         nthread = 4, 
                         nrounds = 50, 
                         subsample = 0.3,
-                        objective = "reg:squarederror")
+                        objective = "reg:squarederror",
+                        print_every_n = 1000L)
     
     ## Predictions
     pred <- predict(bstDense, X_test)
@@ -182,6 +183,9 @@ for(estimation_type_i in estimation_type_vec){
         FI_OUT <- file.path(OUT_PATH, "feature_importance", 
                             paste0("fi_", file_name_suffix))
         
+        ACCURACY_OUT <- file.path(OUT_PATH, "accuracy", 
+                                  paste0("accuracy_", file_name_suffix))
+        
         # Check if file exists/ should run -------------------------------------
         if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
           
@@ -237,15 +241,33 @@ for(estimation_type_i in estimation_type_vec){
           }
           
           # Run Model ----------------------------------------------------------
-          run_model <- run_model(df = df_traintest,
-                                 estimation_type_i = estimation_type_i,
-                                 feature_type_i = feature_type_i,
-                                 target_var_i = target_var_i,
-                                 country_i = country_i)
+          xg_results_list <- run_model(df = df_traintest,
+                                       estimation_type_i = estimation_type_i,
+                                       feature_type_i = feature_type_i,
+                                       target_var_i = target_var_i,
+                                       country_i = country_i)
           
-          # Save Results -------------------------------------------------------
-          saveRDS(run_model$results_df, PRED_OUT)
-          saveRDS(run_model$feat_imp_df, FI_OUT)
+          # Accuracy Stats -----------------------------------------------------
+          results_df_i <- xg_results_list$results_df
+          
+          acc_fold_df <- results_df_i %>%
+            dplyr::group_by(fold) %>%
+            dplyr::summarise(cor_fold = cor(truth, prediction),
+                             N_fold = n())
+          
+          acc_fold_df$cor_all <- cor(results_df_i$truth,
+                                     results_df_i$prediction)
+          
+          acc_fold_df <- acc_fold_df %>%
+            dplyr::mutate(estimation_type = estimation_type_i,
+                          feature_type = feature_type_i,
+                          target_var = target_var_i,
+                          country = country_i)
+          
+          # Export Results -----------------------------------------------------
+          saveRDS(xg_results_list$results_df,  PRED_OUT)
+          saveRDS(xg_results_list$feat_imp_df, FI_OUT)
+          saveRDS(acc_fold_df,                 ACCURACY_OUT)
         }
       }
     }

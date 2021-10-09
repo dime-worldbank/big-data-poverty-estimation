@@ -1,21 +1,13 @@
-# Pakistan Poverty Estimation Results
+# Append Poverty Estimation Results
 
-SURVEY_NAME <- "DHS"
+# Load/append data -------------------------------------------------------------
+acc_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "accuracy") %>%
+  list.files(pattern = "*.Rds",
+             full.names = T) %>%
+  map_df(readRDS)
 
-# Load Data --------------------------------------------------------------------
-results_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "results", "country_withincv") %>%
-  list.files(full.names = T) %>%
-  str_subset("withincv_results_") %>%
-  map_df(read.csv) %>%
-  dplyr::select(-X)
-
-pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "results", "country_withincv") %>%
-  list.files(full.names = T) %>%
-  str_subset("withincv_predicted_values_") %>%
-  map_df(read.csv) %>%
-  dplyr::select(-X)
-
-# Export Data ------------------------------------------------------------------
-saveRDS(results_df, file.path(data_dir, SURVEY_NAME, "FinalData", "results", "results.Rds"))
-saveRDS(pred_df, file.path(data_dir, SURVEY_NAME, "FinalData", "results", "predicted_values.Rds"))
+# Export data ------------------------------------------------------------------
+saveRDS(acc_df, 
+        file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                  "accuracy_appended.Rds"))
 

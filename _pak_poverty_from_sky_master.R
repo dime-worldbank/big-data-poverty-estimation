@@ -69,6 +69,7 @@ for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS")){
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "satellite_data_from_gee") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "worldclim") %>% dir.create()
+  file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "cnn_features") %>% dir.create()
   
   # FinalData/Individual Datasets/osm
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "poi") %>% dir.create()

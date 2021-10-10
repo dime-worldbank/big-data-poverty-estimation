@@ -1,6 +1,6 @@
 # Poverty Estimation Using XGBoost
 
-GRID_SEARCH <- T
+grid_search <- T
 
 # Load Data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
@@ -95,13 +95,13 @@ run_model <- function(df,
         colsample_bytree = 1,
         min_child_weight = c(1,2),
         #subsample = c(0.3, 0.5)
-        subsample = c(0.3, 0.5)
+        subsample = c(0.5)
       )
       
       # pack the training control parameters
       xgb_trcontrol = trainControl(
         method = "cv",
-        number = 5,  
+        number = 3,  
         search = "grid",
         allowParallel = TRUE,
         verboseIter = FALSE,

@@ -1,12 +1,15 @@
 # Poverty Estimation Using XGBoost
 
+GRID_SEARCH <- T
+
 # Load Data --------------------------------------------------------------------
-SURVEY_NAME <- "DHS"
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results")
 
-df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
+if(SURVEY_NAME == "OPM"){
+  df <- df[df$year %in% 2014,]
+}
 
 # Functions --------------------------------------------------------------------
 grab_x_features <- function(df, 
@@ -35,7 +38,7 @@ grab_x_features <- function(df,
       as.matrix()
   } else{
     X <- df %>%
-      dplyr::select_at(vars(contains( paste0(feature_type, "_") ))) %>%
+      dplyr::select_at(vars(contains( paste0(feature_type_i, "_") ))) %>%
       as.matrix()
   }
   
@@ -52,7 +55,8 @@ run_model <- function(df,
                       estimation_type_i,
                       feature_type_i,
                       target_var_i,
-                      country_i){
+                      country_i,
+                      grid_search){
   
   ## Set Target Var
   df$target_var <- df[[target_var_i]]
@@ -78,19 +82,55 @@ run_model <- function(df,
     y_train <- df_train$target_var
     y_test  <- df_test$target_var
     
-    ## Run Model
-    bstDense <- xgboost(data = X_train, 
-                        label = y_train, 
-                        max.depth = 5, 
-                        eta = 0.1, 
-                        nthread = 4, 
-                        nrounds = 50, 
-                        subsample = 0.3,
-                        objective = "reg:squarederror",
-                        print_every_n = 1000L)
+    ## Run xgboost mode
+    if(grid_search){
+      # --------------
+      xgb_grid = expand.grid(
+        nrounds = c(100, 1000),
+        max_depth = c(2, 4, 6, 8, 10),
+        #max_depth = c(2, 10),
+        eta = c(0.1, 0.01, 0.001, 0.0001),
+        #eta = c(0.01),
+        gamma = 1,
+        colsample_bytree = 1,
+        min_child_weight = c(1,2),
+        #subsample = c(0.3, 0.5)
+        subsample = c(0.3, 0.5)
+      )
+      
+      # pack the training control parameters
+      xgb_trcontrol = trainControl(
+        method = "cv",
+        number = 5,  
+        search = "grid",
+        allowParallel = TRUE,
+        verboseIter = FALSE,
+        returnData = FALSE
+      )
+      
+      # train the model for each parameter combination in the grid,
+      # using CV to evaluate
+      xgb_model = train(
+        X_train, y_train,  
+        trControl = xgb_trcontrol,
+        tuneGrid = xgb_grid,
+        method = "xgbTree"
+      )
+      
+    } else{
+      xgb_model <- xgboost(data = X_train, 
+                           label = y_train, 
+                           max.depth = 5, 
+                           eta = 0.1, 
+                           nthread = 4, 
+                           nrounds = 50, 
+                           subsample = 0.3,
+                           objective = "reg:squarederror",
+                           print_every_n = 1000L)
+    }
     
     ## Predictions
-    pred <- predict(bstDense, X_test)
+    pred <- predict(xgb_model, X_test)
     
     results_fold_df <- data.frame(truth = y_test,
                                   prediction = pred,
@@ -102,25 +142,52 @@ run_model <- function(df,
                                   country = country_i)
     
     ## Feature Importance
-    feat_imp_fold_df                 <- xgb.importance(model = bstDense)
+    if(grid_search){
+      # Make feature importance dataframe outputted from caret similar to dataframe 
+      # outputted by xgboost. varImp returns Overall, which is Gain. By default,
+      # scales between 0 and 100; xgboost doesn't do that, so don't do here.
+      # https://stackoverflow.com/questions/59632899/does-the-caret-varimp-wrapper-for-xgboost-xgbtree-use-xgboost-gain
+      feat_imp_fold_df <- varImp(xgb_model, scale=FALSE)$importance
+      feat_imp_fold_df$Feature <- row.names(feat_imp_fold_df)
+      
+      feat_imp_fold_df <- feat_imp_fold_df %>%
+        dplyr::rename(Gain = Overall)
+    } else{
+      feat_imp_fold_df                 <- xgb.importance(model = xgb_model)
+    }
+    
     feat_imp_fold_df$fold            <- fold_i
     feat_imp_fold_df$estimation_type <- estimation_type_i
     feat_imp_fold_df$target_var      <- target_var_i
     feat_imp_fold_df$country         <- country_i
     
+    ## Best Parameters
+    if(grid_search){
+      grid_results_fold_df <- xgb_model$results %>%
+        dplyr::mutate(fold = fold_i,
+                      estimation_type = estimation_type_i,
+                      target_var = target_var_i,
+                      country = country_i)
+    } else{
+      grid_results_fold_df <- data.frame(NULL)
+    }
+    
     return(list(results_fold_df = results_fold_df,
-                feat_imp_fold_df = feat_imp_fold_df))
+                feat_imp_fold_df = feat_imp_fold_df,
+                grid_results_fold_df = grid_results_fold_df))
   })
   
   results_df <- map_df(results_folds_list, function(x) x$results_fold_df)
   feat_imp_df <- map_df(results_folds_list, function(x) x$feat_imp_fold_df)
+  grid_imp_df <- map_df(results_folds_list, function(x) x$grid_results_fold_df)
   
   return(list(results_df = results_df,
-              feat_imp_df = feat_imp_df))
+              feat_imp_df = feat_imp_df,
+              grid_imp_df = grid_imp_df))
 }
 
 # Implement Functions ----------------------------------------------------------
-feature_types <- c("all", "osm")
+feature_types <- c("all", "satellites", "osm", "fb")
 
 if(SURVEY_NAME == "DHS"){
   estimation_type_vec <- c("within_country_cv",
@@ -154,6 +221,11 @@ for(estimation_type_i in estimation_type_vec){
         # Only implement continent on all countries
         if((estimation_type_i == "continent") & (country_i != "all")) next
         
+        # Only implement weath_score with individual countries for DHS
+        if((target_var_i == "wealth_index_score") & 
+           (SURVEY_NAME == "DHS") & 
+           (estimation_type_i != "within_country_cv")) next
+        
         # Skip: If continent, country_pred, must be in same continent ----------
         if(estimation_type_i == "continent_africa_country_pred"){
           continent_i <- df$continent_adj[df$country_code %in% country_i][1]
@@ -185,6 +257,9 @@ for(estimation_type_i in estimation_type_vec){
         
         ACCURACY_OUT <- file.path(OUT_PATH, "accuracy", 
                                   paste0("accuracy_", file_name_suffix))
+        
+        GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
+                                         paste0("gs_", file_name_suffix))
         
         # Check if file exists/ should run -------------------------------------
         if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
@@ -245,7 +320,8 @@ for(estimation_type_i in estimation_type_vec){
                                        estimation_type_i = estimation_type_i,
                                        feature_type_i = feature_type_i,
                                        target_var_i = target_var_i,
-                                       country_i = country_i)
+                                       country_i = country_i,
+                                       grid_search = GRID_SEARCH)
           
           # Accuracy Stats -----------------------------------------------------
           results_df_i <- xg_results_list$results_df
@@ -268,6 +344,11 @@ for(estimation_type_i in estimation_type_vec){
           saveRDS(xg_results_list$results_df,  PRED_OUT)
           saveRDS(xg_results_list$feat_imp_df, FI_OUT)
           saveRDS(acc_fold_df,                 ACCURACY_OUT)
+          
+          if(grid_search){
+            saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)
+          }
+          
         }
       }
     }

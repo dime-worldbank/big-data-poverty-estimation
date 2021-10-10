@@ -2,26 +2,34 @@
 
 # Load Data --------------------------------------------------------------------
 i <<- 1
+
+# Use data.table rbindlist to efficiently append
+# https://rstudio-pubs-static.s3.amazonaws.com/406521_7fc7b6c1dc374e9b8860e15a699d8bb0.html
 df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
                      "fb_mau_individual_datasets") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
-  map_dfr(function(path){
+  lapply(function(path){
     df <- readRDS(path) 
     
     # If there was an error, example incorrect location, won't have uid
     if(is.null(df$uid)){
-      df_out <- data.frame(NULL)
+      df_out <- data.frame(NULL) %>%
+        as.data.table()
     } else{
       df_out <- df %>%
-        dplyr::select(uid, param_id, estimate_dau, estimate_mau)
+        dplyr::select(uid, param_id, estimate_dau, estimate_mau) %>%
+        dplyr::mutate(uid = uid %>% as.character()) %>%
+        as.data.table()
     }
     
     i <<- i + 1
     if((i %% 100) %in% 0) print(paste0("Append FB: ", i))
     
     return(df_out)  
-  })
+  }) %>%
+  rbindlist() %>%
+  as.data.frame()
 rm(i)
 
 # To Wide ----------------------------------------------------------------------

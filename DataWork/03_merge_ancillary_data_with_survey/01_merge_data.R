@@ -9,6 +9,12 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
 fb_prop_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau_prop.Rds"))
 
+fb_df$estimate_dau_NA <- NULL
+fb_df$estimate_mau_NA <- NULL
+
+fb_prop_df$fb_prop_estimate_dau_NA <- NULL
+fb_prop_df$fb_prop_estimate_mau_NA <- NULL
+
 fb_df <- fb_df %>%
   rename_at(vars(-uid), ~ paste0("fb_", .))
 

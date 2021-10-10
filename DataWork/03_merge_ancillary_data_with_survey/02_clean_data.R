@@ -29,10 +29,23 @@ df <- df %>%
   dplyr::filter(!is.na(fb_estimate_mau_1))
 
 # Facebook - Divide by World Pop -----------------------------------------------
+# Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
+inf_to_zero <- function(x){
+  x[x == Inf] <- 0
+  return(x)
+}
+
+truncate_1 <- function(x){
+  x[x > 1] <- 1
+  return(x)
+}
+
 df_fb_wp <- df %>%
   dplyr::mutate_at(vars(contains("fb_estimate_")), ~ . / worldpop_10km) %>%
   dplyr::select_at(vars(uid, year, contains("fb_estimate_"))) %>%
-  rename_at(vars(-uid, -year), ~ str_replace_all(., "fb_estimate", "fb_wp_estimate"))
+  rename_at(vars(-uid, -year), ~ str_replace_all(., "fb_estimate", "fb_wp_estimate")) %>%
+  dplyr::mutate_at(vars(contains("fb_wp")), inf_to_zero) %>%
+  dplyr::mutate_at(vars(contains("fb_wp")), truncate_1) 
 
 df <- df %>%
   left_join(df_fb_wp, by = c("uid", "year"))
@@ -45,11 +58,22 @@ log_p1 <- function(x){
 df <- df %>%
   dplyr::mutate_at(vars(contains("osm_dist")), log_p1)
 
+df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
+
 # Remove Variables -------------------------------------------------------------
 df <- df %>%
   
   ## Facebook daily active users
   dplyr::select_at(vars(-contains("_dau_")))
+
+# Remove Observations ----------------------------------------------------------
+nrow(df)
+
+df <- df %>%
+  dplyr::filter(!is.na(worldclim_bio_1),
+                !is.na(fb_estimate_mau_22),
+                !is.na(l8_B1))
+
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))

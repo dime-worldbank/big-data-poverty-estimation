@@ -320,7 +320,7 @@ dhs_gadm_cw <- bind_rows(
   data.frame(code_dhs = "KH", code_gadm = "KHM"),
   data.frame(code_dhs = "KM", code_gadm = "COM"),
   data.frame(code_dhs = "KY", code_gadm = "KGZ"),
-  data.frame(code_dhs = "LB", code_gadm = "LBN"),
+  data.frame(code_dhs = "LB", code_gadm = "LBR"),
   data.frame(code_dhs = "LS", code_gadm = "LSO"),
   data.frame(code_dhs = "MA", code_gadm = "MAR"),
   data.frame(code_dhs = "MB", code_gadm = "MDA"), # Moldova

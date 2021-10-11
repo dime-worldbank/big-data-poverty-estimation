@@ -72,8 +72,10 @@ nrow(df)
 df <- df %>%
   dplyr::filter(!is.na(worldclim_bio_1),
                 !is.na(fb_estimate_mau_22),
-                !is.na(l8_B1))
+                !is.na(l8_B1),
+                !is.na(cnn_l8_rgb_pc1))
 
+nrow(df)
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))

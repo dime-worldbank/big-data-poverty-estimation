@@ -26,7 +26,8 @@ osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
 osm_road_df <- readRDS(file.path(INV_DATA_DIR, "osm_road.Rds"))
 
 # [Load] CNN Features ----------------------------------------------------------
-#gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                "cnn_features_l8_rgb_pca.Rds"))
 
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
@@ -134,6 +135,7 @@ pollution_df <- pollution_df %>%
 survey_ancdata_df <- list(survey_df, 
                           fb_df, 
                           fb_prop_df, 
+                          cnn_rgb_df,
                           osm_poi_df, 
                           osm_road_df) %>%
   reduce(full_join, by = "uid")
@@ -153,6 +155,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
 if(F){
   survey_ancdata_df <- list(survey_df, 
                             gc_df, 
+                            cnn_rgb_df,
                             osm_poi_df, 
                             osm_road_df) %>%
     reduce(full_join, by = "uid")
@@ -170,6 +173,4 @@ if(F){
 # [Export] Data ----------------------------------------------------------------
 saveRDS(survey_ancdata_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
-
-
 

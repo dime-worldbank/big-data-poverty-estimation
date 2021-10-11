@@ -1,6 +1,6 @@
 # Poverty Estimation Using XGBoost
 
-grid_search <- T
+grid_search <- F
 
 # Load Data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
@@ -22,13 +22,14 @@ grab_x_features <- function(df,
   if(feature_type_i %in% "all"){
     X <- df %>%
       dplyr::select_at(vars(contains("osm_"),
-                            #contains("fb_"),
+                            contains("fb_"),
                             contains("gc_"),
                             contains("weather_"),
                             contains("l8_"),
                             contains("elevslope_"),
                             contains("pollution_"),
                             contains("worldclim_"),
+                            contains("cnn_l8_rgb_"),
                             contains("viirs_"))) %>%
       as.matrix()
   } else if(feature_type_i %in% "satellites"){
@@ -187,7 +188,7 @@ run_model <- function(df,
 }
 
 # Implement Functions ----------------------------------------------------------
-feature_types <- c("all", "satellites", "osm", "fb")
+feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb")
 
 if(SURVEY_NAME == "DHS"){
   estimation_type_vec <- c("within_country_cv",
@@ -321,7 +322,7 @@ for(estimation_type_i in estimation_type_vec){
                                        feature_type_i = feature_type_i,
                                        target_var_i = target_var_i,
                                        country_i = country_i,
-                                       grid_search = GRID_SEARCH)
+                                       grid_search = grid_search)
           
           # Accuracy Stats -----------------------------------------------------
           results_df_i <- xg_results_list$results_df

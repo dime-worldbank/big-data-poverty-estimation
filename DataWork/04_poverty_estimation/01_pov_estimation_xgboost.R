@@ -47,7 +47,7 @@ grab_x_features <- function(df,
 }
 
 #### PARAMS
-estimation_type_i <- "within_country_cv"
+estimation_type_i <- "continent"
 feature_type_i <- "all"
 target_var_i <- "wealth_index_score"
 country_i <- "PK"
@@ -136,11 +136,12 @@ run_model <- function(df,
     results_fold_df <- data.frame(truth = y_test,
                                   prediction = pred,
                                   uid = df_test$uid,
+                                  country_code = df_test$country_code,
                                   fold = fold_i,
                                   estimation_type = estimation_type_i,
                                   feature_type = feature_type_i,
                                   target_var = target_var_i,
-                                  country = country_i)
+                                  country_group = country_i)
     
     ## Feature Importance
     if(grid_search){
@@ -160,7 +161,7 @@ run_model <- function(df,
     feat_imp_fold_df$fold            <- fold_i
     feat_imp_fold_df$estimation_type <- estimation_type_i
     feat_imp_fold_df$target_var      <- target_var_i
-    feat_imp_fold_df$country         <- country_i
+    feat_imp_fold_df$country_group   <- country_i
     
     ## Best Parameters
     if(grid_search){
@@ -168,7 +169,7 @@ run_model <- function(df,
         dplyr::mutate(fold = fold_i,
                       estimation_type = estimation_type_i,
                       target_var = target_var_i,
-                      country = country_i)
+                      country_group = country_i)
     } else{
       grid_results_fold_df <- data.frame(NULL)
     }
@@ -188,7 +189,7 @@ run_model <- function(df,
 }
 
 # Implement Functions ----------------------------------------------------------
-feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb")
+feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb", "gc")
 
 if(SURVEY_NAME == "DHS"){
   estimation_type_vec <- c("within_country_cv",
@@ -197,7 +198,19 @@ if(SURVEY_NAME == "DHS"){
                            "continent_americas_country_pred",
                            "continent_eurasia_country_pred", 
                            "continent")
-  target_vars_vec <- c("pca_allvars")
+  target_vars_vec <- c("pca_allvars", 
+                       #"pca_allvars_noroof",
+                       "pca_physicalvars",
+                       #"pca_physicalvars_noroof",
+                       "pca_nonphysicalvars",
+                       
+                       # "pca_allvars_rmna", 
+                       # "pca_allvars_noroof_rmna",
+                       # "pca_physicalvars_rmna",
+                       # "pca_physicalvars_noroof_rmna",
+                       # "pca_nonphysicalvars_rmna",
+                       
+                       "wealth_index_score")
   countries_vec <- c("all", unique(df$country_code))
 }
 
@@ -260,7 +273,7 @@ for(estimation_type_i in estimation_type_vec){
                                   paste0("accuracy_", file_name_suffix))
         
         GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
-                                         paste0("gs_", file_name_suffix))
+                                    paste0("gs_", file_name_suffix))
         
         # Check if file exists/ should run -------------------------------------
         if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
@@ -327,10 +340,19 @@ for(estimation_type_i in estimation_type_vec){
           # Accuracy Stats -----------------------------------------------------
           results_df_i <- xg_results_list$results_df
           
-          acc_fold_df <- results_df_i %>%
-            dplyr::group_by(fold) %>%
-            dplyr::summarise(cor_fold = cor(truth, prediction),
-                             N_fold = n())
+          if(estimation_type_i == "continent"){
+            acc_fold_df <- results_df_i %>%
+              dplyr::group_by(country_code, fold) %>%
+              dplyr::summarise(cor_fold = cor(truth, prediction),
+                               N_fold = n()) %>%
+              ungroup()
+          } else{
+            acc_fold_df <- results_df_i %>%
+              dplyr::group_by(fold) %>%
+              dplyr::summarise(cor_fold = cor(truth, prediction),
+                               N_fold = n()) %>%
+              ungroup()
+          }
           
           acc_fold_df$cor_all <- cor(results_df_i$truth,
                                      results_df_i$prediction)

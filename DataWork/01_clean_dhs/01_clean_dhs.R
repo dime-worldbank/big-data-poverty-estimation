@@ -234,7 +234,7 @@ country_year_dirs <- lapply(countries, function(country_i){
 country_year_dirs <- country_year_dirs[!grepl("archive", country_year_dirs)]
 
 ## Process Data
-country_year_dirs <- country_year_dirs[!grepl(countries_to_remove, country_year_dirs)]
+#country_year_dirs <- country_year_dirs[!grepl(countries_to_remove, country_year_dirs)]
 
 dhs_all_df <- map_df(country_year_dirs, process_dhs)
 

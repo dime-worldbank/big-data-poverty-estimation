@@ -35,10 +35,6 @@ api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F)
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
 N_KEYS <- length(KEYS_ACCOUNTS)
 
-#token <- api_keys$Key[api_keys$Account %in% "token"] %>% str_squish()
-#creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"] %>% str_replace_all("ACT_", "") %>% str_squish()
-#version <- api_keys$Key[api_keys$Account %in% "version"] %>% str_squish()
-
 # Parameters -------------------------------------------------------------------
 AGE_MIN = 18
 AGE_MAX = 65
@@ -238,11 +234,7 @@ make_query_location_i <- function(param_i,
                            paste0("'interests':[", parameters_df_i$interest, "],")), 
                     "'genders':[",parameters_df_i$gender,"],",
                     "'age_min':",parameters_df_i$age_min,",",
-                    "'age_max':",parameters_df_i$age_max, #",",
-                    #"'facebook_positions':[",parameters_df_i$facebook_positions,"],",
-                    #"'device_platforms':[",parameters_df_i$device_platforms,"],",
-                    #"'publisher_platforms':[",parameters_df_i$publisher_platforms,"],",
-                    #"'messenger_positions':[",parameters_df_i$messenger_positions,"]",
+                    "'age_max':",parameters_df_i$age_max, 
                     "}")
     
     query_val <- url(query) %>% fromJSON
@@ -258,10 +250,10 @@ make_query_location_i <- function(param_i,
       for(var in names(parameters_df_i)) query_val_df[[var]] <- parameters_df_i[[var]]
       
       ## Add cluster info
-      query_val_df$param_id   <- param_i
-      query_val_df$uid <- coords_df$uid
-      query_val_df$latitude   <- coords_df$latitude
-      query_val_df$longitude  <- coords_df$longitude
+      query_val_df$param_id  <- param_i
+      query_val_df$uid       <- coords_df$uid
+      query_val_df$latitude  <- coords_df$latitude
+      query_val_df$longitude <- coords_df$longitude
       
       ## Add time
       query_val_df$api_call_time_utc <- Sys.time() %>% with_tz(tzone = "UTC")
@@ -325,7 +317,6 @@ sleep_time_after_loc <- sleep_time_after_loc / N_KEYS
 # Implement Function and Export ------------------------------------------------
 ## Grab country codes
 country_code_all <- df$country_code %>% unique()
-country_code_all <- country_code_all[!(country_code_all %in% c("ID"))]
 
 # Repeat in case missed some due to error, so will go back and check
 country_code_all_rep <- c(country_code_all,
@@ -348,8 +339,8 @@ for(country_code_i in country_code_all_rep){
     
     df_i <- df_c[df_c$uid %in% uid_i,]
     
-    if(df_i$urban_rural %in% "U") RADIUS_i <- 5 #km
-    if(df_i$urban_rural %in% "R") RADIUS_i <- 10 #km
+    #if(df_i$urban_rural %in% "U") RADIUS_i <- 5 #km
+    #if(df_i$urban_rural %in% "R") RADIUS_i <- 10 #km
     
     OUT_PATH <- file.path(dropbox_dir, "Data", SURVEY_NAME,  "FinalData", "Individual Datasets",
                           "fb_mau_individual_datasets", paste0("fb_",uid_i,"_radius",RADIUS_KM,"km.Rds"))
@@ -365,7 +356,7 @@ for(country_code_i in country_code_all_rep){
       creation_act <- api_keys_i$Key[api_keys_i$Account %in% "creation_act"] %>% str_replace_all("ACT_", "") %>% str_squish()
       version <- api_keys_i$Key[api_keys_i$Account %in% "version"] %>% str_squish()
       
-      parameters_df$radius_km <- RADIUS_i
+      #parameters_df$radius_km <- RADIUS_i
       
       df_out <- map_df(parameters_df$param_id, make_query_location_i, 
                        parameters_df,

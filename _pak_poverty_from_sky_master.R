@@ -41,9 +41,11 @@ globcover_dir    <- file.path(data_dir, "Globcover")
 worldclim_dir    <- file.path(data_dir, "WorldClim")
 cntry_dtls_dir   <- file.path(data_dir, "Country Details")
 
+#### Overleaf Paths
 tables_dir  <- file.path(overleaf_dir, "tables")
 figures_dir <- file.path(overleaf_dir, "figures")
 
+#### API Key Paths (For Facebook)
 api_key_dir <- file.path(dropbox_dir, "API Keys")
 
 #### Google Drive Paths
@@ -160,7 +162,9 @@ library(FactoMineR)
 library(countrycode)
 library(furrr)
 library(progressr)
+library(ggmap)
 library(ggridges)
+library(ggpubr)
 library(xgboost)
 source(file.path(github_dir, "Functions", "functions.R"))
 

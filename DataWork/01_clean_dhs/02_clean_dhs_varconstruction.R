@@ -162,8 +162,8 @@ pca_allvars <- c("has_electricity",
                  "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 "n_sleeping_rooms_pp_cat",
-                 "educ_years_hh_max_scale")
+                 #"educ_years_hh_max_scale",
+                 "n_sleeping_rooms_pp_cat")
 
 pca_allvars_noroof <- c("has_electricity",
                         "has_tv",
@@ -175,8 +175,8 @@ pca_allvars_noroof <- c("has_electricity",
                         "water_time_to_get_cat",
                         "water_source_piped_dwelling",
                         "flush_toilet_sewer",
-                        "n_sleeping_rooms_pp_cat",
-                        "educ_years_hh_max_scale")
+                        #"educ_years_hh_max_scale",
+                        "n_sleeping_rooms_pp_cat")
 
 pca_physicalvars <- c("has_electricity",
                       "floor_material_cat",
@@ -194,8 +194,8 @@ pca_nonphysicalvars <- c("has_tv",
                          "water_time_to_get_cat",
                          "water_source_piped_dwelling",
                          "flush_toilet_sewer",
-                         "n_sleeping_rooms_pp_cat",
-                         "educ_years_hh_max_scale")
+                         #"educ_years_hh_max_scale",
+                         "n_sleeping_rooms_pp_cat")
 
 ##### ** Compute PCA #####
 dhs_all_df$ind_id <- 1:nrow(dhs_all_df)
@@ -332,6 +332,7 @@ dhs_gadm_cw <- bind_rows(
   data.frame(code_dhs = "NG", code_gadm = "NGA"),
   data.frame(code_dhs = "NM", code_gadm = "NAM"), # Namibia
   data.frame(code_dhs = "NP", code_gadm = "NPL"),
+  data.frame(code_dhs = "PE", code_gadm = "PER"),
   data.frame(code_dhs = "PH", code_gadm = "PHL"),
   data.frame(code_dhs = "PK", code_gadm = "PAK"),
   data.frame(code_dhs = "RW", code_gadm = "RWA"),
@@ -376,15 +377,12 @@ dhs_all_df_coll <- map_df(unique(dhs_all_df$country_code), function(cc_dhs){
 }) 
 
 # Country Name -----------------------------------------------------------------
-dhs_all_df_coll$country_name <- countrycode(dhs_all_df_coll$country_code, origin = "iso2c", destination = "country.name")
+dhs_all_df_coll$iso2 <- countrycode(dhs_all_df_coll$country_code, origin = "dhs", destination = "iso2c")
+dhs_all_df_coll$country_name <- countrycode(dhs_all_df_coll$iso2, origin = "iso2c", destination = "country.name")
 
-dhs_all_df_coll <- dhs_all_df_coll %>%
-  mutate(country_name = case_when(
-    country_code == "BU" ~ "Burundi",
-    country_code == "DR" ~ "Dominican Republic",
-    country_code == "IA" ~ "India",
-    country_code == "NM" ~ "Namibia",
-    TRUE ~ country_name))
+dhs_all_df_coll$country_code %>% unique %>% length()
+dhs_all_df_coll$iso2 %>% unique %>% length()
+dhs_all_df_coll$country_name %>% unique %>% length()
 
 # Cleanup Variables ------------------------------------------------------------
 dhs_all_df_coll <- dhs_all_df_coll %>%

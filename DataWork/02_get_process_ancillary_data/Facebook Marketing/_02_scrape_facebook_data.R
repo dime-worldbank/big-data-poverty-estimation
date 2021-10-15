@@ -15,6 +15,7 @@
 # https://developers.facebook.com/docs/marketing-api/audiences/reference/basic-targeting
 # https://developers.facebook.com/docs/marketing-api/audiences/reference/advanced-targeting
 # https://github.com/SofiaG1l/Using_Facebook_API
+# https://worldbank.github.io/connectivity_mapping/intro.html
 
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
@@ -131,11 +132,11 @@ parameters_df_behaviors <- data.frame(
     "{'id':6004385895772}", # Facebook access (mobile): Windows phones
     
     # High end phones
-    "{'id':6092512462983}", # Facebook access (mobile): iPhone X
-    "{'id':6092512462983},{'id':6092512412783},{'id':6092512424583}", # iPhone X/8/8 Plus
+    "{'id':6092512462983},{'id':6120699687383},{'id':6120699721983},{'id':6120699725783}", # Facebook access (mobile): iPhone X/XS/XS Max/XR
+    "{'id':6092512462983},{'id':6120699687383},{'id':6120699721983},{'id':6120699725783},{'id':6092512412783},{'id':6092512424583}", # iPhone X/XS/XS Max/XR/8/8 Plus
     "{'id':6106224431383}", # Owns: Galaxy S9+
     "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383}", #Samsung Galaxy phone S8/S8+/S9/S9+ 
-    "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383},{'id':6092512462983},{'id':6092512412783},{'id':6092512424583}", # iPhone X/8/8 Plus or Samsung Galaxy phone S8/S8+/S9/S9+ 
+    "{'id':6075237200983},{'id':6075237226583},{'id':6106223987983},{'id':6106224431383},{'id':6092512462983},{'id':6120699687383},{'id':6120699721983},{'id':6120699725783},{'id':6092512412783},{'id':6092512424583}", # iPhone X/XS/XS Max/XR/8/8 Plus or Samsung Galaxy phone S8/S8+/S9/S9+ 
     
     # Other device types
     "{'id':6004382299972}", # Facebook access (mobile): all mobile devices
@@ -172,7 +173,9 @@ parameters_df_interests <- data.frame(
   interest = c("{'id':6003012317397}", # Gambling
                #"{'id':6004115167424}", # Physical exercise
                "{'id':6003384248805}", # Fitness and wellness
-               "{'id':6007828099136}" # Luxury Goods
+               "{'id':6007828099136}", # Luxury Goods
+               "{'id':6002868910910}", # Organic food
+               "{'id':6004037400009}" # Fast food
   ), 
   stringsAsFactors = F
 )
@@ -186,6 +189,17 @@ parameters_df <- bind_rows(
 )
 
 parameters_df$param_id <- 1:nrow(parameters_df)
+
+# Export Parameters Dataframe --------------------------------------------------
+
+#param_df <- df_long %>%
+#  dplyr::select(-c(estimate_dau, estimate_mau, latitude, longitude, api_call_time_utc)) %>%
+#  dplyr::distinct(param_id, .keep_all = T) %>%
+#  dplyr::select(param_id, everything())
+
+saveRDS(parameters_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.Rds"))
+write.csv(parameters_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "facebook_marketing_parameters.csv"), row.names = F)
+
 
 # Function to extract data -----------------------------------------------------
 make_query_location_i <- function(param_i,
@@ -232,12 +246,13 @@ make_query_location_i <- function(param_i,
                            paste0("'behaviors':[", parameters_df_i$behavior, "],")), 
                     ifelse(is.na(parameters_df_i$interest), "", 
                            paste0("'interests':[", parameters_df_i$interest, "],")), 
-                    "'genders':[",parameters_df_i$gender,"],",
+                    "'genders':[",parameters_df_i$gender,"],", 
                     "'age_min':",parameters_df_i$age_min,",",
                     "'age_max':",parameters_df_i$age_max, 
                     "}")
     
     query_val <- url(query) %>% fromJSON
+    query_val
     
     #### If there is no error
     if(is.null(query_val$error)){

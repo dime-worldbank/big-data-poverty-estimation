@@ -3,6 +3,10 @@
 # Load Data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
+dfa <- df %>%
+  dplyr::group_by(country_code) %>%
+  dplyr::summarise(a = mean(fb_estimate_mau_1 %in% 1000))
+
 df_cor_country <- df %>%
   dplyr::select_at(vars(country_name, 
                         continent_adj,

@@ -8,7 +8,7 @@
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad",
-         Details == "robmarty3@gmail.com")
+         Details == "ramarty92@gmail.com")
 
 token <- api_keys$Key[api_keys$Account %in% "token"]
 creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"]
@@ -16,7 +16,7 @@ version <- api_keys$Key[api_keys$Account %in% "version"]
 
 # Parameters -------------------------------------------------------------------
 demographics_df <- GET(
-  "https://graph.facebook.com/v10.0/search",
+  "https://graph.facebook.com/v12.0/search",
   query=list(
     type='adTargetingCategory',
     class='demographics',
@@ -25,7 +25,7 @@ demographics_df <- GET(
   )) %>% content(as="text") %>% fromJSON %>%. [[1]]
 
 interests_df <- GET(
-  "https://graph.facebook.com/v10.0/search",
+  "https://graph.facebook.com/v12.0/search",
   query=list(
     type='adTargetingCategory',
     class='interests',
@@ -34,7 +34,7 @@ interests_df <- GET(
   )) %>% content(as="text") %>% fromJSON %>% .[[1]]
 
 behaviors_df <- GET(
-  "https://graph.facebook.com/v10.0/search",
+  "https://graph.facebook.com/v12.0/search",
   query=list(
     type='adTargetingCategory',
     class='behaviors',
@@ -63,4 +63,9 @@ saveRDS(behaviors_df,
 write.csv(behaviors_df %>% dplyr::select(id, name, description, audience_size),
           file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                     "behaviors.csv"), row.names = F)
+
+interests_df[interests_df$name %>% tolower() %>% str_detect("food"),]
+interests_df[interests_df$name %in% "Fast Food"]
+
+
 

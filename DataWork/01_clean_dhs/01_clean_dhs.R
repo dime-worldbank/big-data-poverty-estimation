@@ -53,9 +53,14 @@ clean_hh <- function(df){
     mutate_all(to_numeric) %>%
     mutate_all(as.numeric) %>%
     mutate_all(to_na_if_large) 
-
+  
   df$educ_years_hh_max  <- apply(educ_years, 1, max_ig_na)
   df$educ_years_hh_mean <- apply(educ_years, 1, mean_ig_na)
+  
+  # Earlier DHS don't have this variable
+  if(is.null(df$hv216)){
+    df$hv216 <- NA
+  }
   
   df_out <- df %>%
     dplyr::rename(cluster_id = hv001,
@@ -70,8 +75,8 @@ clean_hh <- function(df){
                   has_motorbike = hv211,
                   has_car = hv212,
                   n_hh_members = hv009,
-                  kitchen_is_sep_room = hv242,
-                  has_bank_account = hv247,
+                  #kitchen_is_sep_room = hv242,
+                  #has_bank_account = hv247,
                   wall_material = hv214,
                   roof_material = hv215,
                   n_rooms_sleeping = hv216,
@@ -91,8 +96,8 @@ clean_hh <- function(df){
                   has_motorbike,
                   has_car,
                   n_hh_members,
-                  kitchen_is_sep_room,
-                  has_bank_account,
+                  #kitchen_is_sep_room,
+                  #has_bank_account,
                   wall_material,
                   roof_material,
                   n_rooms_sleeping,
@@ -104,7 +109,7 @@ clean_hh <- function(df){
            roof_material = roof_material %>% as_factor() %>% as.character(),
            water_source = water_source %>% as_factor() %>% as.character(),
            toilet_type = toilet_type %>% as_factor() %>% as.character(),
-           has_bank_account = has_bank_account %>% as_factor() %>% as.character(),
+           #has_bank_account = has_bank_account %>% as_factor() %>% as.character(),
            water_time_to_get = water_time_to_get %>% as.numeric()) %>%
     dplyr::mutate(cluster_id = cluster_id %>% as.character())
   
@@ -134,7 +139,7 @@ merge_clean <- function(hh_df, geo_df){
     mutate_at(vars(urban_rural), as.character) %>%
     dplyr::select(uid, cluster_id, everything()) %>%
     dplyr::mutate(year = year %>% as.character())
-
+  
   return(df_out)
 }
 
@@ -168,23 +173,36 @@ process_dhs <- function(dir){
   # for each household
   df_onerow_names <- read_dta(hh_path, n_max = 1) %>% names()
   
-  hh108_names <- df_onerow_names %>%
-    str_subset("hv108")
+  # Years of education
+  if(TRUE %in% (df_onerow_names %>% str_detect("hv108"))){
+    hh108_names <- df_onerow_names %>%
+      str_subset("hv108")
+  } else{
+    hh108_names <- NULL
+  } 
   
-  if(hh108_names %>% str_detect("sh110j")){
+  if(TRUE %in% (df_onerow_names %>% str_detect("sh110j"))){
     sh110j_var <- "sh110j"
   } else{
     sh110j_var <- NULL
   } 
   
-  if(hh108_names %>% str_detect("sh110j")){
+  if(TRUE %in% (df_onerow_names %>% str_detect("sh110k"))){
     sh110k_var <- "sh110k"
   } else{
     sh110k_var <- NULL
   } 
+  
+  # N rooms for sleeping
+  if(TRUE %in% (df_onerow_names %>% str_detect("hv216"))){
+    hv216_var <- "hv216"
+  } else{
+    hv216_var <- NULL
+  } 
 
   hh_vars <- c("hv000",
                hh108_names,
+               hv216_var,
                sh110j_var,
                sh110k_var,
                "hv001",
@@ -199,12 +217,12 @@ process_dhs <- function(dir){
                "hv211",
                "hv212",
                "hv214",
-               "hv242",
-               "hv247",
+               #"hv242",
+               #"hv247",
                "hv215",
                "hv221",
                "hv009",
-               "hv216",
+               #"hv216",
                "hv270",
                "hv271")
   

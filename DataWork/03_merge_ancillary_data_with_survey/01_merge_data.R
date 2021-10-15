@@ -7,19 +7,19 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
-fb_prop_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau_prop.Rds"))
+#fb_prop_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau_prop.Rds"))
 
-fb_df$estimate_dau_NA <- NULL
 fb_df$estimate_mau_NA <- NULL
 
-fb_prop_df$fb_prop_estimate_dau_NA <- NULL
-fb_prop_df$fb_prop_estimate_mau_NA <- NULL
+#fb_prop_df$fb_prop_estimate_dau_NA <- NULL
+#fb_prop_df$fb_prop_estimate_mau_NA <- NULL
 
 fb_df <- fb_df %>%
+  dplyr::select(uid, contains("estimate_mau_")) %>%
   rename_at(vars(-uid), ~ paste0("fb_", .))
 
-fb_prop_df <- fb_prop_df %>%
-  rename_at(vars(-uid), ~ paste0("fb_prop_", .))
+#fb_prop_df <- fb_prop_df %>%
+#  rename_at(vars(-uid), ~ paste0("fb_prop_", .))
 
 # [Load] OSM -------------------------------------------------------------------
 osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
@@ -96,7 +96,7 @@ weather_q4 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
   rename_at(vars(-uid, -year), ~ paste0("weather_q4_", .))
 
 weather_annual <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                             "ecmwf_weather_ubuff10000_rbuff10000.Rds")) %>%
+                                    "ecmwf_weather_ubuff10000_rbuff10000.Rds")) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_all_", .))
 
 weather <- weather_annual %>%
@@ -134,7 +134,7 @@ pollution_df <- pollution_df %>%
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 
                           fb_df, 
-                          fb_prop_df, 
+                          #fb_prop_df, 
                           cnn_rgb_df,
                           osm_poi_df, 
                           osm_road_df) %>%

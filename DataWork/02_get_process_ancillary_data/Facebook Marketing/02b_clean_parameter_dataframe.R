@@ -127,7 +127,7 @@ param_df$param_category <- param_df$param_name_clean %>% str_replace_all(":.*", 
 param_df$param_name_simple <- param_df$param_name_clean %>% str_replace_all(".*:", "") %>% str_squish()
 
 # Export -----------------------------------------------------------------------
-#saveRDS(param_df, file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
+saveRDS(param_df, file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
 
 
 

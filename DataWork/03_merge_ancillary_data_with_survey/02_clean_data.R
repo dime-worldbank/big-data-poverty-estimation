@@ -5,13 +5,6 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 
 # Add Continent/Region ---------------------------------------------------------
 df <- df %>%
-  dplyr::mutate(iso2 = case_when(
-    country_name == "Dominican Republic" ~ "DO",
-    country_name == "India" ~ "IN",
-    country_name == "Burundi" ~ "BI",
-    country_name == "Namibia" ~ "NA",
-    TRUE ~ country_code
-  )) %>%
   mutate(continent = iso2 %>% countrycode(origin = "iso2c", destination = "continent"),
          un_region = iso2 %>% countrycode(origin = "iso2c", destination = "un.region.name"),
          un_subregion = iso2 %>% countrycode(origin = "iso2c", destination = "un.regionsub.name")) %>%
@@ -25,18 +18,40 @@ df <- df %>%
   dplyr::filter(country_code != "GY")
 
 # Remove missing
+#df <- df %>%
+#  dplyr::filter(!is.na(fb_estimate_mau_1))
+
+# Facebook - Cleanup -----------------------------------------------------------
+# For all Facebook variables except total users, if 1000, make 0
+
+if_1000_make_0 <- function(x){
+  x[x %in% 1000] <- 0
+  return(x)
+}
+
 df <- df %>%
-  dplyr::filter(!is.na(fb_estimate_mau_1))
+  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_1), if_1000_make_0)
+
+# Facebook - Proportion --------------------------------------------------------
+truncate_1 <- function(x){
+  x[x > 1] <- 1
+  return(x)
+}
+
+df_fb_prop <- df %>%
+  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_1), ~(. / fb_estimate_mau_1)) %>%
+  dplyr::select(-c(fb_estimate_mau_1)) %>%
+  dplyr::select(uid, contains("fb_")) %>%
+  dplyr::mutate_at(vars(contains("fb_")), truncate_1) %>%
+  rename_at(vars(-uid), ~ str_replace_all(., "fb_", "fb_prop_")) 
+
+df <- df %>%
+  left_join(df_fb_prop, by = "uid")
 
 # Facebook - Divide by World Pop -----------------------------------------------
 # Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
 inf_to_zero <- function(x){
   x[x == Inf] <- 0
-  return(x)
-}
-
-truncate_1 <- function(x){
-  x[x > 1] <- 1
   return(x)
 }
 

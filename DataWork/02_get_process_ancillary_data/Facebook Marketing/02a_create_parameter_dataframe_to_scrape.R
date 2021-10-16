@@ -137,8 +137,9 @@ parameters_df_interests <- data.frame(
   interest = c("6003012317397", # Gambling
                "6003384248805", # Fitness and wellness
                "6007828099136", # Luxury Goods
-               "6002868910910", # Organic food
-               "6004037400009" # Fast food
+               "6003346592981", # Online Shopping
+               "6004160395895", # Travel
+               "6003436950375"  # Restaurants
   ), 
   stringsAsFactors = F
 )

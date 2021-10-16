@@ -41,7 +41,7 @@ number_locs_per_hour <- ceiling(200/nrow(parameters_df))
 seconds_in_hour <- 60*60
 sleep_time_after_loc <- (seconds_in_hour/number_locs_per_hour)
 sleep_time_after_loc <- sleep_time_after_loc - nrow(parameters_df)*sleep_time_after_param
-sleep_time_after_loc <- sleep_time_after_loc - 105
+sleep_time_after_loc <- sleep_time_after_loc - 110
 
 sleep_time_after_loc <- sleep_time_after_loc / N_KEYS
 
@@ -51,8 +51,9 @@ country_isos <- df$iso2 %>% unique()
 country_isos <- rep(country_isos, 5)
 
 #### Loop over countries
-KEY_i <- 9
+KEY_i <- 1
 for(iso_i in country_isos){
+  print(iso_i)
   
   OUT_PATH <- file.path(fb_marketing_dir,  "FinalData", "country_level_mau", "Individual Datasets", 
                         paste0("fb_",iso_i,".Rds"))
@@ -70,7 +71,7 @@ for(iso_i in country_isos){
     
     ## Scape
     print(account_i)
-    
+
     fb_df <- map_df(1:nrow(parameters_df), function(param_i){
       parameters_df_i <- parameters_df[param_i,]
       
@@ -85,7 +86,7 @@ for(iso_i in country_isos){
                                         version = version,
                                         creation_act = creation_act,
                                         token = token,
-                                        sleep_time = 1)
+                                        sleep_time = 0.1)
       
       # Add variables if not null (ie, no error in calling function)
       if(!is.null(fb_df_i)){
@@ -94,7 +95,7 @@ for(iso_i in country_isos){
       
       return(fb_df_i)
     })
-    
+
     ## Export; Only export if scraped all parameters
     if(nrow(fb_df) == nrow(parameters_df)){
       print("Saved!")

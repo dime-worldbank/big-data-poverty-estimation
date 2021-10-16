@@ -72,6 +72,7 @@ KEY_i  <- 1
 
 #### Loop over countries
 for(country_code_i in country_code_all_rep){
+  print(country_code_i)
   
   df_c <- df[df$country_code %in% country_code_i,]
   

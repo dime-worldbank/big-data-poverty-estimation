@@ -15,40 +15,25 @@ creation_act <- api_keys$Key[api_keys$Account %in% "creation_act"]
 version <- api_keys$Key[api_keys$Account %in% "version"]
 
 # Parameters -------------------------------------------------------------------
-demographics_df <- GET(
-  "https://graph.facebook.com/v12.0/search",
-  query=list(
-    type='adTargetingCategory',
-    class='demographics',
-    access_token=token,
-    limit=2000
-  )) %>% content(as="text") %>% fromJSON %>%. [[1]]
+demographics_df <- get_fb_parameters(class = "demographics",
+                                     version = version,
+                                     token = token)
 
-interests_df <- GET(
-  "https://graph.facebook.com/v12.0/search",
-  query=list(
-    type='adTargetingCategory',
-    class='interests',
-    access_token=token,
-    limit=2000
-  )) %>% content(as="text") %>% fromJSON %>% .[[1]]
+interests_df <- get_fb_parameters(class = "interests",
+                                  version = version,
+                                  token = token)
 
-behaviors_df <- GET(
-  "https://graph.facebook.com/v12.0/search",
-  query=list(
-    type='adTargetingCategory',
-    class='behaviors',
-    access_token=token,
-    limit=2000
-  )) %>% content(as="text") %>% fromJSON %>% .[[1]]
+behaviors_df <- get_fb_parameters(class = "behaviors",
+                                  version = version,
+                                  token = token)
 
 # Export -----------------------------------------------------------------------
 saveRDS(demographics_df,
         file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                   "demographics.Rds"))
 write.csv(demographics_df %>% dplyr::select(id, name, type, description, audience_size),
-        file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
-                  "demographics.csv"), row.names = F)
+          file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
+                    "demographics.csv"), row.names = F)
 
 saveRDS(interests_df,
         file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
@@ -63,9 +48,4 @@ saveRDS(behaviors_df,
 write.csv(behaviors_df %>% dplyr::select(id, name, description, audience_size),
           file.path(data_dir, "Facebook Marketing",  "FinalData", "interests_demographics_behaviors_ids",
                     "behaviors.csv"), row.names = F)
-
-interests_df[interests_df$name %>% tolower() %>% str_detect("food"),]
-interests_df[interests_df$name %in% "Fast Food"]
-
-
 

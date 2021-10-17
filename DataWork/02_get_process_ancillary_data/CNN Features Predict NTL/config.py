@@ -20,7 +20,8 @@ if(username == 'robmarty'):
     MAIN_GIT_DIRECTORY = '/Users/robmarty/Documents/Github/Pakistan-Poverty-from-Sky'
     SECURE_DATA_DIRECTORY = '/Users/robmarty/Documents/World Bank/Pakistan Poverty from Sky'
     GOOGLEDRIVE_DIRECTORY = '/Users/robmarty/Google Drive/World Bank/IEs/Pakistan Poverty Estimation'
-
+    OVERLEAF_DIRECTORY = '/Users/robmarty/Dropbox/Apps/Overleaf/Poverty Estimation - Paper'
+        
 ## Dependent Paths
 GIT_DIRECTORY = os.path.join(MAIN_GIT_DIRECTORY, 'DataWork', '03_analysis', 'poverty_estimation')
 DTL_DIRECTORY = os.path.join(DROPBOX_DIRECTORY, 'Data', 'Landsat', 'RawData', '2014')

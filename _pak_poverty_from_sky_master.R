@@ -166,6 +166,7 @@ library(ggmap)
 library(ggridges)
 library(ggpubr)
 library(xgboost)
+library(WDI)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")

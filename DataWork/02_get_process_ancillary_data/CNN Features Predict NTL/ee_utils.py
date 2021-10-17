@@ -107,7 +107,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
 
         # Prep Files
         ### RGB
-        brgb_l = [np.array(d_f_i[b_b]), np.array(d_f_i[g_b]), np.array(d_f_i[r_b])]
+        brgb_l = [np.array(d_f_i[r_b]), np.array(d_f_i[g_b]), np.array(d_f_i[b_b])]
         brgb_np = np.stack(brgb_l, axis=-1)
         brgb_np = brgb_np.astype(np.uint16)
         brgb_np_tf = tf.io.encode_png(brgb_np, compression = 9)

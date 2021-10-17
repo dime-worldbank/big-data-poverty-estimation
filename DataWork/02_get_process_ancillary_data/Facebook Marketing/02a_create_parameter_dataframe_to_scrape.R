@@ -93,7 +93,7 @@ parameters_df_behaviors <- data.frame(
     # Mobile OS
     "6004386044572", # Facebook access (mobile): Android devices
     "6004384041172", # Facebook access (mobile): Apple (iOS) devices
-    "6004385895772", # Facebook access (mobile): Windows phones
+    #"6004385895772", # Facebook access (mobile): Windows phones
     
     # High end phones
     "6092512462983,6120699687383,6120699721983,6120699725783", # Facebook access (mobile): iPhone X/XS/XS Max/XR
@@ -104,10 +104,10 @@ parameters_df_behaviors <- data.frame(
     
     # Other device types
     "6004382299972", # Facebook access (mobile): all mobile devices
-    "6004383149972", # Facebook access (mobile): feature phones
+    #"6004383149972", # Facebook access (mobile): feature phones
     "6004383049972", # Facebook access (mobile): smartphones and tablets
     "6016286626383", # Facebook access (mobile): tablets
-    "6023460590583", # Owns: Cherry Mobile
+    #"6023460590583", # Owns: Cherry Mobile
     "6056265212183", # Owns: VIVO devices
     "6011390261383", # Owns: Huawei
     "6056265200983", # Owns: Oppo
@@ -139,7 +139,9 @@ parameters_df_interests <- data.frame(
                "6007828099136", # Luxury Goods
                "6003346592981", # Online Shopping
                "6004160395895", # Travel
-               "6003436950375"  # Restaurants
+               "6003436950375", # Restaurants
+               "6003430696269",  # Tourism
+               "6003263791114" # Shopping
   ), 
   stringsAsFactors = F
 )

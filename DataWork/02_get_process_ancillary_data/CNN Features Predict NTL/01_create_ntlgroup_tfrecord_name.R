@@ -1,6 +1,8 @@
 # Create bins for nighttime lights
 
 set.seed(4242)
+N_BINS <- 5
+N_OBS_IN_TFR <- 100
 
 # Load data --------------------------------------------------------------------
 survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
@@ -9,7 +11,7 @@ survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData",
 
 viirs_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
                               "satellite_data_from_gee", 
-                              "viirs_ubuff2500_rbuff2500.Rds"))
+                              "viirs181920_2000_ubuff2000_rbuff2000.Rds"))
 
 survey_all_df <- survey_all_df %>%
   left_join(viirs_df, by = c("uid", "year")) %>%
@@ -25,16 +27,24 @@ if(SURVEY_NAME %in% "DHS"){
 survey_df_clean_append <- map_df(years, function(year_i){
   print(year_i)
   
-  if(year_i != "all"){
-    survey_df <- survey_all_df[survey_all_df$year %in% year_i,]
-  } else{
+  if(year_i == "all"){
     survey_df <- survey_all_df
+  } else{
+    survey_df <- survey_all_df[survey_all_df$year %in% year_i,]
   }
-
+  
   # Create bins ------------------------------------------------------------------
-  mclust_fit = Mclust(survey_df$avg_rad, G=3, model="V")
+  mclust_fit = Mclust(survey_df$avg_rad, G=N_BINS, model="V")
   survey_df$ntl_group <- predict(mclust_fit, survey_df$avg_rad)$classification
   
+  if(F){
+    survey_df %>%
+      group_by(ntl_group) %>%
+      dplyr::summarise(avg_rad_min = min(avg_rad),
+                       avg_rad_max = max(avg_rad))
+    
+    table(survey_df$ntl_group)
+  }
   # Create balanced groups -------------------------------------------------------
   min_group_size <- survey_df$ntl_group %>%
     table() %>%
@@ -78,9 +88,9 @@ survey_df_clean_append <- map_df(years, function(year_i){
     return(dhs_all_df_coll)
   }
   
-  survey_df_forcnn_tf <- make_tfrecord_name(survey_df_forcnn, "forcnn") %>%
+  survey_df_forcnn_tf <- make_tfrecord_name(survey_df_forcnn, "forcnn", N_OBS_IN_TFR) %>%
     dplyr::mutate(use_for_cnn = "yes")
-  survey_df_nocnn_tf <- make_tfrecord_name(survey_df_nocnn, "nocnn") %>%
+  survey_df_nocnn_tf <- make_tfrecord_name(survey_df_nocnn, "nocnn", N_OBS_IN_TFR) %>%
     dplyr::mutate(use_for_cnn = "no")
   
   survey_df_clean <- bind_rows(survey_df_forcnn_tf,
@@ -98,17 +108,18 @@ survey_df_clean_append <- map_df(years, function(year_i){
 })
 
 write.csv(survey_df_clean_append, file.path(data_dir, SURVEY_NAME, "FinalData",
-                                     "Individual Datasets",
-                                     "data_for_cnn.csv"),
+                                            "Individual Datasets",
+                                            "data_for_cnn.csv"),
           row.names = F)
 
 
 write.csv(survey_df_clean_append, file.path(gdrive_dir,
-                                     "Data", SURVEY_NAME, "FinalData",
-                                     "Individual Datasets",
-                                     "data_for_cnn.csv"),
+                                            "Data", SURVEY_NAME, "FinalData",
+                                            "Individual Datasets",
+                                            "data_for_cnn.csv"),
           row.names = F)
 
 
-
+survey_df_clean_append$ntl_group %>% table()
+survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_")] %>% table()
 

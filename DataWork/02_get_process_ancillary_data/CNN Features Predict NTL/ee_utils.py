@@ -79,7 +79,7 @@ def normalized_diff(values1, values2):
 
     return (values2 - values1)/(values2 + values1)
 
-def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, other_bs):
+def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b):
     '''
     Transforms feature collection from neighborhood array to np array. Stacks bands
     so that they are: NTL, blue, green, red, NDVI, other single daytime bands
@@ -101,7 +101,7 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         uid_i = survey_df['uid'].iloc[i].encode()
         
         d_f_i = daytime_f[i]['properties']
-        n_f_i = ntl_f[i]['properties']
+        #n_f_i = ntl_f[i]['properties']
 
         # SAVE AS TFRECORD
 
@@ -114,8 +114,8 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         #brgb_np_tf = tf.io.serialize_tensor(brgb_np)
 
         # https://www.tensorflow.org/api_docs/python/tf/io/encode_png
-        ### NDVI
-        bndvi_np = normalized_diff(np.array(d_f_i[nir_b]), np.array(d_f_i[r_b]))
+        ### NDVI 
+        bndvi_np = d_f_i['NDVI']      
         bndvi_np = np.expand_dims(bndvi_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
         # Convert from -1 to 1 to 0 to 20000
         bndvi_np = bndvi_np + 1
@@ -124,25 +124,26 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
         bndvi_np_tf = tf.io.encode_png(bndvi_np, compression = 9)
         #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
-        ### NIR
-        bnir_np = np.array(d_f_i[nir_b])
-        bnir_np = np.expand_dims(bnir_np, axis=2)
-        bnir_np = bnir_np.astype(np.uint16)
-        bnir_np_tf = tf.io.encode_png(bnir_np, compression = 9)
-        #bnir_np_tf = tf.io.serialize_tensor(bnir_np)
+        ### BU 
+        bbu_np = d_f_i['BU']      
+        bbu_np = np.expand_dims(bbu_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+        # Convert from -1 to 1 to 0 to 20000
+        bbu_np = bbu_np + 1
+        bbu_np = bbu_np * 10000
+        bbu_np = bbu_np.astype(np.uint16)
+        bbu_np_tf = tf.io.encode_png(bbu_np, compression = 9)
+        #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
         ### NTL
         # Not uint16, so so serialize
-        bntl_np = np.array(n_f_i['avg_rad'])
-        bntl_np = np.expand_dims(bntl_np, axis=2)
-
+        #bntl_np = np.array(n_f_i['avg_rad'])
+        #bntl_np = np.expand_dims(bntl_np, axis=2)
         # Values to uint16
-        bntl_np = bntl_np + 2 # Can be negative
-        bntl_np = bntl_np * 100 # consider two decimal places before uint16 // could also to * 10 (second decimal may not matter)
-        bntl_np[bntl_np >= 65535] = 65535 # within range of uint16
-
-        bntl_np = bntl_np.astype(np.uint16)
-        bntl_np_tf = tf.io.encode_png(bntl_np, compression = 9)
+        #bntl_np = bntl_np + 2 # Can be negative
+        #bntl_np = bntl_np * 100 # consider two decimal places before uint16 // could also to * 10 (second decimal may not matter)
+        #bntl_np[bntl_np >= 65535] = 65535 # within range of uint16
+        #bntl_np = bntl_np.astype(np.uint16)
+        #bntl_np_tf = tf.io.encode_png(bntl_np, compression = 9)
         #bntl_np_tf = tf.io.serialize_tensor(bntl_np)
 
         ## Create dictionary
@@ -150,21 +151,20 @@ def ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, 
             'uid' : _bytes_feature(uid_i),
             'viirs_ntl_group' : _int64_feature(viirs_ntl_group),
             'year' : _int64_feature(survey_year_i),
-            'b_ntl': _bytes_feature(bntl_np_tf),
             'b_rgb': _bytes_feature(brgb_np_tf),
             'b_ndvi': _bytes_feature(bndvi_np_tf),
-            'b_nir': _bytes_feature(bnir_np_tf)
+            'b_bu': _bytes_feature(bbu_np_tf)
             }
 
         # Other MS Bands
-        b_other_list = []
-        for b_other_i in other_bs:
-            bi_np = np.array(d_f_i[b_other_i])
-            bi_np = np.expand_dims(bi_np, axis=2)
-            #bi_np_tf = tf.io.serialize_tensor(bi_np)
-            bi_np = bi_np.astype(np.uint16)
-            bi_np_tf = tf.io.encode_png(bi_np, compression = 9)
-            feature['b_' + b_other_i] = _bytes_feature(bi_np_tf)
+        #b_other_list = []
+        #for b_other_i in other_bs:
+        #    bi_np = np.array(d_f_i[b_other_i])
+        #    bi_np = np.expand_dims(bi_np, axis=2)
+        #    #bi_np_tf = tf.io.serialize_tensor(bi_np)
+        #    bi_np = bi_np.astype(np.uint16)
+        #    bi_np_tf = tf.io.encode_png(bi_np, compression = 9)
+        #    feature['b_' + b_other_i] = _bytes_feature(bi_np_tf)
   
         example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
 
@@ -226,40 +226,41 @@ def prep_cnn_np(survey_df,
     
     # Year
     # VIIRS starts in 2012. At minimum, use 2013 to have year before and after
-    if year <= 2013:
-        year_use = 2013
-    else:
-        year_use = year
-                
-    year_plus = year_use + 1
-    year_minus = year_use - 1
-    
-    year_minus_str = str(year_minus) + '-01-01'
-    year_plus_str = str(year_plus) + '-12-31'
-    
-    # Reduce image collection
-    ntl_image = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG')\
-        .filterDate(year_minus_str, year_plus_str)\
-        .median()
+    if False:
+        if year <= 2013:
+            year_use = 2013
+        else:
+            year_use = year
 
-    # Select Bands  
-    ntl_image = ntl_image.select(['avg_rad'])
-        
-    # Image to neighborhood array
-    ntl_arrays = ntl_image.neighborhoodToArray(kernel)
-    
-    # Extract values from GEE    
-    ntl_values_ee = ntl_arrays.sample(
-      region = survey_fc, 
-      scale = SCALE,
-      tileScale = 8
-    )
-    
-    ntl_dict_ee = ntl_values_ee.getInfo()
-    
-    # Convert values to numpy array
-    #n_rows = survey_df.shape[0]
-    ntl_f = ntl_dict_ee['features']    
+        year_plus = year_use + 1
+        year_minus = year_use - 1
+
+        year_minus_str = str(year_minus) + '-01-01'
+        year_plus_str = str(year_plus) + '-12-31'
+
+        # Reduce image collection
+        ntl_image = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG')\
+            .filterDate(year_minus_str, year_plus_str)\
+            .median()
+
+        # Select Bands  
+        ntl_image = ntl_image.select(['avg_rad'])
+
+        # Image to neighborhood array
+        ntl_arrays = ntl_image.neighborhoodToArray(kernel)
+
+        # Extract values from GEE    
+        ntl_values_ee = ntl_arrays.sample(
+          region = survey_fc, 
+          scale = SCALE,
+          tileScale = 8
+        )
+
+        ntl_dict_ee = ntl_values_ee.getInfo()
+
+        # Convert values to numpy array
+        #n_rows = survey_df.shape[0]
+        ntl_f = ntl_dict_ee['features']    
         
     # l7 ----------------------------------------------------------------
     if satellite == "l7":
@@ -269,13 +270,15 @@ def prep_cnn_np(survey_df,
         g_b = 'B2' 
         r_b = 'B3' 
         nir_b = 'B4'
-        other_bs = ['B5', 'B6', 'B7']
+        swir_b = 'B5'
+        #other_bs = ['B5', 'B6', 'B7']
         
-        BANDS = single_bs.copy()
-        BANDS.append(b_b)
+        #BANDS = single_bs.copy()
+        BANDS = [b_b].copy()
         BANDS.append(g_b)
         BANDS.append(r_b)
         BANDS.append(nir_b)
+        BANDS.append(swir_b)
 
         # Year
         year_use = year
@@ -308,13 +311,15 @@ def prep_cnn_np(survey_df,
         g_b = 'B3' 
         r_b = 'B4' 
         nir_b = 'B5'
-        other_bs = ['B6', 'B7', 'B10']
+        swir_b = 'B6'
+        #other_bs = ['B6', 'B7', 'B10']
         
-        BANDS = other_bs.copy()
-        BANDS.append(b_b)
+        #BANDS = single_bs.copy()
+        BANDS = [b_b].copy()
         BANDS.append(g_b)
         BANDS.append(r_b)
         BANDS.append(nir_b)
+        BANDS.append(swir_b)
 
         # Year
         # landsat 8 starts in April 2013; if year is less than
@@ -336,7 +341,6 @@ def prep_cnn_np(survey_df,
         #    .median() #\
         #    #.multiply(0.0001)
         
-        
         image = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR')\
             .filterDate(year_minus_str, year_plus_str)\
             .map(cloud_mask_landsatSR)\
@@ -354,17 +358,19 @@ def prep_cnn_np(survey_df,
         g_b = 'B3' 
         r_b = 'B4' 
         nir_b = 'B8'
-        other_bs = ['B5', 'B6', 'B7', 'B8A', 'B11', 'B12', 'AOT']
+        swir_b = 'B11'
+        #other_bs = ['B5', 'B6', 'B7', 'B8A', 'B11', 'B12', 'AOT']
      
-        BANDS = other_bs.copy()
-        BANDS.append(b_b)
+        #BANDS = single_bs.copy()
+        BANDS = [b_b].copy()
         BANDS.append(g_b)
         BANDS.append(r_b)
         BANDS.append(nir_b)
+        BANDS.append(swir_b)
         
         # Year
         # sentinel starts in March 2017; juse use 2018
-        year_use = 2018
+        year_use = 2019
                     
         year_plus = year_use + 1
         year_minus = year_use - 1
@@ -383,6 +389,16 @@ def prep_cnn_np(survey_df,
 
     # Select Bands
     image = image.select(BANDS)
+    
+    # Create Indices
+    # https://www.linkedin.com/pulse/ndvi-ndbi-ndwi-calculation-using-landsat-7-8-tek-bahadur-kshetri
+    ndvi = image.normalizedDifference([nir_b, r_b]).rename('NDVI');
+    ndbi = image.normalizedDifference([swir_b, nir_b]).rename('NDBI');
+    image = image.addBands(ndvi)
+    image = image.addBands(ndbi)
+        
+    bu = image.select('NDBI').subtract(image.select('NDVI')).rename('BU')
+    image = image.addBands(bu)
         
     # Image to neighborhood array
     arrays = image.neighborhoodToArray(kernel)
@@ -401,7 +417,7 @@ def prep_cnn_np(survey_df,
     daytime_f = dict_ee['features']
     
     # Extract dta
-    out_ex_proto_list = ee_to_np_daytime(daytime_f, ntl_f, survey_df, n_rows, b_b, g_b, r_b, nir_b, other_bs)
+    out_ex_proto_list = ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b)
     
     return out_ex_proto_list
 

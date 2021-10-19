@@ -5,7 +5,7 @@ set.seed(42)
 
 over_nearest <- function(sp_i, gadm_i){
   # For each sp_i, takes the nearest polygon from gadm_i. Returns data frame
-  # ob sp_i with gadm data merged in
+  # of sp_i with gadm data merged in
   
   # Add uids in same order as rows
   gadm_i$gadm_uid <- 1:nrow(gadm_i)

@@ -19,3 +19,7 @@ fb_wide_df <- fb_df %>%
 
 fb_wide_df <- fb_wide_df %>%
   dplyr::select(country_iso2, contains("mau"))
+
+saveRDS(fb_wide_df, file.path(fb_marketing_dir,  "FinalData", "country_level_mau", 
+                              "Individual Datasets",
+                              "country_level_mau.Rds"))

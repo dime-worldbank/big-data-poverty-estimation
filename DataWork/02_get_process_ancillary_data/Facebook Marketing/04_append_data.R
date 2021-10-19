@@ -18,7 +18,7 @@ df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
         as.data.table()
     } else{
       df_out <- df %>%
-        dplyr::select(uid, param_id, estimate_dau, estimate_mau) %>%
+        dplyr::select(uid, param_id, estimate_mau, radius) %>%
         dplyr::mutate(uid = uid %>% as.character()) %>%
         as.data.table()
     }
@@ -34,9 +34,11 @@ rm(i)
 
 # To Wide ----------------------------------------------------------------------
 df_wide <- df_long %>%
-  pivot_wider(id_cols = c(uid),
+  pivot_wider(id_cols = c(uid, radius),
               names_from = param_id,
-              values_from = c(estimate_dau, estimate_mau))
+              values_from = c(estimate_mau)) %>%
+  dplyr::rename_at(vars(-uid, -radius), ~ paste0("estimate_mau_", .)) %>%
+  dplyr::rename(radius = fb_radius)
 
 # To Proportion ----------------------------------------------------------------
 # estimate_[mau/dau]_1 is all facebook users, so divide by this to 

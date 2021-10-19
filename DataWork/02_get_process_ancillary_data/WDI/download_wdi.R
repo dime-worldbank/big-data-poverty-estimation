@@ -14,7 +14,8 @@ wdi_df <- WDI(country=unique(survey_df$iso2),
 
 wdi_df <- wdi_df %>%
   dplyr::rename(wdi_population = SP.POP.TOTL,
-                wdi_gdp_pc = NY.GDP.PCAP.CD)
+                wdi_gdp_pc = NY.GDP.PCAP.CD,
+                iso2 = iso2c)
 
 # Export -----------------------------------------------------------------------
 saveRDS(wdi_df, file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))

@@ -303,6 +303,9 @@ for(country_code_i in country_code_all_rep){
           sleep_time_check <- sleep_time_check + 1
           
         }
+        
+        cat("\n")
+        
       }
       
       ## Change Key

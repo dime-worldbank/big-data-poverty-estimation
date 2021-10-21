@@ -139,20 +139,20 @@ for(country_code_i in country_code_all_rep){
       #### Check 5km
       if(is.na(radius)){
         fb_radius_Xkm <- query_fb_marketing_api(location_type = "coordinates",
-                                             latitude = df_i$latitude,
-                                             longitude = df_i$longitude,
-                                             radius = 5,
-                                             radius_unit = "kilometer",
-                                             education_statuses = parameters_df_i$education_statuses,
-                                             behavior = parameters_df_i$behavior %>% str_split(",") %>% unlist(),
-                                             interest = parameters_df_i$interest,
-                                             gender = parameters_df_i$gender %>% str_split(",") %>% unlist(),
-                                             age_min = parameters_df_i$age_min,
-                                             age_max = parameters_df_i$age_max,
-                                             version = version,
-                                             creation_act = creation_act,
-                                             token = token,
-                                             sleep_time = 0.2)
+                                                latitude = df_i$latitude,
+                                                longitude = df_i$longitude,
+                                                radius = 5,
+                                                radius_unit = "kilometer",
+                                                education_statuses = parameters_df_i$education_statuses,
+                                                behavior = parameters_df_i$behavior %>% str_split(",") %>% unlist(),
+                                                interest = parameters_df_i$interest,
+                                                gender = parameters_df_i$gender %>% str_split(",") %>% unlist(),
+                                                age_min = parameters_df_i$age_min,
+                                                age_max = parameters_df_i$age_max,
+                                                version = version,
+                                                creation_act = creation_act,
+                                                token = token,
+                                                sleep_time = 0.2)
         
         if(is.null(fb_radius_Xkm)){
           print("Too many API calls when checking radius; sleep and skip")
@@ -172,20 +172,20 @@ for(country_code_i in country_code_all_rep){
       if(is.na(radius)){
         # Still grab to determine whether need to scrape
         fb_radius_Xkm <- query_fb_marketing_api(location_type = "coordinates",
-                                             latitude = df_i$latitude,
-                                             longitude = df_i$longitude,
-                                             radius = 10,
-                                             radius_unit = "kilometer",
-                                             education_statuses = parameters_df_i$education_statuses,
-                                             behavior = parameters_df_i$behavior %>% str_split(",") %>% unlist(),
-                                             interest = parameters_df_i$interest,
-                                             gender = parameters_df_i$gender %>% str_split(",") %>% unlist(),
-                                             age_min = parameters_df_i$age_min,
-                                             age_max = parameters_df_i$age_max,
-                                             version = version,
-                                             creation_act = creation_act,
-                                             token = token,
-                                             sleep_time = 0.2)
+                                                latitude = df_i$latitude,
+                                                longitude = df_i$longitude,
+                                                radius = 10,
+                                                radius_unit = "kilometer",
+                                                education_statuses = parameters_df_i$education_statuses,
+                                                behavior = parameters_df_i$behavior %>% str_split(",") %>% unlist(),
+                                                interest = parameters_df_i$interest,
+                                                gender = parameters_df_i$gender %>% str_split(",") %>% unlist(),
+                                                age_min = parameters_df_i$age_min,
+                                                age_max = parameters_df_i$age_max,
+                                                version = version,
+                                                creation_act = creation_act,
+                                                token = token,
+                                                sleep_time = 0.2)
         
         if(is.null(fb_radius_Xkm)){
           print("Too many API calls when checking radius; sleep and skip")
@@ -287,7 +287,22 @@ for(country_code_i in country_code_all_rep){
       
       ## Sleep
       if(SCRAPE_ALL_DATA){
-        Sys.sleep(sleep_time_after_loc)
+        
+        sleep_time_check <- 0
+        while(sleep_time_check < sleep_time_after_loc){
+
+          if(sleep_time_check == 0){
+            cat("Sleeping ")
+            cat(round(sleep_time_after_loc))
+            cat(" seconds: ")
+          } else{
+            cat("=")
+          }
+          
+          Sys.sleep(1)
+          sleep_time_check <- sleep_time_check + 1
+          
+        }
       }
       
       ## Change Key

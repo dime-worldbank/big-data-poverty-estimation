@@ -79,7 +79,7 @@ def normalized_diff(values1, values2):
 
     return (values2 - values1)/(values2 + values1)
 
-def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b):
+def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b): # nir_b, swir_b
     '''
     Transforms feature collection from neighborhood array to np array. Stacks bands
     so that they are: NTL, blue, green, red, NDVI, other single daytime bands
@@ -112,27 +112,36 @@ def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b):
         brgb_np = brgb_np.astype(np.uint16)
         brgb_np_tf = tf.io.encode_png(brgb_np, compression = 9)
         #brgb_np_tf = tf.io.serialize_tensor(brgb_np)
+        
+        ### NIR
+        if False:
+            bnir_np = d_f_i[nir_b]      
+            bnir_np = np.expand_dims(bnir_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+            bnir_np = bnir_np.astype(np.uint16)
+            bnir_np_tf = tf.io.encode_png(bnir_np, compression = 9)
+            #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
-        # https://www.tensorflow.org/api_docs/python/tf/io/encode_png
-        ### NDVI 
-        bndvi_np = d_f_i['NDVI']      
-        bndvi_np = np.expand_dims(bndvi_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
-        # Convert from -1 to 1 to 0 to 20000
-        bndvi_np = bndvi_np + 1
-        bndvi_np = bndvi_np * 10000
-        bndvi_np = bndvi_np.astype(np.uint16)
-        bndvi_np_tf = tf.io.encode_png(bndvi_np, compression = 9)
-        #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
+        if True:
+            # https://www.tensorflow.org/api_docs/python/tf/io/encode_png
+            ### NDVI 
+            bndvi_np = d_f_i['NDVI']      
+            bndvi_np = np.expand_dims(bndvi_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+            # Convert from -1 to 1 to 0 to 20000
+            bndvi_np = bndvi_np + 1
+            bndvi_np = bndvi_np * 10000
+            bndvi_np = bndvi_np.astype(np.uint16)
+            bndvi_np_tf = tf.io.encode_png(bndvi_np, compression = 9)
+            #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
-        ### BU 
-        bbu_np = d_f_i['BU']      
-        bbu_np = np.expand_dims(bbu_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
-        # Convert from -1 to 1 to 0 to 20000
-        bbu_np = bbu_np + 1
-        bbu_np = bbu_np * 10000
-        bbu_np = bbu_np.astype(np.uint16)
-        bbu_np_tf = tf.io.encode_png(bbu_np, compression = 9)
-        #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
+            ### BU 
+            bbu_np = d_f_i['BU']      
+            bbu_np = np.expand_dims(bbu_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+            # Convert from -1 to 1 to 0 to 20000
+            bbu_np = bbu_np + 1
+            bbu_np = bbu_np * 10000
+            bbu_np = bbu_np.astype(np.uint16)
+            bbu_np_tf = tf.io.encode_png(bbu_np, compression = 9)
+            #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
         ### NTL
         # Not uint16, so so serialize
@@ -152,6 +161,7 @@ def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b):
             'viirs_ntl_group' : _int64_feature(viirs_ntl_group),
             'year' : _int64_feature(survey_year_i),
             'b_rgb': _bytes_feature(brgb_np_tf),
+            #'b_nir': _bytes_feature(bnir_np_tf)
             'b_ndvi': _bytes_feature(bndvi_np_tf),
             'b_bu': _bytes_feature(bbu_np_tf)
             }
@@ -253,7 +263,7 @@ def prep_cnn_np(survey_df,
         ntl_values_ee = ntl_arrays.sample(
           region = survey_fc, 
           scale = SCALE,
-          tileScale = 8
+          tileScale = 10 #8
         )
 
         ntl_dict_ee = ntl_values_ee.getInfo()
@@ -400,24 +410,47 @@ def prep_cnn_np(survey_df,
     bu = image.select('NDBI').subtract(image.select('NDVI')).rename('BU')
     image = image.addBands(bu)
         
+    # Subset bands; don't need those used to create NDVI and NDBI
+    image = image.select([b_b, g_b, r_b, 'NDVI', 'BU'])
+        
     # Image to neighborhood array
     arrays = image.neighborhoodToArray(kernel)
+    
+    # New ---------
+    #neighborhoodImage = myImageToBeSampled.neighborhoodToArray(kernel)
+    #samples = arrays.sampleRegions(collection=survey_fc)
+    
+    # ee.batch.Export.table.toCloudStorage
+    # ee.batch.Export.table.toDrive
+    # Export.table.toDrive
+    #mytask = ee.batch.Export.table.toDrive(
+    # collection = samples,
+    # fileFormat = 'TFRecord',
+    # description = 'test123',
+    # folder = 'gee_extracts',
+    # selectors = [b_b, g_b, r_b, 'NDVI', 'BU'] + ['uid', 'ntl_group'])
+    
+    #return mytask
 
+    # OLD ---------
     # Extract values from GEE   
     values_ee = arrays.sample(
       region = survey_fc, 
       scale = SCALE,
-      tileScale = 8
+      tileScale = 12 # 8
     )
     
     dict_ee = values_ee.getInfo()
-    
+     
     # Convert values to numpy array
     n_rows = survey_df.shape[0]
     daytime_f = dict_ee['features']
     
-    # Extract dta
+    # Extract data
     out_ex_proto_list = ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b)
     
     return out_ex_proto_list
 
+# https://csaybar.github.io/blog/2019/05/30/eetf/
+# https://stackoverflow.com/questions/63000565/extract-10000-images-from-google-earth-engine
+# https://colab.research.google.com/github/google/earthengine-api/blob/master/python/examples/ipynb/UNET_regression_demo.ipynb#scrollTo=-IlgXu-vcUEY

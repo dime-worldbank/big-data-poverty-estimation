@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Install gsutil
+# sudo pip install gsutil
+
+gsutil config 
+
+# -m flag: parallel processing (I think)?
+# -n flag: skip if already exists
+gsutil -m -n cp ~/Google\ Drive/World\ Bank/IEs/Pakistan\ Poverty\ Estimation/Data/DHS/FinalData/Individual\ Datasets/cnn_s2/tfrecords/*.tfrecord gs://ieconnectpovest/cnn_s2/tfrecords
+

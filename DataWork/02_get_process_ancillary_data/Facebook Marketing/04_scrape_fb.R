@@ -55,6 +55,8 @@ sleep_time_after_loc <- sleep_time_after_loc - 105
 
 sleep_time_after_loc <- sleep_time_after_loc / N_KEYS
 
+sleep_time_after_loc <- sleep_time_after_loc - 12
+
 # Implement Function and Export ------------------------------------------------
 ## Grab country codes
 country_code_all <- df$country_code %>% unique()
@@ -126,6 +128,8 @@ for(country_code_i in country_code_all_rep){
       
       if(is.null(fb_radius_Xkm)){
         print("Too many API calls when checking radius; sleep and skip")
+        KEY_i <- KEY_i + 1
+        if(KEY_i > N_KEYS) KEY_i <- 1
         Sys.sleep(10)
         next
       }
@@ -156,6 +160,9 @@ for(country_code_i in country_code_all_rep){
         
         if(is.null(fb_radius_Xkm)){
           print("Too many API calls when checking radius; sleep and skip")
+          KEY_i <- KEY_i + 1
+          if(KEY_i > N_KEYS) KEY_i <- 1
+          
           Sys.sleep(10)
           next
         }
@@ -189,6 +196,9 @@ for(country_code_i in country_code_all_rep){
         
         if(is.null(fb_radius_Xkm)){
           print("Too many API calls when checking radius; sleep and skip")
+          KEY_i <- KEY_i + 1
+          if(KEY_i > N_KEYS) KEY_i <- 1
+          
           Sys.sleep(10)
           next
         }

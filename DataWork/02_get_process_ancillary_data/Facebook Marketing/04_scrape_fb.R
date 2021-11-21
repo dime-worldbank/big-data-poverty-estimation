@@ -136,8 +136,12 @@ for(country_code_i in country_code_all_rep){
         next
       }
       
-      if(!is.null(fb_radius_Xkm$estimate_mau)){
-        if(fb_radius_Xkm$estimate_mau >= 2000){
+      if(!is.null(fb_radius_Xkm$estimate_mau_upper_bound)){
+        
+        mau_to_check <- mean(fb_radius_Xkm$estimate_mau_upper_bound, 
+                             fb_radius_Xkm$estimate_mau_lower_bound)
+        
+        if(mau_to_check >= 2000){
           radius <- 2
         }
       }
@@ -169,8 +173,12 @@ for(country_code_i in country_code_all_rep){
           next
         }
         
-        if(!is.null(fb_radius_Xkm$estimate_mau)){
-          if(fb_radius_Xkm$estimate_mau >= 2000){
+        if(!is.null(fb_radius_Xkm$estimate_mau_upper_bound)){
+          
+          mau_to_check <- mean(fb_radius_Xkm$estimate_mau_upper_bound, 
+                               fb_radius_Xkm$estimate_mau_lower_bound)
+          
+          if(mau_to_check >= 2000){
             radius <- 5
           }
         }

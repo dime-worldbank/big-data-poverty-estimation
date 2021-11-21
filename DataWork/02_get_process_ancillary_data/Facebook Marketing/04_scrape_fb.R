@@ -211,7 +211,7 @@ for(country_code_i in country_code_all_rep){
       
       ## Check 1: estimate_mau is 1000
       if(!is.null(fb_radius_Xkm)){
-        if(!is.null(fb_radius_Xkm$estimate_mau)){
+        if(!is.null(fb_radius_Xkm$estimate_mau_upper_bound)){
           if(fb_radius_Xkm$estimate_mau_upper_bound == 1000){
             
             print("estimate_1_mau = 1000; assigning 1000 to all mau")

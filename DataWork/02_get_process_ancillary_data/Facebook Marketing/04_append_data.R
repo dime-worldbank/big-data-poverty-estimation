@@ -8,22 +8,29 @@ i <<- 1
 df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
                      "fb_mau_individual_datasets") %>%
   list.files(pattern = "*.Rds",
-             full.names = T) %>%
+             full.names = T) %>% 
   lapply(function(path){
+    #print(path)
+    
     df <- readRDS(path) 
-
+    
     # If there was an error, example incorrect location, won't have uid
     if(is.null(df$uid)){
+      df_out <- data.frame(NULL) %>%
+        as.data.table()
+    } else if(!is.null(df$ERROR)){
       df_out <- data.frame(NULL) %>%
         as.data.table()
     } else{
       # Don't use dplyr::select; some datasets dont contain all the variables.
       # For example, if was an invalid lat/lon, wouldn't contain 'mau' variables
-      df_out <- df[,c("uid", 
-                      "param_id", 
-                      "estimate_mau_lower_bound", 
-                      "estimate_mau_upper_bound",
-                      "radius")]
+      df_out <- df[,names(df) %in% c("uid", 
+                                     "param_id", 
+                                     "estimate_mau_lower_bound", 
+                                     "estimate_mau_upper_bound",
+                                     "radius",
+                                     "estimate_mau",
+                                     "api_call_time_utc")]
       
       df_out <- df_out %>%
         dplyr::mutate(uid = uid %>% as.character()) %>%
@@ -35,7 +42,7 @@ df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
     
     return(df_out)  
   }) %>%
-  rbindlist() %>%
+  rbindlist(fill=TRUE) %>%
   as.data.frame()
 rm(i)
 

@@ -33,6 +33,8 @@ if(SURVEY_NAME %in% "OPM"){
 api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad")
 
+api_keys <- api_keys[api_keys$Details != "pakistanprojectroute4@gmail.com",]
+
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
 N_KEYS <- length(KEYS_ACCOUNTS)
 
@@ -215,7 +217,7 @@ for(country_code_i in country_code_all_rep){
           if(fb_radius_Xkm$estimate_mau_upper_bound == 1000){
             
             print("estimate_1_mau = 1000; assigning 1000 to all mau")
-            print(fb_radius_Xkm$estimate_mau)
+            print(fb_radius_Xkm$estimate_mau_upper_bound)
             
             fb_df <- data.frame(uid = rep(df_i$uid, nrow(parameters_df)))
             fb_df$estimate_mau <- 1000

@@ -2,7 +2,7 @@
 
 set.seed(4242)
 N_BINS <- 5
-N_OBS_IN_TFR <- 100
+N_OBS_IN_TFR <- 250
 
 # Load data --------------------------------------------------------------------
 survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
@@ -11,7 +11,7 @@ survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData",
 
 viirs_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
                               "satellite_data_from_gee", 
-                              "viirs181920_2000_ubuff2000_rbuff2000.Rds"))
+                              "viirs181920_1120_ubuff1120_rbuff1120.Rds"))
 
 survey_all_df <- survey_all_df %>%
   left_join(viirs_df, by = c("uid", "year")) %>%

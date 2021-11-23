@@ -57,7 +57,7 @@ sleep_time_after_loc <- sleep_time_after_loc - 105
 
 sleep_time_after_loc <- sleep_time_after_loc / N_KEYS
 
-sleep_time_after_loc <- sleep_time_after_loc - 12
+sleep_time_after_loc <- sleep_time_after_loc - 14
 
 # Implement Function and Export ------------------------------------------------
 ## Grab country codes
@@ -269,6 +269,7 @@ for(country_code_i in country_code_all_rep){
         print(paste0("Radius: ", radius, "; uid = ", uid_i, "; u/r = ", df_i$urban_rural))
         
         fb_df <- map_df(1:nrow(parameters_df), function(param_i){
+
           parameters_df_i <- parameters_df[param_i,]
           
           fb_df_i <- query_fb_marketing_api(location_type = "coordinates",
@@ -285,7 +286,7 @@ for(country_code_i in country_code_all_rep){
                                             version = version,
                                             creation_act = creation_act,
                                             token = token,
-                                            sleep_time = 0.1)
+                                            sleep_time = 0.3)
           
           # Add variables if not null (ie, no error in calling function)
           if(!is.null(fb_df_i)){

@@ -7,30 +7,31 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
-#fb_prop_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau_prop.Rds"))
-
-fb_df$estimate_mau_NA <- NULL
-
-#fb_prop_df$fb_prop_estimate_dau_NA <- NULL
-#fb_prop_df$fb_prop_estimate_mau_NA <- NULL
 
 fb_df <- fb_df %>%
-  dplyr::select(uid, contains("estimate_mau_")) %>%
+  dplyr::select(uid, contains("estimate_mau_upper_bound_")) %>%
   rename_at(vars(-uid), ~ paste0("fb_", .))
-
-#fb_prop_df <- fb_prop_df %>%
-#  rename_at(vars(-uid), ~ paste0("fb_prop_", .))
 
 # [Load] OSM -------------------------------------------------------------------
 osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
 osm_road_df <- readRDS(file.path(INV_DATA_DIR, "osm_road.Rds"))
 
+#osm_poi_df$uid[!(osm_poi_df$uid %in% survey_df$uid)] %>% substring(1,2) %>% table()
+
 # [Load] CNN Features ----------------------------------------------------------
 cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                "cnn_features_l8_rgb_pca.Rds"))
+                                "cnn_features_s2_rgb_pca.Rds"))
+
+cnn_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                 "cnn_features_s2_ndvi_pca.Rds"))
+
+cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                               "cnn_features_s2_bu_pca.Rds"))
 
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
+
+# table(wc_df$uid %in% survey_df$uid)
 
 # [Load] WorldClim -------------------------------------------------------------
 wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
@@ -40,7 +41,7 @@ wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
 ##### ** VIIRS #####
 viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "viirs_ubuff2500_rbuff2500.Rds"))
+                              "viirs_1120_ubuff1120_rbuff1120.Rds"))
 
 viirs_df <- viirs_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
@@ -154,7 +155,6 @@ survey_ancdata_df <- list(survey_ancdata_df,
 
 if(F){
   survey_ancdata_df <- list(survey_df, 
-                            gc_df, 
                             cnn_rgb_df,
                             osm_poi_df, 
                             osm_road_df) %>%
@@ -162,11 +162,7 @@ if(F){
   
   survey_ancdata_df <- list(survey_ancdata_df, 
                             viirs_df,
-                            l8_df,
-                            wp10km_df,
-                            elevslope,
-                            gbmod_df,
-                            pollution_df) %>%
+                            gc_df) %>%
     reduce(full_join, by = c("uid", "year"))
 }
 

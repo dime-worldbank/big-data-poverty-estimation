@@ -90,6 +90,9 @@ df <- df %>%
                 !is.na(l8_B1),
                 !is.na(cnn_l8_rgb_pc1))
 
+df <- df %>%
+  dplyr::filter(!is.na(cnn_s2_rgb_pc1))
+
 nrow(df)
 
 # Export Data ------------------------------------------------------------------

@@ -3,6 +3,15 @@
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
+# Delete existing files --------------------------------------------------------
+if(F){
+  to_rm <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
+                     "globcover") %>%
+    list.files(full.names = T)
+  
+  for(to_rm_i in to_rm) file.remove(to_rm_i)
+}
+
 # Function to Extract Globcover ------------------------------------------------
 #country_code_i <- "IA"
 #buffer_m <- 5000
@@ -69,7 +78,7 @@ extract_globcover <- function(df_country,
 }
 
 # Implement Function and Export ------------------------------------------------
-for(buffer_i in c(2000, 2500)){
+for(buffer_i in c(2500)){
   for(country_i in unique(df$country_code)){
     
     df_country <- df[df$country_code %in% country_i,]

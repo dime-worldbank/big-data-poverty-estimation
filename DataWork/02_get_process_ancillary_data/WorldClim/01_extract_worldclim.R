@@ -3,9 +3,16 @@
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
-# Function to Extract Globcover ------------------------------------------------
-#country_code_i <- "ZM"
-#buffer_m <- 2500
+# Delete existing files --------------------------------------------------------
+if(F){
+  to_rm <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
+                     "worldclim") %>%
+    list.files(full.names = T)
+  
+  for(to_rm_i in to_rm) file.remove(to_rm_i)
+}
+
+# Function to Extract World Clim -----------------------------------------------
 extract_worldclim <- function(df_country, year_i, buffer_m){
   
   ## Project, buffer, then back to WGS
@@ -48,8 +55,8 @@ for(buffer_i in c(2500)){
       
       if(REPLACE_IF_EXTRACTED | !file.exists(OUT_PATH)){
         df_wc_i <- extract_worldclim(df_country[df_country$year %in% year_i,], 
-                                       year_i,
-                                       buffer_i)
+                                     year_i,
+                                     buffer_i)
         saveRDS(df_wc_i, OUT_PATH)
       }
       

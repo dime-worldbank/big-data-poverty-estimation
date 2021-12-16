@@ -1,6 +1,7 @@
 # Poverty Estimation Using XGBoost
 
 grid_search <- F
+REPLACE_IF_EXTRACTED <- T
 
 # Load Data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
@@ -10,6 +11,9 @@ OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_result
 if(SURVEY_NAME == "OPM"){
   df <- df[df$year %in% 2014,]
 }
+
+# Country code: CNN issues??
+df <- df[!(df$country_code %in% c("KE", "TG", "MW")),]
 
 # Functions --------------------------------------------------------------------
 grab_x_features <- function(df, 
@@ -189,15 +193,25 @@ run_model <- function(df,
 }
 
 # Implement Functions ----------------------------------------------------------
-feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb", "gc")
+#feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb", "gc")
+feature_types <- c("cnn_s2_rgb")
 
 if(SURVEY_NAME == "DHS"){
+  
   estimation_type_vec <- c("within_country_cv",
                            "global_country_pred",
                            "continent_africa_country_pred",
                            "continent_americas_country_pred",
                            "continent_eurasia_country_pred", 
                            "continent")
+  
+  estimation_type_vec <- c("within_country_cv",
+                           #"global_country_pred",
+                           #"continent_africa_country_pred",
+                           #"continent_americas_country_pred",
+                           #"continent_eurasia_country_pred", 
+                           "continent")
+  
   target_vars_vec <- c("pca_allvars", 
                        #"pca_allvars_noroof",
                        "pca_physicalvars",
@@ -211,6 +225,7 @@ if(SURVEY_NAME == "DHS"){
                        # "pca_nonphysicalvars_rmna",
                        
                        "wealth_index_score")
+  
   countries_vec <- c("all", unique(df$country_code))
 }
 

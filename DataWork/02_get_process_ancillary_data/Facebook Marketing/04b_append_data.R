@@ -26,10 +26,10 @@ df_long <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
       # For example, if was an invalid lat/lon, wouldn't contain 'mau' variables
       df_out <- df[,names(df) %in% c("uid", 
                                      "param_id", 
+                                     "estimate_mau",
                                      "estimate_mau_lower_bound", 
                                      "estimate_mau_upper_bound",
                                      "radius",
-                                     "estimate_mau",
                                      "api_call_time_utc")]
       
       df_out <- df_out %>%
@@ -50,9 +50,8 @@ rm(i)
 df_wide <- df_long %>%
   pivot_wider(id_cols = c(uid, radius),
               names_from = param_id,
-              values_from = c(estimate_mau)) %>%
-  dplyr::rename_at(vars(-uid, -radius), ~ paste0("estimate_mau_", .)) %>%
-  dplyr::rename(radius = fb_radius)
+              values_from = c(estimate_mau_lower_bound,
+                              estimate_mau_upper_bound)) 
 
 # To Proportion ----------------------------------------------------------------
 # estimate_[mau/dau]_1 is all facebook users, so divide by this to 

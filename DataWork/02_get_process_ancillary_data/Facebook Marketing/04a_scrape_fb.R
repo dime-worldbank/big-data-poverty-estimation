@@ -71,6 +71,9 @@ country_code_all_rep <- c(country_code_all,
                           country_code_all) %>% 
   sort()
 
+country_code_all_rep <- c(country_code_all) %>% 
+  sort()
+
 ## UIDs to scrape
 KEY_i  <- 1
 

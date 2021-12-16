@@ -29,10 +29,12 @@ OUT_PATH <- file.path(data_dir,
                       "Individual Datasets", 
                       "satellite_data_from_gee")
 
-## Remove if has a parenthesis in the name -- eg (1).csv. These are duplicates
+## Remove on gdrive folder if has a parenthesis in the name -- eg (1).csv. 
+## These are duplicates.
 files_to_rm <- list.files(GEE_PATH) %>%
   str_subset("\\(")
 
+length(files_to_rm)
 for(file_i in files_to_rm){
   file.remove(file.path(GEE_PATH, file_i))
 }
@@ -41,6 +43,7 @@ for(file_i in files_to_rm){
 # Exclude [year]_[chunk] -- so unique per each dataframe 
 data_root_names <- list.files(GEE_PATH) %>% 
   str_replace_all("_[:digit:]{4}_[:digit:]{1,2}.csv", "") %>%
+  str_replace_all("gee_", "") %>%
   unique() %>%
   sort()
 
@@ -56,7 +59,8 @@ for(data_root_names_i in data_root_names){
     str_subset(data_root_names_i) %>%
     map_df(read.csv) %>%
     mutate_if(is.factor, as.character) %>%
-    distinct(uid, year, .keep_all = T) # FIX SO DONT NEED THIS
+    distinct()
+    #distinct(uid, year, .keep_all = T) # FIX SO DONT NEED THIS
   
   saveRDS(df_tmp, file.path(OUT_PATH, paste0(data_root_names_i, ".Rds")))
   
@@ -73,7 +77,7 @@ if(DELETE_IF_NOT_ALL_DATA){
   survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
                                  "Individual Datasets", "survey_socioeconomic.Rds"))
   
-  data_to_rm <- df_nrow$name[df_nrow$N_rows < nrow(survey_df)] %>%
+  data_to_rm <- df_nrow$name[df_nrow$N_rows != nrow(survey_df)] %>%
     paste(collapse = "|")
   
   print("Removing...")

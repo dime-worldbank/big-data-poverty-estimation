@@ -55,7 +55,7 @@ acc_df <- acc_df %>%
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 survey_df <- survey_df %>%
-  distinct(country_code, country_name, continent_adj) %>%
+  distinct(country_code, country_name, continent_adj, iso2) %>%
   dplyr::rename(country = country_code)
 
 acc_df <- acc_df %>%
@@ -70,7 +70,7 @@ acc_all_df <- acc_df %>%
   group_by(estimation_type, estimation_type_clean,
            feature_type, feature_type_clean,
            target_var, target_var_clean, 
-           country, country_name, continent_adj) %>%
+           country, country_name, continent_adj, iso2) %>%
   dplyr::summarise(N = sum(N_fold),
                    cor = cor_country[1]) %>% # This repeats across folds
   dplyr::mutate(r2 = cor^2)

@@ -1,8 +1,10 @@
 # Determinants of Model Performance
 
-# Load data --------------------------------------------------------------------
-# TODO: Merge in country-level data (eg, WDI, Facebook penetration, etc)
+# TO PREDICT ON
+# 1. Can also predict on continent (simple model)
+# 2. Survey date
 
+# Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                                 "accuracy_appended.Rds"))
 

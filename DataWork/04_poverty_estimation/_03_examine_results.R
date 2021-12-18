@@ -1,24 +1,13 @@
 # Examine results
 
 # Load data --------------------------------------------------------------------
-acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                            "accuracy_appended.Rds"))
-
-acc_df <- acc_df %>%
-  dplyr::filter(target_var %in% c("pca_allvars",
-                                  "pca_nonphysicalvars",
-                                  "pca_physicalvars"))
+acc_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                                "accuracy_appended.Rds"))
 
 # Prep Data --------------------------------------------------------------------
-acc_all_df <- acc_df %>%
-  group_by(estimation_type, feature_type, target_var, country) %>%
-  dplyr::summarise(N = sum(N_fold),
-                   cor = cor_country[1]) %>% # This repeats across folds
-  dplyr::mutate(r2 = cor^2)
-
 
 acc_all_df %>% 
-  dplyr::filter(feature_type == "all") %>% 
+  dplyr::filter(feature_type != "all") %>% 
   ggplot(aes(x = r2,
              y = estimation_type,
              fill = factor(stat(quantile)))) +

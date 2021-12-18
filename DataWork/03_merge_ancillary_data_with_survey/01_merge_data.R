@@ -16,8 +16,6 @@ fb_df <- fb_df %>%
 osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
 osm_road_df <- readRDS(file.path(INV_DATA_DIR, "osm_road.Rds"))
 
-#osm_poi_df$uid[!(osm_poi_df$uid %in% survey_df$uid)] %>% substring(1,2) %>% table()
-
 # [Load] CNN Features ----------------------------------------------------------
 cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
                                 "cnn_features_s2_rgb_pca.Rds"))
@@ -31,8 +29,6 @@ cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features",
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
 
-# table(wc_df$uid %in% survey_df$uid)
-
 # [Load] WorldClim -------------------------------------------------------------
 wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
@@ -41,7 +37,7 @@ wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
 ##### ** VIIRS #####
 viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "viirs_1120_ubuff1120_rbuff1120.Rds"))
+                              "viirs_2500_ubuff2500_rbuff2500.Rds"))
 
 viirs_df <- viirs_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
@@ -55,7 +51,7 @@ l8_df <- l8_df %>%
 
 ##### ** World pop #####
 wp10km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                               "worldpop_ubuff10000_rbuff10000.Rds"))
+                               "worldpop_10000_ubuff10000_rbuff10000.Rds"))
 
 wp10km_df <- wp10km_df %>%
   dplyr::rename(worldpop_10km = sum)
@@ -78,6 +74,14 @@ gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
 
 gbmod_df <- gbmod_df %>%
   dplyr::rename(globalmod_mean = mean)
+
+##### ** AOD #####
+aod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "aod_ubuff2500_rbuff2500.Rds"))
+
+aod_df <- aod_df %>%
+  dplyr::rename(pollution_aod_047 = Optical_Depth_047,
+                pollution_aod_055 = Optical_Depth_055)
 
 ##### ** Weather #####
 weather_q1 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -128,8 +132,8 @@ for(var in names(pollution_df)){
 
 pollution_df <- pollution_df %>%
   dplyr::select(-c(pollution_CH4_column_volume_mixing_ratio_dry_air,
-                   pollution_CO_column_number_density,
-                   pollution_H2O_column_number_density,
+                   #pollution_CO_column_number_density,
+                   #pollution_H2O_column_number_density,
                    pollution_absorbing_aerosol_index))
 
 # [Merge] Datasets -------------------------------------------------------------
@@ -137,6 +141,8 @@ survey_ancdata_df <- list(survey_df,
                           fb_df, 
                           #fb_prop_df, 
                           cnn_rgb_df,
+                          cnn_ndvi_df,
+                          cnn_bu_df,
                           osm_poi_df, 
                           osm_road_df) %>%
   reduce(full_join, by = "uid")
@@ -150,6 +156,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           wp10km_df, 
                           elevslope, 
                           gbmod_df, 
+                          aod_df,
                           pollution_df) %>%
   reduce(full_join, by = c("uid", "year"))
 

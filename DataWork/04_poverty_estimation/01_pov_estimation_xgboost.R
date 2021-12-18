@@ -1,7 +1,7 @@
 # Poverty Estimation Using XGBoost
 
 grid_search <- F
-REPLACE_IF_EXTRACTED <- T
+REPLACE_IF_EXTRACTED <- F
 
 # Load Data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
@@ -13,7 +13,22 @@ if(SURVEY_NAME == "OPM"){
 }
 
 # Country code: CNN issues??
-df <- df[!(df$country_code %in% c("KE", "TG", "MW")),]
+#df <- df[!(df$country_code %in% c("KE", "TG", "MW")),]
+
+# Delete existing files --------------------------------------------------------
+if(REPLACE_IF_EXTRACTED){
+  print("Removing files!")
+  Sys.sleep(3)
+  
+  files_to_rm <- file.path(OUT_PATH) %>% 
+    list.files(full.names = T, pattern = "*.Rds", recursive = T)
+  
+  for(file_i in files_to_rm){
+    file.remove(files_to_rm)
+  }
+  
+  print("Files removed!")
+}
 
 # Functions --------------------------------------------------------------------
 grab_x_features <- function(df, 
@@ -26,14 +41,17 @@ grab_x_features <- function(df,
   if(feature_type_i %in% "all"){
     X <- df %>%
       dplyr::select_at(vars(contains("osm_"),
-                            contains("fb_"),
+                            contains("fb_prop_"),
                             contains("gc_"),
                             contains("weather_"),
                             contains("l8_"),
                             contains("elevslope_"),
                             contains("pollution_"),
                             contains("worldclim_"),
-                            contains("cnn_l8_rgb_"),
+                            contains("globalmod_"),
+                            contains("cnn_s2_rgb_"),
+                            contains("cnn_s2_ndvi_"),
+                            contains("cnn_s2_bu_"),
                             contains("viirs_"))) %>%
       as.matrix()
   } else if(feature_type_i %in% "satellites"){
@@ -194,22 +212,30 @@ run_model <- function(df,
 
 # Implement Functions ----------------------------------------------------------
 #feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb", "gc")
-feature_types <- c("cnn_s2_rgb")
+feature_types <- c("cnn_s2_rgb", "cnn_s2_ndvi", "cnn_s2_bu", 
+                   "osm",
+                   "fb_prop", 
+                   "gc",
+                   "pollution",
+                   "l8",
+                   "all") # all
+
+names(df)
 
 if(SURVEY_NAME == "DHS"){
-  
-  estimation_type_vec <- c("within_country_cv",
-                           "global_country_pred",
-                           "continent_africa_country_pred",
-                           "continent_americas_country_pred",
-                           "continent_eurasia_country_pred", 
-                           "continent")
   
   estimation_type_vec <- c("within_country_cv",
                            #"global_country_pred",
                            #"continent_africa_country_pred",
                            #"continent_americas_country_pred",
                            #"continent_eurasia_country_pred", 
+                           "continent")
+  
+  estimation_type_vec <- c("within_country_cv",
+                           "global_country_pred",
+                           "continent_africa_country_pred",
+                           "continent_americas_country_pred",
+                           "continent_eurasia_country_pred", 
                            "continent")
   
   target_vars_vec <- c("pca_allvars", 

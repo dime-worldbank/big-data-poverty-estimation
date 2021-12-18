@@ -30,7 +30,7 @@ if_1000_make_0 <- function(x){
 }
 
 df <- df %>%
-  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_1), if_1000_make_0)
+  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), if_1000_make_0)
 
 # Facebook - Proportion --------------------------------------------------------
 truncate_1 <- function(x){
@@ -39,8 +39,8 @@ truncate_1 <- function(x){
 }
 
 df_fb_prop <- df %>%
-  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_1), ~(. / fb_estimate_mau_1)) %>%
-  dplyr::select(-c(fb_estimate_mau_1)) %>%
+  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), ~(. / fb_estimate_mau_upper_bound_1)) %>%
+  dplyr::select(-c(fb_estimate_mau_upper_bound_1)) %>%
   dplyr::select(uid, contains("fb_")) %>%
   dplyr::mutate_at(vars(contains("fb_")), truncate_1) %>%
   rename_at(vars(-uid), ~ str_replace_all(., "fb_", "fb_prop_")) 
@@ -50,6 +50,9 @@ df <- df %>%
 
 # Facebook - Divide by World Pop -----------------------------------------------
 # Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
+
+# TODO: Update with radius; 2, 5, 10 -- for Facebook
+
 inf_to_zero <- function(x){
   x[x == Inf] <- 0
   return(x)
@@ -76,29 +79,28 @@ df <- df %>%
 df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
 
 # Remove Variables -------------------------------------------------------------
-df <- df %>%
+#df <- df %>%
   
   ## Facebook daily active users
-  dplyr::select_at(vars(-contains("_dau_")))
+#  dplyr::select_at(vars(-contains("_dau_")))
 
 # Remove Observations ----------------------------------------------------------
-nrow(df)
+
+df$cnn_s2_rgb_pc1 %>% is.na %>% table()
 
 df <- df %>%
   dplyr::filter(!is.na(worldclim_bio_1),
-                !is.na(fb_estimate_mau_22),
+                !is.na(fb_estimate_mau_upper_bound_2),
+                !is.na(globalmod_mean),
                 !is.na(l8_B1),
-                !is.na(cnn_l8_rgb_pc1))
-
-df <- df %>%
-  dplyr::filter(!is.na(cnn_s2_rgb_pc1))
+                !is.na(cnn_s2_rgb_pc1))
 
 nrow(df)
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
-write.csv(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.csv"),
-          row.names = F)
+#write.csv(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.csv"),
+#          row.names = F)
 
 ## Check NAs
 df_sum <- df %>%

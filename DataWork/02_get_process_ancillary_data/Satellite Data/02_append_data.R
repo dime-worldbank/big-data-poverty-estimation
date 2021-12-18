@@ -42,7 +42,7 @@ for(file_i in files_to_rm){
 ## Root data names
 # Exclude [year]_[chunk] -- so unique per each dataframe 
 data_root_names <- list.files(GEE_PATH) %>% 
-  str_replace_all("_[:digit:]{4}_[:digit:]{1,2}.csv", "") %>%
+  str_replace_all("_[:digit:]{4}_[:digit:]{1,3}.csv", "") %>%
   str_replace_all("gee_", "") %>%
   unique() %>%
   sort()

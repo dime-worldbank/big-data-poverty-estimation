@@ -218,6 +218,8 @@ feature_types <- c("cnn_s2_rgb", "cnn_s2_ndvi", "cnn_s2_bu",
                    "gc",
                    "pollution",
                    "l8",
+                   #"viirs",
+                   "weather",
                    "all") # all
 
 names(df)

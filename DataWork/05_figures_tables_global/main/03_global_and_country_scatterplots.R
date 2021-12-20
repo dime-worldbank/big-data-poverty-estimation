@@ -1,5 +1,12 @@
 # Global Scatterplot - Predicted vs True
 
+# TODO:
+# (1) Global correlation using globally best parameters
+# (2) Individual country correlation using globally best parameters
+# (3) Individual country correlation using country-specific best parmeters
+# ------For this, can load all predictions, compute correlations, and take
+# ------best across countries. In this figure (or table), report estimation type
+
 # Load Data --------------------------------------------------------------------
 pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
   list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
@@ -48,7 +55,7 @@ p_scatter_global <- pred_df %>%
   guides(color = guide_legend(override.aes = list(size = 2)),
          alpha = guide_legend(override.aes = list(alpha = 1)))
 
-p_scatter
+p_scatter_global
 
 # Country Scatterplot ----------------------------------------------------------
 p_scatter_country <- pred_df %>%

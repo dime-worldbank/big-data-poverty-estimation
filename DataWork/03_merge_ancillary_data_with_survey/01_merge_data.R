@@ -16,6 +16,12 @@ fb_df <- fb_df %>%
 osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
 osm_road_df <- readRDS(file.path(INV_DATA_DIR, "osm_road.Rds"))
 
+## Cleanup
+osm_road_df <- osm_road_df %>%
+  dplyr::select(-contains("osm_N_segments"))
+names(osm_road_df) <- names(osm_road_df) %>%
+  str_replace_all("dist", "distmeters_road")
+
 # [Load] CNN Features ----------------------------------------------------------
 cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
                                 "cnn_features_s2_rgb_pca.Rds"))
@@ -121,7 +127,7 @@ pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
   str_subset("2500") %>%
   lapply(readRDS) %>%
   reduce(full_join, by = c("uid", "year")) %>%
-  rename_at(vars(-uid, -year), ~ paste0("pollution_", .))
+  rename_at(vars(-uid, -year), ~ paste0("pollution_s5p_", .))
 
 ## Check for and remove NAs
 for(var in names(pollution_df)){

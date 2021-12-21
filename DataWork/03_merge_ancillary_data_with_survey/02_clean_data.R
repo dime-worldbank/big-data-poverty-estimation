@@ -86,6 +86,9 @@ df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
 
 # Remove Observations ----------------------------------------------------------
 
+# CAN WE IMPUTE MISSING VALUES?
+# pollution_s5p_NO2_column_number_density
+
 df$cnn_s2_rgb_pc1 %>% is.na %>% table()
 
 df <- df %>%
@@ -95,7 +98,6 @@ df <- df %>%
                 !is.na(l8_B1),
                 !is.na(cnn_s2_rgb_pc1))
 
-nrow(df)
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))

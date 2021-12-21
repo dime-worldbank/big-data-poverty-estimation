@@ -56,11 +56,40 @@ l8_df <- l8_df %>%
   rename_at(vars(-uid, -year), ~ paste0("l8_", .))
 
 ##### ** World pop #####
-wp10km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                               "worldpop_10000_ubuff10000_rbuff10000.Rds"))
+## Year of survey
+wp2km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "worldpop_2000_ubuff2000_rbuff2000.Rds")) %>%
+  dplyr::rename(worldpop_2km = sum)
 
-wp10km_df <- wp10km_df %>%
+wp5km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "worldpop_5000_ubuff5000_rbuff5000.Rds")) %>%
+  dplyr::rename(worldpop_5km = sum)
+
+wp10km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                               "worldpop_10000_ubuff10000_rbuff10000.Rds")) %>%
   dplyr::rename(worldpop_10km = sum)
+
+## 2020
+wp2km2020_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                  "worldpop2020_2000_ubuff2000_rbuff2000.Rds")) %>%
+  dplyr::rename(worldpop2020_2km = sum)
+
+wp5km2020_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                  "worldpop2020_5000_ubuff5000_rbuff5000.Rds")) %>%
+  dplyr::rename(worldpop2020_5km = sum)
+
+wp10km2020_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                   "worldpop2020_10000_ubuff10000_rbuff10000.Rds")) %>%
+  dplyr::rename(worldpop2020_10km = sum)
+
+## Merge
+wp_df <- list(wp2km_df,
+              wp5km_df, 
+              wp10km_df, 
+              wp2km2020_df, 
+              wp5km2020_df,
+              wp10km2020_df) %>%
+  reduce(full_join, by = c("uid", "year"))
 
 ##### ** Elevation/Slope #####
 elev_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -83,7 +112,7 @@ gbmod_df <- gbmod_df %>%
 
 ##### ** AOD #####
 aod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "aod_ubuff2500_rbuff2500.Rds"))
+                            "aod_ubuff2500_rbuff2500.Rds"))
 
 aod_df <- aod_df %>%
   dplyr::rename(pollution_aod_047 = Optical_Depth_047,
@@ -136,11 +165,13 @@ for(var in names(pollution_df)){
   print(" ")
 }
 
+pol_na_df <- pollution_df %>%
+  pivot_longer(cols = -c(uid, year)) %>%
+  group_by(name) %>%
+  dplyr::summarise(N_na = sum(is.na(value)))
+
 pollution_df <- pollution_df %>%
-  dplyr::select(-c(pollution_CH4_column_volume_mixing_ratio_dry_air,
-                   #pollution_CO_column_number_density,
-                   #pollution_H2O_column_number_density,
-                   pollution_absorbing_aerosol_index))
+  dplyr::select(-c(pollution_s5p_CH4_column_volume_mixing_ratio_dry_air))
 
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 
@@ -159,25 +190,12 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           viirs_df, 
                           l8_df, 
                           weather,
-                          wp10km_df, 
+                          wp_df, 
                           elevslope, 
                           gbmod_df, 
                           aod_df,
                           pollution_df) %>%
   reduce(full_join, by = c("uid", "year"))
-
-if(F){
-  survey_ancdata_df <- list(survey_df, 
-                            cnn_rgb_df,
-                            osm_poi_df, 
-                            osm_road_df) %>%
-    reduce(full_join, by = "uid")
-  
-  survey_ancdata_df <- list(survey_ancdata_df, 
-                            viirs_df,
-                            gc_df) %>%
-    reduce(full_join, by = c("uid", "year"))
-}
 
 # [Export] Data ----------------------------------------------------------------
 saveRDS(survey_ancdata_df, 

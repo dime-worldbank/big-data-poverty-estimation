@@ -172,6 +172,8 @@ library(ggpubr)
 library(xgboost)
 library(WDI)
 library(ggtext)
+library(gghalves)
+library(ggthemes)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
@@ -347,9 +349,16 @@ if(F){
   # results.
   # --
   
-  # 5. Tables/Figures ----------------------------------------------------------
+  # 5. Tables/Figures: Global analysis -----------------------------------------
   # Makes tables and figures for paper
   # --
+  
+  figures_tables_global_dir <- file.path(datawork_dir, "05_figures_tables_global")
+  
+  source(file.path(figures_tables_global_dir, "main", "00_correlations.R"))
+  source(file.path(figures_tables_global_dir, "main", "00_global_scatterplot_map.R"))
+  source(file.path(figures_tables_global_dir, "main", "01_avg_performance_by_type.R"))
+  
   
 }
 

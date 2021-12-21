@@ -179,7 +179,7 @@ p <- ggarrange(p_scatter,
                heights = c(0.8, 1))
 
 ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
-       height = 12*0.8, width = 18*0.8)
+       height =11*0.8, width = 18*0.8)
 
 # height = 12, width = 18
 

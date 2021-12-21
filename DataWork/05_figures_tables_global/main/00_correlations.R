@@ -135,24 +135,25 @@ cor_topvars_clean_df <- cor_topvars_df %>%
   ))
 
 ### Figure
-p <- cor_topvars_clean_df %>%
+p_topvar <- cor_topvars_clean_df %>%
   ggplot() +
   geom_vline(xintercept = 0, alpha = 0.5) +
   geom_boxplot(aes(x = cor,
                    y = reorder(variable_clean, cor, FUN = median, .desc =TRUE)),
-               fill = "orange") +
-  labs(title = "Correlation of Select Variables to Poverty Across Countries",
+               fill = "gray80") +
+  labs(title = "A. Correlation of Select Variables to Wealth Score Across Countries",
        subtitle = "The variable with the highest median correlation for each dataset is shown",
        y = NULL,
-       x = "Correlation between variable and poverty") + 
+       x = "Correlation") + 
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10),
                      limits = c(min(cor_topvars_clean_df$cor),
                                 1)) +
-  theme_minimal() +
-  theme(plot.title = element_text(face = "bold"),
-        axis.text.y = element_text(face = "bold", color = "black"))
+  theme_classic() +
+  theme(plot.title = element_text(face = "bold", size = 10),
+        axis.text.y = element_text(color = "black"),
+        plot.title.position = "plot")
 
-ggsave(p,
+ggsave(p_topvar,
        filename = file.path(figures_global_dir, "cor_topvar_category.png"),
        height = 5,
        width = 8.5)
@@ -160,17 +161,45 @@ ggsave(p,
 # CORRELATIONS BY DATASET ------------------------------------------------------
 
 # ** Facebook ------------------------------------------------------------------
-cor_df %>%
+p_fb <- cor_df %>%
   dplyr::filter(variable_cat %in% "Facebook Marketing") %>%
+  dplyr::mutate(var_indv = variable_clean %>% 
+                  str_replace_all(".*:", "") %>% 
+                  str_squish(),
+                var_cat = variable_clean %>% 
+                  str_replace_all(":.*", "")) %>%
+  dplyr::mutate(var_indv = case_when(
+    var_indv == "Samsung Galaxy phone S8/S8+/S9/S9+ or Apple iPhone X/XS/XS Max/XR" ~ 
+      "Samsung Galaxy phone S8+ or Apple iPhone X+",
+    TRUE ~ var_indv
+  )) %>%
   ggplot() +
+  geom_vline(xintercept = 0, alpha = 0.1) +
+  geom_vline(xintercept = -0.5, alpha = 0.1) +
+  geom_vline(xintercept = 0.5, alpha = 0.1) +
+  geom_vline(xintercept = 1, alpha = 0.1) +
   geom_boxplot(aes(x = cor,
-                   y = reorder(variable_clean, cor, FUN = mean, .desc =TRUE)),
-               fill = "orange") +
+                   y = reorder(var_indv, cor, FUN = mean, .desc =TRUE),
+                   fill = var_cat)) +
   labs(y = NULL,
-       x = "Correlation")
+       x = "Correlation",
+       fill = "Variable\nCategory",
+       title = "B. Correlation of Facebook Variables to Wealth Score") +
+  theme_classic() +
+  scale_x_continuous(limits = c(-0.5, 1)) +
+  theme(axis.text.y = element_text(color = "black"),
+        plot.title = element_text(face = "bold", size = 10),
+        plot.title.position = "plot") +
+  scale_fill_brewer(palette = "Accent") #+
+  #guides(fill=guide_legend(nrow=3,byrow=TRUE))
+
+ggsave(p_fb,
+       filename = file.path(figures_global_dir, "cor_fb.png"),
+       height = 6,
+       width = 9.5)
 
 # ** Globcover -----------------------------------------------------------------
-p <- cor_df %>%
+p_gc <- cor_df %>%
   dplyr::filter(variable_cat %in% "Land Cover") %>%
   ggplot() +
   geom_vline(xintercept = 0, alpha = 0.5) +
@@ -180,17 +209,18 @@ p <- cor_df %>%
   labs(y = NULL,
        x = "Correlation",
        title = "Correlation of Globcover Variables to Asset Index") +
-  theme_minimal() +
+  theme_classic() +
   theme(axis.text.y = element_text(color = "black"),
-        plot.title = element_text(face = "bold"))
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot")
 
-ggsave(p,
+ggsave(p_gc,
        filename = file.path(figures_global_dir, "cor_globcover.png"),
        height = 6,
        width = 9.5)
 
 # ** OpenStreetMap -------------------------------------------------------------
-p <- cor_df %>%
+p_osm <- cor_df %>%
   dplyr::filter(variable_cat %in% "OpenStreetMap") %>%
   dplyr::mutate(osm_cat = case_when(
     variable_clean %>% str_detect("osm_length_") ~ "Road Length",
@@ -208,26 +238,51 @@ p <- cor_df %>%
                   str_replace_all("_5000m", "") %>%
                   str_replace_all("_buff", "") %>%
                   str_replace_all("_", " ") %>%
-                  str_squish() %>%
                   tools::toTitleCase() %>%
                   str_replace_all("\\ball\\b", "All") %>%
-                  str_replace_all("\\bany\\b", "Any")) %>%
+                  str_replace_all("\\bany\\b", "Any") %>%
+                  str_replace_all(".*:", "") %>% 
+                  str_squish()) %>%
+  dplyr::filter(osm_cat %in% c("Road Length",
+                               "N POI")) %>%
   ggplot() +
-  geom_vline(xintercept = 0, alpha = 0.5) +
+  geom_vline(xintercept = 0, alpha = 0.1) +
+  geom_vline(xintercept = -0.5, alpha = 0.1) +
+  geom_vline(xintercept = 0.5, alpha = 0.1) +
+  geom_vline(xintercept = 1, alpha = 0.1) +
   geom_boxplot(aes(x = cor,
                    y = reorder(variable_clean, cor, FUN = mean, .desc =TRUE),
                    fill = osm_cat)) +
   labs(y = NULL,
        x = "Correlation",
-       fill = "Variable Type",
-       title = "Correlation of OSM Variables to Asset Index") +
-  theme_minimal() +
+       fill = "Variable\nCategory",
+       title = "C. Correlation of Select OSM Variables to Wealth Score") +
+  scale_x_continuous(limits = c(-0.5, 1)) +
+  theme_classic() +
   theme(axis.text.y = element_text(color = "black"),
-        plot.title = element_text(face = "bold"))
+        plot.title = element_text(face = "bold", size = 10),
+        plot.title.position = "plot") + 
+  scale_fill_manual(values = c("cadetblue2", "tan1"))
 
-ggsave(p,
+ggsave(p_osm,
        filename = file.path(figures_global_dir, "cor_osm.png"),
        height = 10,
        width = 8.5)
 
+
+# Arrange ----------------------------------------------------------------------
+p_indv <- ggarrange(p_fb + theme(legend.position = "bottom"), 
+               p_osm + theme(legend.position = "bottom"),
+          widths = c(0.55, 0.45),
+          nrow = 1)
+
+p <- ggarrange(p_topvar,
+               p_indv,
+               nrow = 2,
+               heights = c(0.32, 0.68))
+
+ggsave(p,
+       filename = file.path(figures_global_dir, "cor_all_fb_osm.png"),
+       height = 11,
+       width = 9)
 

@@ -51,6 +51,9 @@ r2_urban <- cor(pred_df_u$truth, pred_df_u$prediction)^2
 r2_rural <- cor(pred_df_r$truth, pred_df_r$prediction)^2
 
 TEXT_X <- -4
+TEXT_Y_TOP <- 4
+TEXT_Y_INCR <- 0.3
+FONT_SIZE <- 4.5
 
 p_scatter <- ggplot() +
   geom_point(aes(color = urban_rural,
@@ -61,25 +64,28 @@ p_scatter <- ggplot() +
              alpha = 0.3) +
   geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(r2_all,2)),
                     x = TEXT_X,
-                    y = 4),
+                    y = TEXT_Y_TOP),
                 color = "black",
                 hjust = 0,
                 fill = NA, 
-                label.color = NA) +
+                label.color = NA,
+                size = FONT_SIZE) +
   geom_richtext(aes(label = paste0("Urban r<sup>2</sup>: ", round(r2_urban,2)),
                     x = TEXT_X,
-                    y = 3.75),
+                    y = TEXT_Y_TOP - TEXT_Y_INCR),
                 color = "chocolate2",
                 hjust = 0,
                 fill = NA, 
-                label.color = NA) + 
+                label.color = NA,
+                size = FONT_SIZE) + 
   geom_richtext(aes(label = paste0("Rural r<sup>2</sup>: ", round(r2_rural,2)),
                     x = TEXT_X,
-                    y = 3.5),
+                    y = TEXT_Y_TOP - TEXT_Y_INCR*2),
                 color = "chartreuse4",
                 hjust = 0,
                 fill = NA, 
-                label.color = NA) +
+                label.color = NA,
+                size = FONT_SIZE) +
   # geom_smooth(aes(x = truth,
   #                 y = prediction),
   #             data = pred_df %>% dplyr::filter(urban_rural %in% "Urban"),
@@ -94,17 +100,20 @@ p_scatter <- ggplot() +
 #             color = "darkgreen") +
 scale_color_manual(values = c("chartreuse4", "chocolate2")) +
   labs(color = NULL,
-       title = "\n\n\n\nPredicted vs. True Wealth Scores",
-       x = "True Wealth Asset Index\n\n\n\n\n\n",
-       y = "Predicted Wealth Asset Index") +
+       title = "\n\n\n\n\n\n\nEstimated vs. True Wealth Asset Index",
+       x = "True Wealth Asset Index\n\n\n\n\n\n\n\n\n",
+       y = "Estimated Wealth Asset Index") +
   theme_minimal() +
   theme(legend.position = c(0.9, 0.1),
         legend.box.background = element_rect(colour = "black"),
         plot.title = element_text(face = "bold", size = 16),
+        axis.title = element_text(face = "bold"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 2)),
          alpha = guide_legend(override.aes = list(alpha = 1)))
+
+#p_scatter
 
 # To Long ----------------------------------------------------------------------
 # Stack truth and prediction
@@ -112,8 +121,8 @@ pred_long_df <- pred_df %>%
   dplyr::select(truth, prediction, latitude, longitude, uid, country_code) %>%
   pivot_longer(cols = -c(uid, latitude, longitude, country_code)) %>%
   dplyr::mutate(name = case_when(
-    name == "truth" ~ "True Wealth Score",
-    name == "prediction" ~ "Predicted Wealth Score"
+    name == "truth" ~ "True Wealth Asset Index",
+    name == "prediction" ~ "Predicted Wealth Asset Index"
   )) 
 
 # Map --------------------------------------------------------------------------
@@ -144,7 +153,7 @@ p_map <- ggmap(basemap) +
   theme_void() +
   theme(strip.text = element_text(face = "bold",
                                   size = 16)) +
-  labs(color = "Wealth\nScore") +
+  labs(color = "Wealth\nAsset\nIndex") +
   facet_wrap(~name,
              ncol = 1)
 
@@ -157,15 +166,21 @@ p_map <- ggmap(basemap) +
 #       height = 10, width = 10)
 
 # Arrange/Export ---------------------------------------------------------------
+# p <- ggarrange(p_scatter,
+#                p_map,
+#                ncol = 2,
+#                widths = c(0.4, 0.6),
+#                heights = c(0.8, 1))
+
 p <- ggarrange(p_scatter,
                p_map,
                ncol = 2,
-               widths = c(0.4, 0.6),
+               widths = c(0.45, 0.55),
                heights = c(0.8, 1))
 
-ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map_within_country_cv.png"),
-       height = 12, width = 18)
+ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
+       height =12*0.8, width = 18*0.8)
 
-
+# height = 12, width = 18
 
 

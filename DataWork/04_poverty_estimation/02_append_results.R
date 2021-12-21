@@ -75,6 +75,19 @@ acc_all_df <- acc_df %>%
                    cor = cor_country[1]) %>% # This repeats across folds
   dplyr::mutate(r2 = cor^2)
 
+# Add rows for best estimation type --------------------------------------------
+acc_all_best_df <- acc_all_df %>%
+  group_by(country, target_var, feature_type, feature_type_clean) %>%
+  slice_max(order_by = r2, n = 1) %>%
+  mutate(estimation_type_clean = "Using Best Training Sample\nType for Each Country",
+         estimation_type = "best") %>%
+  mutate(est_cat = "Best")
+
+acc_all_df <- bind_rows(
+  acc_all_df,
+  acc_all_best_df
+)
+
 # Export data ------------------------------------------------------------------
 saveRDS(acc_all_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",

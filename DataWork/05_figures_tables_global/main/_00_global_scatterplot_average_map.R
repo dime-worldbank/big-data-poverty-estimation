@@ -1,36 +1,28 @@
 # Global Scatterplot - Predicted vs True
 
+# TODO:
+# (1) Global correlation using globally best parameters
+# (2) Individual country correlation using globally best parameters
+# (3) Individual country correlation using country-specific best parmeters
+# ------For this, can load all predictions, compute correlations, and take
+# ------best across countries. In this figure (or table), report estimation type
+
 # Load Data --------------------------------------------------------------------
 pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
-  #list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
-  #           full.names = T) %>%
-  list.files(pattern = "*.Rds",
+  list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
              full.names = T) %>%
+  # Subset to:
+  # -- Prediction of pca_allvars variable
+  # -- Prediction using all features
   str_subset("pca_allvars_all.Rds") %>%
   map_df(readRDS)
-
-# Select best estimation type for each country ---------------------------------
-pred_df <- pred_df %>%
-  mutate(country_est_id = paste(estimation_type, country_code))
-
-pred_df <- pred_df[pred_df$estimation_type %in% "within_country_cv",]
-
-cor_df <- pred_df %>%
-  group_by(country_est_id, estimation_type, country_code) %>%
-  dplyr::summarise(cor = cor(truth, prediction)) %>%
-
-  group_by(country_code) %>% 
-  slice_max(order_by = cor, n = 1) %>%
-  
-  mutate(r2 = cor^2)
-
-pred_df <- pred_df[pred_df$country_est_id %in% cor_df$country_est_id,]
 
 # Merge with select survey variables -------------------------------------------
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 survey_df <- survey_df %>%
-  dplyr::select(uid, latitude, longitude, continent_adj, urban_rural)
+  dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
+                country_name)
 
 pred_df <- pred_df %>%
   dplyr::left_join(survey_df, by = "uid")
@@ -52,7 +44,7 @@ r2_rural <- cor(pred_df_r$truth, pred_df_r$prediction)^2
 
 TEXT_X <- -4
 TEXT_Y_TOP <- 4
-TEXT_Y_INCR <- 0.3
+TEXT_Y_INCR <- 0.35
 FONT_SIZE <- 4.5
 
 p_scatter <- ggplot() +
@@ -100,8 +92,8 @@ p_scatter <- ggplot() +
 #             color = "darkgreen") +
 scale_color_manual(values = c("chartreuse4", "chocolate2")) +
   labs(color = NULL,
-       title = "\n\n\n\n\n\n\nEstimated vs. True Wealth Asset Index",
-       x = "True Wealth Asset Index\n\n\n\n\n\n\n\n\n",
+       title = "A. Estimated vs. True Wealth Asset Index",
+       x = "True Wealth Asset Index",
        y = "Estimated Wealth Asset Index") +
   theme_minimal() +
   theme(legend.position = c(0.9, 0.1),
@@ -113,74 +105,164 @@ scale_color_manual(values = c("chartreuse4", "chocolate2")) +
   guides(color = guide_legend(override.aes = list(size = 2)),
          alpha = guide_legend(override.aes = list(alpha = 1)))
 
-#p_scatter
+p_scatter
 
-# To Long ----------------------------------------------------------------------
-# Stack truth and prediction
-pred_long_df <- pred_df %>%
-  dplyr::select(truth, prediction, latitude, longitude, uid, country_code) %>%
-  pivot_longer(cols = -c(uid, latitude, longitude, country_code)) %>%
-  dplyr::mutate(name = case_when(
-    name == "truth" ~ "True Wealth Asset Index",
-    name == "prediction" ~ "Predicted Wealth Asset Index"
-  )) 
+
+# To Long (for map) ----------------------------------------------------------------------
+cor_df <- pred_df %>%
+  group_by(country_code, country_name, continent_adj) %>%
+  dplyr::summarise(cor = cor(truth, prediction)) %>%
+  
+  # Change name to match with world shapefile
+  dplyr::mutate(country_name = case_when(
+    country_name == "Congo - Kinshasa" ~ "Dem. Rep. Congo",
+    country_name == "Côte d’Ivoire" ~ "Côte d'Ivoire",
+    country_name == "Dominican Republic" ~ "Dominican Rep.",
+    country_name == "Myanmar (Burma)" ~ "Myanmar",
+    country_name == "Eswatini" ~ "Swaziland",
+    TRUE ~ country_name
+  )) %>%
+  dplyr::mutate(r2 = cor^2)
+
+cor_mean_all <- mean(cor_df$r2)
+cor_mean_africa <- mean(cor_df$r2[cor_df$continent_adj %in% "Africa"])
+cor_mean_americas <- mean(cor_df$r2[cor_df$continent_adj %in% "Americas"])
+cor_mean_eurasia <- mean(cor_df$r2[cor_df$continent_adj %in% "Eurasia"])
+
+cor_df$r2[cor_df$r2 <= 0.3] <- 0.3
 
 # Map --------------------------------------------------------------------------
-#### Basemap
-shift <- 0.1
-basemap <- get_stamenmap(bbox = c(left = min(survey_df$longitude) - shift,
-                                  bottom = min(survey_df$latitude) - shift,
-                                  right = max(survey_df$longitude) + shift,
-                                  top = max(survey_df$latitude) + shift),
-                         maptype = "toner-background", 
-                         crop = FALSE,
-                         zoom = 4)
+world_sp <- ne_countries(type = "countries", scale=50)
 
-#### Map
-p_map <- ggmap(basemap) +
-  geom_point(data = pred_long_df,
-             aes(x = longitude,
-                 y = latitude),
-             size = 0.15,
-             color = "black") + 
-  geom_point(data = pred_long_df,
-             aes(x = longitude,
-                 y = latitude,
-                 color = value),
-             size = 0.075) + 
-  scale_color_distiller(palette = "Spectral",
-                        direction = 1) +
+world_sp <- world_sp[world_sp$continent != "Antarctica",]
+
+world_sp@data <- world_sp@data %>%
+  dplyr::select(name, continent) %>%
+  dplyr::rename(country_name = name)
+
+world_sp <- merge(world_sp, cor_df, by = "country_name", all.x = T, all.y = F)
+
+world_sp$id <- row.names(world_sp)
+world_sp_tidy <- tidy(world_sp)
+world_sp_tidy <- merge(world_sp_tidy, world_sp@data)
+
+TEXT_X_MAP <- -73
+TEXT_Y_TOP_MAP <- 40
+TEXT_Y_INC_MAP <- 3
+
+p_map <- ggplot() +
+  geom_polygon(data = world_sp_tidy[is.na(world_sp_tidy$cor),],
+               aes(x = long, y = lat, group = group),
+               fill = "gray50",
+               color = "white") +
+  #geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
+  #             aes(x = long, y = lat, group = group),
+  #             color = "black",
+  #             fill = "black",
+  #             size = 1) +
+  geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
+               aes(x = long, y = lat, group = group,
+                   fill = r2),
+               color = "black") +
+  geom_richtext(aes(label = paste0("All - Average r<sup>2</sup>: ", round(cor_mean_all,2)),
+                    x = TEXT_X_MAP,
+                    y = TEXT_Y_TOP_MAP),
+                color = "black",
+                hjust = 0,
+                fill = NA, 
+                label.color = NA,
+                size = FONT_SIZE) +
+  geom_richtext(aes(label = paste0("Africa - Average r<sup>2</sup>: ", round(cor_mean_africa,2)),
+                    x = TEXT_X_MAP,
+                    y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
+                color = "black",
+                hjust = 0,
+                fill = NA, 
+                label.color = NA,
+                size = FONT_SIZE) +
+  geom_richtext(aes(label = paste0("Americas - Average r<sup>2</sup>: ", round(cor_mean_americas,2)),
+                    x = TEXT_X_MAP,
+                    y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
+                color = "black",
+                hjust = 0,
+                fill = NA, 
+                label.color = NA,
+                size = FONT_SIZE) +
+  geom_richtext(aes(label = paste0("Eurasia - Average r<sup>2</sup>: ", round(cor_mean_eurasia,2)),
+                    x = TEXT_X_MAP,
+                    y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
+                color = "black",
+                hjust = 0,
+                fill = NA, 
+                label.color = NA,
+                size = FONT_SIZE) +
+  scale_fill_distiller(palette = "Spectral",
+                       direction = 0,
+                       #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
+                       labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8")) +
+  labs(fill = expression(r^2),
+       title = "B. r2 of Estimated vs True Poverty Across Countries",
+       caption = "") +
   theme_void() +
-  theme(strip.text = element_text(face = "bold",
-                                  size = 16)) +
-  labs(color = "Wealth\nAsset\nIndex") +
-  facet_wrap(~name,
-             ncol = 1)
+  coord_quickmap() +
+  coord_cartesian(xlim=c(-85,135),
+                  ylim=c(-34, 45)) +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        legend.position = c(0.05,0.15)) 
 
-#ggsave(p, filename = file.path(figures_dir, "allcountries_within_map.png"),
-#       height = 14, width = 20)
+#         legend.box.background = element_rect(colour = "black")
+
+
+#p_map
+
+# Arrange/Export ---------------------------------------------------------------
+p <- ggarrange(p_scatter + theme(legend.position = "none"),
+               p_map,
+               ncol = 2,
+               widths = c(0.4, 0.6))
+
+ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
+       height = 5.5, width = 15) 
+
+
+
+
+
+# Country Scatterplot ----------------------------------------------------------
+p_scatter_country <- pred_df %>%
+  group_by(country_name) %>%
+  dplyr::mutate(cor_val = cor(truth, prediction)) %>%
+  dplyr::mutate(country_name = paste0(country_name, "\nCorrelation: ", 
+                                      round(cor_val, 2))) %>%
+  ungroup() %>%
+  dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T)) %>%
+  ggplot(aes(x = truth,
+             y = prediction,
+             color = urban_rural)) +
+  geom_point(size = 0.4, # 0.25
+             alpha = 0.7) + # 0.3
+  scale_color_manual(values = c("chartreuse4", "chocolate1")) +
+  labs(color = NULL,
+       title = "Predicted vs. True Wealth Scores",
+       x = "True Poverty Level",
+       y = "Predicted Poverty Level") +
+  theme_minimal() +
+  theme(legend.position = "top",
+        legend.box.background = element_rect(colour = "black"),
+        plot.title = element_text(face = "bold", size = 16),
+        strip.text = element_text(face = "bold")) +
+  guides(color = guide_legend(override.aes = list(size = 2)),
+         alpha = guide_legend(override.aes = list(alpha = 1))) +
+  facet_wrap(~country_name)
+
+SCALE = 1.5
+ggsave(p_scatter_country, 
+       filename = "~/Desktop/test.png",
+       height = 10*SCALE, 
+       width = 8*SCALE)
 
 
 
 #ggsave(p, filename = file.path(figures_dir, "allcountries_within_scatter.png"),
 #       height = 10, width = 10)
-
-# Arrange/Export ---------------------------------------------------------------
-# p <- ggarrange(p_scatter,
-#                p_map,
-#                ncol = 2,
-#                widths = c(0.4, 0.6),
-#                heights = c(0.8, 1))
-
-p <- ggarrange(p_scatter,
-               p_map,
-               ncol = 2,
-               widths = c(0.45, 0.55),
-               heights = c(0.8, 1))
-
-ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
-       height =11*0.8, width = 18*0.8)
-
-# height = 12, width = 18
-
 

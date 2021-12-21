@@ -201,7 +201,7 @@ p_map <- ggplot() +
                        #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
                        labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8")) +
   labs(fill = expression(r^2),
-       title = "B. r2 of Estimated vs True Poverty Across Countries",
+       title = "B. r2 of Estimated vs True Wealth Score Across Countries",
        caption = "") +
   theme_void() +
   coord_quickmap() +

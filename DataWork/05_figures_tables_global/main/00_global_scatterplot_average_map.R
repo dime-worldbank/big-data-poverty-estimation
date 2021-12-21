@@ -9,13 +9,29 @@
 
 # Load Data --------------------------------------------------------------------
 pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
-  list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
+  #list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
+  #           full.names = T) %>%
+  list.files(pattern = "*.Rds",
              full.names = T) %>%
-  # Subset to:
-  # -- Prediction of pca_allvars variable
-  # -- Prediction using all features
   str_subset("pca_allvars_all.Rds") %>%
   map_df(readRDS)
+
+# Select best estimation type for each country ---------------------------------
+pred_df <- pred_df %>%
+  mutate(country_est_id = paste(estimation_type, country_code))
+
+#pred_df <- pred_df[pred_df$estimation_type %in% "within_country_cv",]
+
+cor_df <- pred_df %>%
+  group_by(country_est_id, estimation_type, country_code) %>%
+  dplyr::summarise(cor = cor(truth, prediction)) %>%
+  
+  group_by(country_code) %>% 
+  slice_max(order_by = cor, n = 1) %>%
+  
+  mutate(r2 = cor^2)
+
+pred_df <- pred_df[pred_df$country_est_id %in% cor_df$country_est_id,]
 
 # Merge with select survey variables -------------------------------------------
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
@@ -44,7 +60,7 @@ r2_rural <- cor(pred_df_r$truth, pred_df_r$prediction)^2
 
 TEXT_X <- -4
 TEXT_Y_TOP <- 4
-TEXT_Y_INCR <- 0.35
+TEXT_Y_INCR <- 0.45
 FONT_SIZE <- 4.5
 
 p_scatter <- ggplot() +
@@ -148,7 +164,7 @@ world_sp_tidy <- merge(world_sp_tidy, world_sp@data)
 
 TEXT_X_MAP <- -73
 TEXT_Y_TOP_MAP <- 40
-TEXT_Y_INC_MAP <- 3
+TEXT_Y_INC_MAP <- 4
 
 p_map <- ggplot() +
   geom_polygon(data = world_sp_tidy[is.na(world_sp_tidy$cor),],
@@ -164,7 +180,7 @@ p_map <- ggplot() +
                aes(x = long, y = lat, group = group,
                    fill = r2),
                color = "black") +
-  geom_richtext(aes(label = paste0("All - Average r<sup>2</sup>: ", round(cor_mean_all,2)),
+  geom_richtext(aes(label = paste0("All - Avg r<sup>2</sup>: ", round(cor_mean_all,2)),
                     x = TEXT_X_MAP,
                     y = TEXT_Y_TOP_MAP),
                 color = "black",
@@ -172,7 +188,7 @@ p_map <- ggplot() +
                 fill = NA, 
                 label.color = NA,
                 size = FONT_SIZE) +
-  geom_richtext(aes(label = paste0("Africa - Average r<sup>2</sup>: ", round(cor_mean_africa,2)),
+  geom_richtext(aes(label = paste0("Africa - Avg r<sup>2</sup>: ", round(cor_mean_africa,2)),
                     x = TEXT_X_MAP,
                     y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
                 color = "black",
@@ -180,7 +196,7 @@ p_map <- ggplot() +
                 fill = NA, 
                 label.color = NA,
                 size = FONT_SIZE) +
-  geom_richtext(aes(label = paste0("Americas - Average r<sup>2</sup>: ", round(cor_mean_americas,2)),
+  geom_richtext(aes(label = paste0("Americas - Avg r<sup>2</sup>: ", round(cor_mean_americas,2)),
                     x = TEXT_X_MAP,
                     y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
                 color = "black",
@@ -188,7 +204,7 @@ p_map <- ggplot() +
                 fill = NA, 
                 label.color = NA,
                 size = FONT_SIZE) +
-  geom_richtext(aes(label = paste0("Eurasia - Average r<sup>2</sup>: ", round(cor_mean_eurasia,2)),
+  geom_richtext(aes(label = paste0("Eurasia - Avg r<sup>2</sup>: ", round(cor_mean_eurasia,2)),
                     x = TEXT_X_MAP,
                     y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
                 color = "black",
@@ -201,14 +217,14 @@ p_map <- ggplot() +
                        #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
                        labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8")) +
   labs(fill = expression(r^2),
-       title = "B. r2 of Estimated vs True Wealth Score Across Countries",
+       title = "B. r2 of Estimated vs True Wealth Score Within Countries",
        caption = "") +
   theme_void() +
   coord_quickmap() +
   coord_cartesian(xlim=c(-85,135),
                   ylim=c(-34, 45)) +
   theme(plot.title = element_text(face = "bold", size = 16),
-        legend.position = c(0.05,0.15)) 
+        legend.position = c(0.05,0.18)) 
 
 #         legend.box.background = element_rect(colour = "black")
 
@@ -222,7 +238,7 @@ p <- ggarrange(p_scatter + theme(legend.position = "none"),
                widths = c(0.4, 0.6))
 
 ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
-       height = 5.5, width = 15) 
+       height = 4.5, width = 15) 
 
 
 
@@ -231,8 +247,8 @@ ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
 # Country Scatterplot ----------------------------------------------------------
 p_scatter_country <- pred_df %>%
   group_by(country_name) %>%
-  dplyr::mutate(cor_val = cor(truth, prediction)) %>%
-  dplyr::mutate(country_name = paste0(country_name, "\nCorrelation: ", 
+  dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
+  dplyr::mutate(country_name = paste0(country_name, "\nR2: ", 
                                       round(cor_val, 2))) %>%
   ungroup() %>%
   dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T)) %>%
@@ -257,7 +273,7 @@ p_scatter_country <- pred_df %>%
 
 SCALE = 1.5
 ggsave(p_scatter_country, 
-       filename = "~/Desktop/test.png",
+       filename = file.path(figures_global_dir, "r2_scatter_eachcountry.png"),
        height = 10*SCALE, 
        width = 8*SCALE)
 

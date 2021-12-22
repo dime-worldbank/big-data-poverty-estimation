@@ -1,5 +1,9 @@
 # Main Results
 
+# To look into
+# 1. Locations
+# 2. Correlation along truth (below/above median pov)
+
 # Load data --------------------------------------------------------------------
 #### Results
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
@@ -25,9 +29,10 @@ survey_df <- survey_df %>%
   dplyr::filter(country_code %in% "PK")
 
 # Merge with select survey variables -------------------------------------------
-survey_df <- survey_df %>%
-  dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
-                country_name)
+#survey_sub_df <- survey_df %>%
+#  dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
+#                country_name, 
+#                viirs_avg_rad, fb_prop_estimate_mau_upper_bound_30)
 
 pred_df <- pred_df %>%
   dplyr::left_join(survey_df, by = "uid")
@@ -39,65 +44,173 @@ pred_df <- pred_df %>%
   ))
 
 # Add Pakistan ADM -------------------------------------------------------------
-pak_adm1 <- readRDS(file.path(data_dir, "GADM", "RawData", "gadm36_PAK_3_sp.rds")) 
-pak_adm2 <- readRDS(file.path(data_dir, "GADM", "RawData", "gadm36_PAK_3_sp.rds")) 
+pak_adm1 <- readRDS(file.path(data_dir, "GADM", "RawData", "gadm36_PAK_1_sp.rds")) 
+pak_adm2 <- readRDS(file.path(data_dir, "GADM", "RawData", "gadm36_PAK_2_sp.rds")) 
 pak_adm3 <- readRDS(file.path(data_dir, "GADM", "RawData", "gadm36_PAK_3_sp.rds")) 
 
-pak_adm <- readRDS(file.path(data_dir, "GADM", "RawData", "gadm36_PAK_3_sp.rds")) 
+pak_adm1$area <- pak_adm1 %>% st_as_sf() %>% st_area() %>% as.numeric()
+pak_adm2$area <- pak_adm2 %>% st_as_sf() %>% st_area() %>% as.numeric()
+pak_adm3$area <- pak_adm3 %>% st_as_sf() %>% st_area() %>% as.numeric()
 
 pred_sp <- pred_df
 coordinates(pred_sp) <- ~longitude+latitude
 crs(pred_sp) <- CRS("+init=epsg:4326")
 
-pred_OVER_gadm <- over(pred_sp, pak_adm)
+pred_OVER_gadm <- over(pred_sp, pak_adm3)
 pred_df$NAME_3 <- pred_OVER_gadm$NAME_3
 pred_df$NAME_2 <- pred_OVER_gadm$NAME_2
 pred_df$NAME_1 <- pred_OVER_gadm$NAME_1
+pred_df$adm_area <- pred_OVER_gadm$area
 
-# Correlations -----------------------------------------------------------------
-
-# Predictions ------------------------------------------------------------------
+# Prep Prediction Data ---------------------------------------------------------
 #### Prep data
 pred_sub_df <- pred_df %>%
   dplyr::filter(feature_type == "all",
                 target_var == "wealth_index_score",
                 estimation_type == "within_country_cv")
 
+#### Aggregate to ADM
 pred_adm1_df <- pred_sub_df %>%
   group_by(NAME_1) %>%
-  dplyr::summarise(cor = cor(truth, prediction),
-                   truth = mean(truth),
-                   prediction = mean(prediction),
-                   N = n()) %>%
+  summarise(across(where(is.numeric), list(mean = mean, sd = sd)),
+            cor = cor(truth, prediction),
+            adm_area = sum(adm_area),
+            N = n()) %>%
   ungroup() %>%
   dplyr::mutate(adm = "ADM 1") %>%
   dplyr::mutate(r2 = cor^2)
 
 pred_adm2_df <- pred_sub_df %>%
   group_by(NAME_2) %>%
-  dplyr::summarise(cor = cor(truth, prediction),
-                   truth = mean(truth),
-                   prediction = mean(prediction),
-                   N = n()) %>%
+  summarise(across(where(is.numeric), list(mean = mean, sd = sd)),
+            cor = cor(truth, prediction),
+            adm_area = sum(adm_area),
+            N = n()) %>%
   ungroup() %>%
   dplyr::mutate(adm = "ADM 2") %>%
   dplyr::mutate(r2 = cor^2)
 
 pred_adm3_df <- pred_sub_df %>%
   group_by(NAME_3) %>%
-  dplyr::summarise(cor = cor(truth, prediction),
-                   truth = mean(truth),
-                   prediction = mean(prediction),
-                   N = n()) %>%
+  summarise(across(where(is.numeric), list(mean = mean, sd = sd)),
+            cor = cor(truth, prediction),
+            adm_area = sum(adm_area),
+            N = n()) %>%
   ungroup() %>%
   dplyr::mutate(adm = "ADM 3") %>%
-  dplyr::mutate(r2 = cor^2)
+  dplyr::mutate(r2 = cor^2) %>%
+  dplyr::filter(!is.na(r2))
+
+#### Correlation between within unit r2 and value
+vars_to_use <- c("viirs_",
+                 "gc_",
+                 "osm_",
+                 "l8_",
+                 "cnn_",
+                 "fb_prop_",
+                 "worldclim_",
+                 "worldpop_",
+                 "elevslope_",
+                 "globalmod_",
+                 "pollution_aod_",
+                 "pollution_s5p_",
+                 "weather_") %>%
+  paste(collapse = "|")
+
+pred_adm1_cor_df <- pred_adm1_df %>%
+  dplyr::select(NAME_1,
+                r2,
+                matches(vars_to_use)) %>%
+  pivot_longer(cols = -c(NAME_1, r2)) %>%
+  group_by(name) %>%
+  dplyr::summarise(cor_modelr2_value = cor(r2, value)) %>%
+  ungroup() %>%
+  dplyr::mutate(variable = name %>% 
+                  str_replace_all("_mean", "") %>% 
+                  str_replace_all("_sd", "")) %>%
+  clean_varnames()
+
+pred_adm2_cor_df <- pred_adm2_df %>%
+  dplyr::select(NAME_2,
+                r2,
+                matches(vars_to_use)) %>%
+  pivot_longer(cols = -c(NAME_2, r2)) %>%
+  group_by(name) %>%
+  dplyr::summarise(cor_modelr2_value = cor(r2, value)) %>%
+  ungroup() %>%
+  dplyr::mutate(variable = name %>% 
+                  str_replace_all("_mean", "") %>% 
+                  str_replace_all("_sd", "")) %>%
+  clean_varnames() 
+
+pred_adm3_cor_df <- pred_adm3_df %>%
+  dplyr::select(NAME_3,
+                r2,
+                matches(vars_to_use)) %>%
+  pivot_longer(cols = -c(NAME_3, r2)) %>%
+  group_by(name) %>%
+  dplyr::summarise(cor_modelr2_value = cor(r2, value)) %>%
+  ungroup() %>%
+  dplyr::mutate(variable = name %>% 
+                  str_replace_all("_mean", "") %>% 
+                  str_replace_all("_sd", "")) %>%
+  clean_varnames() 
 
 pred_adm_all_df <- bind_rows(
   pred_adm1_df,
   pred_adm2_df,
   pred_adm3_df
 )
+
+# Correlations -----------------------------------------------------------------
+cor_df <- survey_df %>%
+  dplyr::select(uid,
+                country_name, 
+                continent_adj,
+                gadm_uid,
+                pca_allvars,
+                wealth_index_score,
+                starts_with("viirs_"),
+                starts_with("gc_"),
+                starts_with("osm_"),
+                starts_with("l8_"),
+                starts_with("cnn_"),
+                starts_with("fb_prop"),
+                starts_with("worldclim_"),
+                starts_with("worldpop_"),
+                starts_with("elevslope_"),
+                starts_with("globalmod_"),
+                starts_with("pollution_aod_"),
+                starts_with("pollution_s5p_"),
+                starts_with("weather_")) %>%
+  pivot_longer(cols = -c(uid, gadm_uid, country_name, continent_adj,
+                         pca_allvars, wealth_index_score)) %>%
+  dplyr::rename(variable = name) %>%
+  clean_varnames() %>%
+  group_by(variable, variable_cat) %>%
+  dplyr::summarise(cor = cor(wealth_index_score, value)) %>%
+  ungroup() %>%
+  dplyr::mutate(cor_abs = abs(cor)) %>%
+  dplyr::filter(!is.na(cor))
+
+cor_df_max <- cor_df %>%
+  group_by(variable_cat) %>%
+  slice_max(order_by = cor, n = 1)
+
+cor_df_min <- cor_df %>%
+  group_by(variable_cat) %>%
+  slice_min(order_by = cor, n = 1)
+
+survey_df %>%
+  ggplot() +
+  geom_point(aes(x = wealth_index_score,
+                 y = cnn_s2_ndvi_pc8))
+
+cor_df %>%
+  ggplot() +
+  geom_boxplot(aes(x = cor,
+                   y = reorder(variable_cat, cor, FUN = median, .desc =TRUE)))
+
 
 #### Survey Cluster Prediction
 pred_sub_df_u <- pred_sub_df[pred_sub_df$urban_rural %in% "Urban",]
@@ -168,11 +281,11 @@ p_cluster <- ggplot() +
 #### ADM Level
 p_adm <- pred_adm_all_df %>%
   group_by(adm) %>%
-  dplyr::mutate(r2 = cor(truth, prediction)^2) %>%
+  dplyr::mutate(r2 = cor(truth_mean, prediction_mean)^2) %>%
   ungroup() %>%
   dplyr::mutate(adm = adm %>% as.factor() %>% fct_rev()) %>%
-  ggplot(aes(x = truth,
-             y = prediction,
+  ggplot(aes(x = truth_mean,
+             y = prediction_mean,
              size = N)) +
   geom_point(pch = 21,
              fill = "gray80",
@@ -199,35 +312,149 @@ p_adm <- pred_adm_all_df %>%
 #### Arrange/Export
 p <- ggarrange(p_cluster, 
                p_adm,
-          nrow = 1,
-          widths = c(0.3, 0.7))
+               nrow = 1,
+               widths = c(0.3, 0.7))
 
 ggsave(p, filename = file.path(figures_pak_dir, "scatterplots.png"),
        height = 4, width = 11)
 
 # Within ADM r2 ----------------------------------------------------------------
-pak_adm2_sf <- merge(pak_adm2, pred_adm2_df, by = "NAME_2") %>% st_as_sf()
+### Map & Scatterplot Parameters
+PLOT_TITLE_SIZE <- 12
+
+#### Maps
+pak_adm1_s <- gSimplify(pak_adm1, tol = 0.05)
+pak_adm1_s$id <- 1:length(pak_adm1_s)
+pak_adm1_s@data <- pak_adm1@data
+
+pak_adm1_sf <- merge(pak_adm1_s, pred_adm1_df, by = "NAME_1") %>% st_as_sf()
 pak_adm1_sf <- merge(pak_adm1, pred_adm1_df, by = "NAME_1") %>% st_as_sf()
 
-ggplot() +
-  geom_sf(data = pak_adm2_sf,
-          aes(fill = r2)) +
-  theme_void()
-
-ggplot() +
+p_within_r2_map <- ggplot() +
   geom_sf(data = pak_adm1_sf,
-          aes(fill = r2)) +
-  theme_void()
+          aes(fill = r2),
+          color = "black") +
+  theme_void() +
+  labs(fill = expression("Within\nDistrict"~r^2),
+       title = expression(bold("A. Within District"~r^2)),
+       subtitle = "\n") +
+  scale_fill_distiller(palette = "Spectral",
+                       direction = 0) + 
+  theme(legend.position = c(0.85,0.25),
+        plot.title = element_text(hjust = 0, size = PLOT_TITLE_SIZE),
+        plot.subtitle = element_text(size = PLOT_TITLE_SIZE))
 
-pred_adm1_df$cor %>% hist()
+#### Explain variation
+## TODO: Run simple OLS on a number of variables, report
+# (1) Coef, (2) Sign, (3) R2 [Coef plot]
+# --- Could check with ALL variables, and just see what works.
+if(F){
+  View(pred_adm1_cor_df)
+  
+  pred_adm1_df %>%
+    dplyr::filter(N >= 10) %>%
+    ggplot() +
+    geom_point(aes(x = r2,
+                   y = viirs_avg_rad_sd))
+}
 
-head(pred_adm1_df)
+p_explainvar_scatter <- pred_adm1_df %>%
+  ## To Long
+  dplyr::select(r2,
+                l8_NDBI_sd,
+                fb_prop_estimate_mau_upper_bound_21_sd,
+                #osm_distmeters_poi_attraction_sd,
+                osm_distmeters_road_tertiary_sd,
+                viirs_avg_rad_sd) %>%
+  pivot_longer(cols = -r2) %>%
+  dplyr::mutate(variable = name %>%
+                  str_replace_all("_sd|mean", "")) %>%
+  clean_varnames() %>%
+  dplyr::mutate(variable_clean = case_when(
+    variable_clean == "Other device types: Oppo/VIVO/Cherry devices" ~ "[Facebook] Use Oppo/\nVIVO/Cherry Devices",
+    variable == "l8_NDBI" ~ "[Landsat] Normalized Diff.\nBuilt-Up Index",
+    variable == "osm_distmeters_poi_attraction" ~ "[OSM] Distance to Attractions",
+    variable == "osm_distmeters_road_tertiary" ~ "[OSM] Distance to\nTertiary Roads",
+    TRUE ~ variable_clean
+  )) %>%
+  
+  ## Compute correlation
+  group_by(name) %>%
+  dplyr::mutate(cor = cor(r2, value),
+                value_high = max(value)*0.93) %>%
+  ungroup() %>%
+  
+  ## Figure
+  ggplot(aes(x = r2,
+             y = value)) +
+  geom_smooth(method = lm, se = F,
+              color = "gray50",
+              size = 0.75) +
+  geom_point(aes(fill = r2),
+             pch = 21,
+             color = "black",
+             size = 3) +
+  geom_richtext(aes(label = paste0("Cor = ", round(cor,2)),
+                    x = 0.12,
+                    y = value_high),
+                size = 2.75) +
+  facet_wrap(~variable_clean,
+             scales = "free_y") +
+  labs(x = expression("Within District"~r^2),
+       y = "Within District Std. Dev. of Value",
+       title = expression(bold("B. Correlation of within district"~r^2~"with")),
+       subtitle = "within district standard deviation of values") +
+  scale_fill_distiller(palette = "Spectral",
+                       direction = 0) + 
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold", hjust = 0),
+        plot.title = element_text(hjust = 0, size = PLOT_TITLE_SIZE),
+        plot.subtitle = element_text(hjust = 0, size = PLOT_TITLE_SIZE, face = "bold"),
+        legend.position = "none")
+
+p <- ggarrange(p_within_r2_map,
+               p_explainvar_scatter)
+
+ggsave(p, filename = file.path(figures_pak_dir, "within_adm_r2.png"),
+       height = 4.5, width = 8)
+
+#### Correlations of Top Variables
+top_cor <- pred_adm1_cor_df %>%
+  arrange(-cor_modelr2_value) %>%
+  head(15)
+
+bottom_cor <- pred_adm1_cor_df %>%
+  arrange(cor_modelr2_value) %>%
+  head(15) %>%
+  arrange(-cor_modelr2_value)
+
+cor_topbottom <- bind_rows(top_cor,
+                           bottom_cor)
+
+
+head(pred_adm1_cor_df)
 
 
 
+#### OTHER **********
 
-
-
-
-
+#### Scatterplots
+pred_sub_df %>%
+  group_by(NAME_1) %>%
+  dplyr::mutate(r2 = cor(truth, prediction)^2) %>%
+  ungroup() %>%
+  ggplot(aes(x = truth,
+             y = prediction)) +
+  geom_point(aes(color = urban_rural)) +
+  geom_smooth(method = lm, se = F) +
+  geom_richtext(aes(label = paste0("r<sup>2</sup> = ", round(r2,2)),
+                    x = -100000,
+                    y = 80000),
+                size = 4.5) +
+  facet_wrap(~NAME_1) +
+  scale_color_manual(values = c("chartreuse4",
+                                "chocolate2")) + 
+  theme_classic() +
+  theme(strip.text = element_text(face = "bold"))
 

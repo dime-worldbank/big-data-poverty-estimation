@@ -361,8 +361,8 @@ for(aggregate_district in c(F, T)){
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T)) %>%
       ggplot(aes(x = truth,
-                 y = prediction,
-                 color = "black")) +
+                 y = prediction),
+             color = "black") +
       geom_point(size = 0.4, # 0.25
                  alpha = 0.7) + # 0.3
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +

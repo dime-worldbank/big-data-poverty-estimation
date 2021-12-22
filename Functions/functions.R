@@ -1,5 +1,97 @@
 # Useful functions for project
 
+clean_varnames <- function(df){
+  # Clean variable names. Assumes df has a `variable` with the raw names; function
+  # creates two variables: `variable_clean` and `variable_cat`. (_cat indicates
+  # category).
+  
+  ## Load Facebook and Globcover parameter name dataframes
+  fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
+  gc_param_df <- read_csv(file.path(data_dir, "Globcover", "RawData", "gc_classes.csv"))
+  
+  df <- df %>%
+    dplyr::mutate(variable_cat = case_when(
+      variable %>% str_detect("viirs_") ~ "Nighttime Lights",
+      variable %>% str_detect("gc_") ~ "Land Cover",
+      variable %>% str_detect("osm_") ~ "OpenStreetMap",
+      variable %>% str_detect("l8_") ~ "Daytime Imagery, Average",
+      variable %>% str_detect("cnn_s2_rgb_") ~ "Daytime Imagery, CNN: RGB",
+      variable %>% str_detect("cnn_s2_ndvi_") ~ "Daytime Imagery, CNN: NDVI",
+      variable %>% str_detect("cnn_s2_bu_") ~ "Daytime Imagery, CNN: BU",
+      variable %>% str_detect("fb_prop") ~ "Facebook Marketing",
+      variable %>% str_detect("worldclim") ~ "World Climate",
+      variable %>% str_detect("worldpop") ~ "World Pop",
+      variable %>% str_detect("elevslope") ~ "Elevation/Slope",
+      variable %>% str_detect("globalmod") ~ "Global Human Mod Index",
+      variable %>% str_detect("pollution_aod") ~ "Pollution - MODIS",
+      variable %>% str_detect("pollution_s5p") ~ "Pollution - Sentinel-5P",
+      variable %>% str_detect("weather") ~ "Weather",
+      TRUE ~ variable
+    ))
+  
+  ### Clean select name for variables
+  ## Facebook
+  fb_param_clean_df <- fb_param_df %>%
+    dplyr::select(param_id, param_category, param_name_simple) %>%
+    dplyr::mutate(variable = paste0("fb_prop_estimate_mau_upper_bound_", param_id),
+                  variable_clean_fb = paste0(param_category, ": ", param_name_simple)) %>%
+    dplyr::select(variable, variable_clean_fb)
+  
+  ## Globcover
+  gc_param_clean_df <- gc_param_df %>%
+    dplyr::select(value, label) %>%
+    dplyr::rename(variable = value,
+                  variable_clean_gc = label) %>%
+    dplyr::mutate(variable = paste0("gc_", variable))
+  
+  df <- df %>%
+    left_join(fb_param_clean_df, by = "variable") %>%
+    left_join(gc_param_clean_df, by = "variable") %>%
+    dplyr::mutate(variable_clean = case_when(
+      variable_cat %>% str_detect("Facebook") ~ variable_clean_fb,
+      variable_cat %>% str_detect("Land Cover") ~ variable_clean_gc,
+      TRUE ~ variable
+    )) %>%
+    dplyr::select(-c(variable_clean_fb, variable_clean_gc))
+  
+  #### Manual variable clean
+  df <- df %>%
+    dplyr::mutate(variable_clean = case_when(
+      variable_clean == "viirs_avg_rad" ~ "Nighttime Lights",
+      variable %>% str_detect("osm_") ~ variable %>%
+        str_replace_all("osm_distmeters_poi_", "Distance: ") %>%
+        str_replace_all("osm_distmeters_road_", "Distance: ") %>%
+        str_replace_all("_", " ") %>%
+        tools::toTitleCase(),
+      TRUE ~ variable_clean
+    ))
+  
+  df <- df %>%
+    dplyr::mutate(variable_clean_with_dataset = case_when(
+      variable_clean %in% "viirs_avg_rad" ~ "[VIIRS] Nighttime Lights",
+      variable_clean %in% "gc_190" ~ "[Globcover] Urban Land",
+      variable_clean %in% "globalmod_mean" ~ "[Global Human Modification Index]",
+      variable_clean %in% "osm_length_residential_5000m" ~ "[OSM] Residential Road Length",
+      variable_clean %in% "cnn_s2_rgb_pc11" ~ "[Daytime Imagery, CNN: RGB] Feature 1",
+      variable_clean %in% "cnn_s2_ndvi_pc7" ~ "[Daytime Imagery, CNN: NDVI] Feature 1",
+      variable_clean %in% "cnn_s2_bu_pc16"  ~ "[Daytime Imagery, CNN: Built-Up Index] Feature 1",
+      variable_clean %in% "worldpop_10km" ~ "[World Pop] Population",
+      variable_clean %in% "pollution_s5p_tropospheric_NO2_column_number_density" ~ 
+        "[Pollution, Sentinel-5P] Tropospheric NO2",
+      variable_clean %in% "l8_B2" ~ "[Landsat 8] Blue Surface Reflectance (B2)",
+      variable_clean %in% "Interests: Restaurants" ~ "[Facebook] Interests: Restaurants",
+      variable_clean %in% "weather_q4_minimum_2m_air_temperature" ~ "[Weather] Quarter 4 Min. Temperature",
+      variable_clean %in% "pollution_aod_047" ~ "[Pollution, MODIS] AOD",
+      variable_clean %in% "worldclim_bio_6" ~ "[WorldClim] Bio 6",
+      variable_clean %in% "elevslope_slope" ~ "[Elevation/Slope] Slope",
+      TRUE ~ variable_clean
+    ))
+  
+  return(df)
+}
+
+
+
 get_lat_lon <- function(number){
   # Transform lat/lon degree/minute/second data from OPM to decimal degrees.
   
@@ -11,16 +103,12 @@ get_lat_lon <- function(number){
   return(degree)
 }
 
-
-
-
 # Function to CLuster Unique Crashes into Crash 
-
 create_clusters <- function(crashes_df,
-                                  lat_var,
-                                  lon_var,
-                                  near_crash_thresh_meters,
-                                  near_anycrash_in_cluster_thresh_meters){
+                            lat_var,
+                            lon_var,
+                            near_crash_thresh_meters,
+                            near_anycrash_in_cluster_thresh_meters){
   
   # DESCRIPTION:
   # Cluster unique crashes into crash clusters. Grab all crashes within 

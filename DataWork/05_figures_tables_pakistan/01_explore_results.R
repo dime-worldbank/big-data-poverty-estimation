@@ -193,6 +193,174 @@ cor_df <- survey_df %>%
   dplyr::mutate(cor_abs = abs(cor)) %>%
   dplyr::filter(!is.na(cor))
 
+#### Correlation Main Figure
+p_cor_all <- cor_df %>%
+  ggplot() +
+  geom_boxplot(aes(x = cor,
+                   y = reorder(variable_cat, cor, FUN = median, .desc =TRUE)),
+               fill = "gray80",
+               center = T,
+               errorbar.draw = F) +
+  labs(x = "Correlation",
+       y = NULL,
+       title = "A. Distribution of correlations across datasets") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(color = "black"),
+        plot.title.position = "plot") 
+
+#### Facebook: Correlation Table
+cor_fb_df <- cor_df %>%
+  dplyr::filter(variable_cat %in% "Facebook Marketing") %>%
+  clean_varnames() %>%
+  arrange(-cor)
+
+cor_var_df <- cor_df %>%
+  clean_varnames() %>%
+  dplyr::mutate(text_move = case_when(
+    cor >= 0 ~ 0.1,
+    cor < 0 ~ -0.1
+  ))
+
+## Facebook
+p_fb <- cor_var_df %>%
+  dplyr::filter(variable_cat %in% "Facebook Marketing") %>%
+  dplyr::mutate(variable_clean_short = variable_clean_short %>%
+                  str_replace_all("Samsung Galaxy phone",
+                                  "Samsung Galaxy")) %>%
+  dplyr::mutate(fb_var = variable_clean_short %>%
+                  str_replace_all(".*:", "") %>%
+                  str_squish(),
+                fb_var_cat = variable_clean_short %>%
+                  str_replace_all(":.*", "") %>%
+                  str_squish()) %>%
+  clean_varnames() %>%
+  ggplot(aes(y = reorder(fb_var, cor, FUN = median, .desc =TRUE),
+             xmin = 0,
+             xmax = cor,
+             x = cor,
+             color = fb_var_cat,
+             label = round(cor, 2))) +
+  geom_point() +
+  geom_linerange() +
+  geom_text(aes(x = cor + text_move)) +
+  labs(x = "Correlation",
+       y = NULL,
+       color = "Variable\nCategory",
+       title = "B. Correlation of Facebook variables to wealth score") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(color = "black"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        plot.title.position = "plot") +
+  scale_color_brewer(palette = "Dark2")
+
+## Pollution
+# TODO: Top by pollutant (one for NO2, one for SO2, etc)
+p_pollution <- cor_var_df %>%
+  dplyr::filter(variable %>% str_detect("pollution")) %>%
+  ggplot(aes(y = reorder(variable_clean, cor, FUN = median, .desc =TRUE),
+             xmin = 0,
+             xmax = cor,
+             x = cor,
+             label = round(cor, 2))) +
+  geom_point() +
+  geom_linerange() +
+  geom_text(aes(x = cor + text_move)) +
+  labs(x = "Correlation",
+       y = NULL,
+       title = "C. Correlation of pollution variables to wealth score") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(color = "black"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.title.position = "plot")
+
+## OSM
+cor_var_osm_df <- cor_var_df %>%
+  dplyr::filter(variable_cat %in% "OpenStreetMap")
+
+cor_df_max <- cor_var_osm_df %>%
+  group_by(variable_cat) %>%
+  slice_max(order_by = cor, n = 10)
+
+cor_df_min <- cor_var_osm_df %>%
+  group_by(variable_cat) %>%
+  slice_min(order_by = cor, n = 10)
+
+cor_df_minmax <- bind_rows(
+  cor_df_max,
+  cor_df_min
+) %>%
+  distinct() 
+
+p_osm <- cor_df_minmax %>%
+  dplyr::mutate(osm_var = variable_clean %>%
+                  str_replace_all("Distance: ", "") %>%
+                  str_replace_all("Osm Length ", "") %>%
+                  str_replace_all("5000m", ""),
+                osm_var = case_when(
+                  variable %>% str_detect("osm_length") ~ paste0("Road Length: ", osm_var),
+                  variable %>% str_detect("osm_distmeters_poi") ~ paste0("POI Distance: ", osm_var),
+                  variable %>% str_detect("osm_distmeters_road") ~ paste0("Road Distance: ", osm_var)
+                )) %>%
+  ggplot(aes(y = reorder(osm_var, cor, FUN = median, .desc =TRUE),
+             xmin = 0,
+             xmax = cor,
+             x = cor,
+             label = round(cor, 2))) +
+  geom_point() +
+  geom_linerange() +
+  geom_text(aes(x = cor + text_move)) +
+  labs(x = "Correlation",
+       y = NULL,
+       title = "D. Correlation of select OSM variables to wealth score") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(color = "black"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.title.position = "plot")
+
+#### Arrange Figure
+p_osm_pollution <- ggarrange(p_osm,
+                             p_pollution,
+                             ncol = 1)
+
+p_osm_pollution_fb <- ggarrange(p_fb, 
+                                p_osm_pollution, 
+                                nrow = 1)
+
+p_cor <- ggarrange(p_cor_all,
+                   p_osm_pollution_fb,
+                   ncol = 1,
+                   heights = c(0.35, 0.65))
+
+ggsave(p_cor, filename = file.path(figures_pak_dir, "correlations.png"),
+       height = 11, width = 9)
+
+
+
+sink(file.path(tables_pak_dir, "fb_cor.tex"))
+
+cat("\\begin{tabular}{rc} \n")
+cat("\\hline \n")
+cat("Variable & Correlation \\\\ \n")
+cat("\\hline \n")
+
+for(i in 1:nrow(cor_fb_df)){
+  cat(cor_fb_df$variable_clean[i])
+  cat(" & ")
+  cat(cor_fb_df$cor[i] %>% round(2))
+  cat(" \\\\ \n")
+}
+
+cat("\\hline \n")
+cat("\\end{tabular}")
+
+sink()
+
+
+
 cor_df_max <- cor_df %>%
   group_by(variable_cat) %>%
   slice_max(order_by = cor, n = 1)
@@ -201,15 +369,18 @@ cor_df_min <- cor_df %>%
   group_by(variable_cat) %>%
   slice_min(order_by = cor, n = 1)
 
-survey_df %>%
-  ggplot() +
-  geom_point(aes(x = wealth_index_score,
-                 y = cnn_s2_ndvi_pc8))
+cor_df_minmax <- bind_rows(
+  cor_df_max,
+  cor_df_min
+) %>%
+  distinct() %>%
+  clean_varnames()
 
-cor_df %>%
+cor_df_minmax %>%
   ggplot() +
-  geom_boxplot(aes(x = cor,
-                   y = reorder(variable_cat, cor, FUN = median, .desc =TRUE)))
+  geom_col(aes(y = reorder(variable_clean, cor, FUN = median, .desc =TRUE),
+               x = cor,
+               fill = variable_cat))
 
 
 #### Survey Cluster Prediction

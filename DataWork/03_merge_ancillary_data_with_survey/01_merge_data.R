@@ -156,7 +156,16 @@ pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
   str_subset("2500") %>%
   lapply(readRDS) %>%
   reduce(full_join, by = c("uid", "year")) %>%
-  rename_at(vars(-uid, -year), ~ paste0("pollution_s5p_", .))
+  rename_at(vars(-uid, -year), ~ paste0("pollution_s5p_", .)) %>%
+  dplyr::select(uid, year,
+                pollution_s5p_absorbing_aerosol_index,
+                pollution_s5p_CO_column_number_density,
+                #pollution_s5p_H2O_column_number_density,
+                pollution_s5p_tropospheric_HCHO_column_number_density,
+                pollution_s5p_NO2_column_number_density,
+                pollution_s5p_O3_column_number_density,
+                pollution_s5p_SO2_column_number_density,
+                pollution_s5p_CH4_column_volume_mixing_ratio_dry_air)
 
 ## Check for and remove NAs
 for(var in names(pollution_df)){

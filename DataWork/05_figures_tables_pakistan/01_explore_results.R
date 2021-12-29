@@ -196,17 +196,22 @@ cor_df <- survey_df %>%
 #### Correlation Main Figure
 p_cor_all <- cor_df %>%
   ggplot() +
+  geom_vline(xintercept = 0, alpha = 0.4) +
   geom_boxplot(aes(x = cor,
                    y = reorder(variable_cat, cor, FUN = median, .desc =TRUE)),
                fill = "gray80",
                center = T,
                errorbar.draw = F) +
-  labs(x = "Correlation",
+  labs(x = NULL,
        y = NULL,
        title = "A. Distribution of correlations across datasets") +
   theme_minimal() +
   theme(axis.text.y = element_text(color = "black"),
-        plot.title.position = "plot") 
+        plot.title.position = "plot",
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold")) +
+  scale_x_continuous(limits = c(-0.8, 0.8),
+                     breaks = seq(-0.8, 0.8, 0.2))
 
 #### Facebook: Correlation Table
 cor_fb_df <- cor_df %>%
@@ -243,17 +248,21 @@ p_fb <- cor_var_df %>%
   geom_point() +
   geom_linerange() +
   geom_text(aes(x = cor + text_move)) +
-  labs(x = "Correlation",
+  labs(x = NULL,
        y = NULL,
-       color = "Variable\nCategory",
-       title = "B. Correlation of Facebook variables to wealth score") +
+       color = "Facebook\nVariable\nCategory",
+       title = "B. Correlation of Facebook variables\nto wealth score") +
   theme_minimal() +
   theme(axis.text.y = element_text(color = "black"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold"),
         legend.position = "bottom",
+        legend.margin=margin(0, 0, 0, -160),
         plot.title.position = "plot") +
-  scale_color_brewer(palette = "Dark2")
+  scale_color_brewer(palette = "Dark2", direction = 1) +
+  guides(color=guide_legend(nrow=3,byrow=T)) +
+  scale_x_continuous(limits = c(-0.2, 0.7))
 
 ## Pollution
 # TODO: Top by pollutant (one for NO2, one for SO2, etc)
@@ -267,14 +276,16 @@ p_pollution <- cor_var_df %>%
   geom_point() +
   geom_linerange() +
   geom_text(aes(x = cor + text_move)) +
-  labs(x = "Correlation",
+  labs(x = NULL,
        y = NULL,
-       title = "C. Correlation of pollution variables to wealth score") +
+       title = "D. Correlation of pollution variables\nto wealth score") +
   theme_minimal() +
   theme(axis.text.y = element_text(color = "black"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        plot.title.position = "plot")
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +
+  scale_x_continuous(limits = c(-0.15, 0.75))
 
 ## OSM
 cor_var_osm_df <- cor_var_df %>%
@@ -311,20 +322,23 @@ p_osm <- cor_df_minmax %>%
              label = round(cor, 2))) +
   geom_point() +
   geom_linerange() +
-  geom_text(aes(x = cor + text_move)) +
-  labs(x = "Correlation",
+  geom_text(aes(x = cor + (text_move*1.5))) +
+  labs(x = NULL,
        y = NULL,
-       title = "D. Correlation of select OSM variables to wealth score") +
+       title = "C. Correlation of select OSM variables\nto wealth score") +
   theme_minimal() +
   theme(axis.text.y = element_text(color = "black"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        plot.title.position = "plot")
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +
+  scale_x_continuous(limits = c(-0.9, 0.75))
 
 #### Arrange Figure
 p_osm_pollution <- ggarrange(p_osm,
                              p_pollution,
-                             ncol = 1)
+                             ncol = 1,
+                             heights = c(0.65, 0.35))
 
 p_osm_pollution_fb <- ggarrange(p_fb, 
                                 p_osm_pollution, 

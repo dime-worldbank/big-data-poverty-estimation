@@ -64,6 +64,31 @@ results_all_sum_df <- results_df %>%
                 estimation_type %in% "best",
                 target_var %in% "pca_allvars")
 
+#### Income & Std Dev Wealth
+p_wealthsd_income <- results_all_sum_df %>%
+  dplyr::mutate(income = case_when(
+    income %in% "Low income" ~ "Low\nincome",
+    income %in% "Lower middle income" ~ "Lower middle\nincome",
+    income %in% "Upper middle income" ~ "Upper middle\nincome"
+  )) %>%
+  ggplot(aes(y = pca_allvars_sd,
+             x = income,
+             fill = income)) +
+  geom_half_boxplot(center = T) +
+  geom_half_point() +
+  coord_flip() +
+  labs(y = "Standard Deviation of Wealth Score",
+       x = NULL,
+       fill = "Income\nGroup",
+       title = "F. Standard deviation of wealth score by income group") +
+  theme_classic() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text = element_text(color = "black"),
+        plot.title = element_text(face = "bold")) +
+  scale_fill_brewer(palette = "Accent",
+                    guide = guide_legend(reverse = FALSE)) 
+
 #### Boxplot and jitterpoints of income & continent
 p_all_income_box <- results_all_sum_df %>%
   dplyr::mutate(income_num = income %>% 
@@ -160,6 +185,11 @@ results_best_df <- results_df %>%
 ## Income GDP Boxplot
 p_boxplot_income <- results_best_df %>%
   #dplyr::filter(feature_type_clean != "All Features") %>%
+  dplyr::mutate(income = case_when(
+    income %in% "Low income" ~ "Low\nincome",
+    income %in% "Lower middle income" ~ "Lower middle\nincome",
+    income %in% "Upper middle income" ~ "Upper middle\nincome"
+  )) %>%
   ggplot(aes(x = r2,
              y = feature_type_clean,
              fill = income)) +
@@ -209,12 +239,28 @@ p_l <- ggarrange(p_all_gdp_scatter +
                  p_weather_aggdp_scatter + labs(plot.title = "A.") + theme_scatter,
                  ncol = 1)
 
+#p_boxplot_income + 
+#  theme(legend.position = "bottom",
+#        axis.text.y = element_text(color = "black")) +
+#  theme_scatter +
+#  guides(fill=guide_legend(nrow=3, byrow=T))
+
+p_r <- ggarrange(p_boxplot_income + 
+                   theme(legend.position = "bottom",
+                         axis.text.y = element_text(color = "black"),
+                         legend.margin=margin(l = -2, unit='cm')) +
+                   theme_scatter +
+                   guides(fill=guide_legend(nrow=1, byrow=T)),
+                 p_wealthsd_income +
+                   theme_scatter +
+                   theme(legend.position = "none",
+                         legend.margin=margin(l = -1, unit='cm')) +
+                   guides(fill=guide_legend(nrow=1, byrow=T)),
+                 ncol = 1,
+                 heights = c(0.75, 0.25))
+
 p_all <- ggarrange(p_l,
-                   p_boxplot_income + 
-                     theme(legend.position = "bottom",
-                           axis.text.y = element_text(color = "black")) +
-                     theme_scatter +
-                     guides(fill=guide_legend(nrow=3, byrow=T)),
+                   p_r,
                    widths = c(0.4, 0.6),
                    nrow = 1)
 

@@ -58,11 +58,24 @@ clean_varnames <- function(df){
   df <- df %>%
     dplyr::mutate(variable_clean = case_when(
       variable_clean == "viirs_avg_rad" ~ "Nighttime Lights",
+      
       variable %>% str_detect("osm_") ~ variable %>%
         str_replace_all("osm_distmeters_poi_", "Distance: ") %>%
         str_replace_all("osm_distmeters_road_", "Distance: ") %>%
         str_replace_all("_", " ") %>%
         tools::toTitleCase(),
+      
+      variable_clean %in% "pollution_s5p_absorbing_aerosol_index" ~ "UV Aerosol Index",
+      variable_clean %in% "pollution_s5p_CO_column_number_density" ~ "Carbon Monoxide",
+      variable_clean %in% "pollution_s5p_H2O_column_number_density" ~ "H20",
+      variable_clean %in% "pollution_s5p_tropospheric_HCHO_column_number_density" ~ "Formaldehyde",
+      variable_clean %in% "pollution_s5p_NO2_column_number_density" ~ "Nitrogen Dioxide",
+      variable_clean %in% "pollution_s5p_O3_column_number_density" ~ "Ozone",
+      variable_clean %in% "pollution_s5p_SO2_column_number_density" ~ "Sulphur Dioxide",
+      variable_clean %in% "pollution_s5p_CH4_column_volume_mixing_ratio_dry_air" ~ "Methane",
+      variable_clean %in% "pollution_aod_047" ~ "AOD: Blue Band",
+      variable_clean %in% "pollution_aod_055" ~ "AOD: Green Band",
+      
       TRUE ~ variable_clean
     ))
   
@@ -84,16 +97,6 @@ clean_varnames <- function(df){
       variable_clean %in% "pollution_aod_047" ~ "[Pollution, MODIS] AOD",
       variable_clean %in% "worldclim_bio_6" ~ "[WorldClim] Bio 6",
       variable_clean %in% "elevslope_slope" ~ "[Elevation/Slope] Slope",
-      variable_clean %in% "pollution_s5p_absorbing_aerosol_index" ~ "UV Aerosol Index",
-      variable_clean %in% "pollution_s5p_CO_column_number_density" ~ "Carbon Monoxide",
-      variable_clean %in% "pollution_s5p_H2O_column_number_density" ~ "H20",
-      variable_clean %in% "pollution_s5p_tropospheric_HCHO_column_number_density" ~ "Formaldehyde",
-      variable_clean %in% "pollution_s5p_NO2_column_number_density" ~ "Nitrogen Dioxide",
-      variable_clean %in% "pollution_s5p_O3_column_number_density" ~ "Ozone",
-      variable_clean %in% "pollution_s5p_SO2_column_number_density" ~ "Sulphur Dioxide",
-      variable_clean %in% "pollution_s5p_CH4_column_volume_mixing_ratio_dry_air" ~ "Methane",
-      variable_clean %in% "pollution_aod_047" ~ "AOD: Blue Band",
-      variable_clean %in% "pollution_aod_055" ~ "AOD: Green Band",
       TRUE ~ variable_clean
     ))
   

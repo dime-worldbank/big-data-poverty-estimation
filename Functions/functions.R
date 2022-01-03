@@ -19,7 +19,7 @@ clean_varnames <- function(df){
       variable %>% str_detect("cnn_s2_ndvi_") ~ "Daytime Imagery, CNN: NDVI",
       variable %>% str_detect("cnn_s2_bu_") ~ "Daytime Imagery, CNN: BU",
       variable %>% str_detect("fb_prop") ~ "Facebook Marketing",
-      variable %>% str_detect("worldclim") ~ "World Climate",
+      variable %>% str_detect("worldclim") ~ "WorldClim",
       variable %>% str_detect("worldpop") ~ "World Pop",
       variable %>% str_detect("elevslope") ~ "Elevation/Slope",
       variable %>% str_detect("globalmod") ~ "Global Human Mod Index",
@@ -62,7 +62,10 @@ clean_varnames <- function(df){
       variable %>% str_detect("osm_") ~ variable %>%
         str_replace_all("osm_distmeters_poi_", "Distance: ") %>%
         str_replace_all("osm_distmeters_road_", "Distance: ") %>%
+        str_replace_all("osm_", "") %>%
         str_replace_all("_", " ") %>%
+        str_replace_all("5000m", "") %>%
+        str_squish() %>%
         tools::toTitleCase(),
       
       variable_clean %in% "pollution_s5p_absorbing_aerosol_index" ~ "UV Aerosol Index",
@@ -76,29 +79,101 @@ clean_varnames <- function(df){
       variable_clean %in% "pollution_aod_047" ~ "AOD: Blue Band",
       variable_clean %in% "pollution_aod_055" ~ "AOD: Green Band",
       
+      variable_clean %in% "l8_B1" ~ "Band 1 - Ultra Blue",
+      variable_clean %in% "l8_B2" ~ "Band 2 - Blue",
+      variable_clean %in% "l8_B3" ~ "Band 3 - Green",
+      variable_clean %in% "l8_B4" ~ "Band 4 - Red",
+      variable_clean %in% "l8_B5" ~ "Band 5 - Near Infrared",
+      variable_clean %in% "l8_B6" ~ "Band 6 - Shortwave Infrared 1",
+      variable_clean %in% "l8_B7" ~ "Band 7 - Shortwave Infrared 2",
+      variable_clean %in% "l8_B10" ~ "Band 10 - Brightness Temperature",
+      variable_clean %in% "l8_B11" ~ "Band 11 - Brightness Temperature",
+      variable_clean %in% "l8_NDVI" ~ "NDVI",
+      variable_clean %in% "l8_NDBI" ~ "NDBI",
+      variable_clean %in% "l8_BU" ~ "BU",
+      
+      variable_clean %in% "globalmod_mean" ~ "Index",
+      
+      variable_clean %in% "elevslope_elev" ~ "Elevation",
+      variable_clean %in% "elevslope_slope" ~ "Slope",
+      
+      variable_clean %in% "worldpop_2km" ~ "Population",
+      variable_clean %in% "worldpop_5km" ~ "Population",
+      variable_clean %in% "worldpop_10km" ~ "Population",
+      
+      variable_clean %in% "worldclim_bio_1" ~ "Annual Mean Temperature",
+      variable_clean %in% "worldclim_bio_2" ~ "Mean Diurnal Range",
+      variable_clean %in% "worldclim_bio_3" ~ "Isothermality",
+      variable_clean %in% "worldclim_bio_4" ~ "Temperature Seasonality",
+      variable_clean %in% "worldclim_bio_5" ~ "Max Temperature of Warmest Month",
+      variable_clean %in% "worldclim_bio_6" ~ "Min Temperature of Coldest Month",
+      variable_clean %in% "worldclim_bio_7" ~ "Temperature Annual Range",
+      variable_clean %in% "worldclim_bio_8" ~ "Mean Temperature of Wettest Quarter",
+      variable_clean %in% "worldclim_bio_9" ~ "Mean Temperature of Driest Quarter",
+      variable_clean %in% "worldclim_bio_10" ~ "Mean Temperature of Warmest Quarter",
+      variable_clean %in% "worldclim_bio_11" ~ "Mean Temperature of Coldest Quarter",
+      variable_clean %in% "worldclim_bio_12" ~ "Annual Precipitation",
+      variable_clean %in% "worldclim_bio_13" ~ "Precipitation of Wettest Month",
+      variable_clean %in% "worldclim_bio_14" ~ "Precipitation of Driest Month",
+      variable_clean %in% "worldclim_bio_15" ~ "Precipitation Seasonality",
+      variable_clean %in% "worldclim_bio_16" ~ "Precipitation of Wettest Quarter",
+      variable_clean %in% "worldclim_bio_17" ~ "Precipitation of Driest Quarter",
+      variable_clean %in% "worldclim_bio_18" ~ "Precipitation of Warmest Quarter",
+      variable_clean %in% "worldclim_bio_19" ~ "Precipitation of Coldest Quarter",
+      
+      variable_clean %>% str_detect("cnn_s2_bu_pc") ~ str_replace_all(variable_clean, 
+                                                                      "cnn_s2_bu_pc",
+                                                                      "Feature "),
+      
+      variable_clean %>% str_detect("cnn_s2_rgb_pc") ~ str_replace_all(variable_clean, 
+                                                                       "cnn_s2_rgb_pc",
+                                                                       "Feature "),
+      
+      variable_clean %>% str_detect("cnn_s2_ndvi_pc7") ~ str_replace_all(variable_clean, 
+                                                                         "cnn_s2_ndvi_pc",
+                                                                         "Feature "),
+      
+      variable_clean %>% str_detect("weather") ~ variable_clean %>%
+        str_replace_all("_",
+                        " ") %>%
+        str_replace_all("weather", "") %>%
+        str_replace_all("2m", "") %>%
+        str_squish() %>%
+        tools::toTitleCase(),
+    
       TRUE ~ variable_clean
     ))
   
   df <- df %>%
-    dplyr::mutate(variable_clean_with_dataset = case_when(
-      variable_clean %in% "viirs_avg_rad" ~ "[VIIRS] Nighttime Lights",
-      variable_clean %in% "gc_190" ~ "[Globcover] Urban Land",
-      variable_clean %in% "globalmod_mean" ~ "[Global Human Modification Index]",
-      variable_clean %in% "osm_length_residential_5000m" ~ "[OSM] Residential Road Length",
-      variable_clean %in% "cnn_s2_rgb_pc11" ~ "[Daytime Imagery, CNN: RGB] Feature 1",
-      variable_clean %in% "cnn_s2_ndvi_pc7" ~ "[Daytime Imagery, CNN: NDVI] Feature 1",
-      variable_clean %in% "cnn_s2_bu_pc16"  ~ "[Daytime Imagery, CNN: Built-Up Index] Feature 1",
-      variable_clean %in% "worldpop_10km" ~ "[World Pop] Population",
-      variable_clean %in% "pollution_s5p_tropospheric_NO2_column_number_density" ~ 
-        "[Pollution, Sentinel-5P] Tropospheric NO2",
-      variable_clean %in% "l8_B2" ~ "[Landsat 8] Blue Surface Reflectance (B2)",
-      variable_clean %in% "Interests: Restaurants" ~ "[Facebook] Interests: Restaurants",
-      variable_clean %in% "weather_q4_minimum_2m_air_temperature" ~ "[Weather] Quarter 4 Min. Temperature",
-      variable_clean %in% "pollution_aod_047" ~ "[Pollution, MODIS] AOD",
-      variable_clean %in% "worldclim_bio_6" ~ "[WorldClim] Bio 6",
-      variable_clean %in% "elevslope_slope" ~ "[Elevation/Slope] Slope",
+    dplyr::mutate(variable_clean = case_when(
+      variable_clean %in% "Length all" ~ "Length All Roads",
       TRUE ~ variable_clean
     ))
+  
+  
+  # df <- df %>%
+  #   dplyr::mutate(variable_clean_with_dataset = case_when(
+  #     variable_clean %in% "viirs_avg_rad" ~ "[VIIRS] Nighttime Lights",
+  #     variable_clean %in% "gc_190" ~ "[Globcover] Urban Land",
+  #     variable_clean %in% "globalmod_mean" ~ "[Global Human Modification Index]",
+  #     variable_clean %in% "osm_length_residential_5000m" ~ "[OSM] Residential Road Length",
+  #     variable_clean %in% "cnn_s2_rgb_pc11" ~ "[Daytime Imagery, CNN: RGB] Feature 1",
+  #     variable_clean %in% "cnn_s2_ndvi_pc7" ~ "[Daytime Imagery, CNN: NDVI] Feature 1",
+  #     variable_clean %in% "cnn_s2_bu_pc16"  ~ "[Daytime Imagery, CNN: Built-Up Index] Feature 1",
+  #     variable_clean %in% "worldpop_10km" ~ "[World Pop] Population",
+  #     variable_clean %in% "pollution_s5p_tropospheric_NO2_column_number_density" ~ 
+  #       "[Pollution, Sentinel-5P] Tropospheric NO2",
+  #     variable_clean %in% "l8_B2" ~ "[Landsat 8] Blue Surface Reflectance (B2)",
+  #     variable_clean %in% "Interests: Restaurants" ~ "[Facebook] Interests: Restaurants",
+  #     variable_clean %in% "weather_q4_minimum_2m_air_temperature" ~ "[Weather] Quarter 4 Min. Temperature",
+  #     variable_clean %in% "pollution_aod_047" ~ "[Pollution, MODIS] AOD",
+  #     variable_clean %in% "worldclim_bio_6" ~ "[WorldClim] Bio 6",
+  #     variable_clean %in% "elevslope_slope" ~ "[Elevation/Slope] Slope",
+  #     TRUE ~ variable_clean
+  #   ))
+  
+  df <- df %>%
+    dplyr::mutate(variable_clean_with_dataset = paste0("[", variable_cat, "] ", variable_clean))
   
   #### Shortened version of variable names
   df <- df %>%

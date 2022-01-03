@@ -79,7 +79,12 @@ df <- df %>%
 df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
 
 # Remove Variables -------------------------------------------------------------
-#df <- df %>%
+df <- df %>%
+  dplyr::select(-c(worldpop_5km,
+                   worldpop_10km,
+                   worldpop2020_2km,
+                   worldpop2020_5km,
+                   worldpop2020_10km))
   
   ## Facebook daily active users
 #  dplyr::select_at(vars(-contains("_dau_")))
@@ -97,7 +102,6 @@ df <- df %>%
                 !is.na(globalmod_mean),
                 !is.na(l8_B1),
                 !is.na(cnn_s2_rgb_pc1))
-
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))

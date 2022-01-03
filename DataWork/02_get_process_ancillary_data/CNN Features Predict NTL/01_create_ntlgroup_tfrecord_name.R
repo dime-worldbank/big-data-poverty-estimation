@@ -3,6 +3,7 @@
 set.seed(4242)
 N_BINS <- 5
 N_OBS_IN_TFR <- 250
+TEST_PROP <- 0.2
 
 # Load data --------------------------------------------------------------------
 survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
@@ -33,7 +34,7 @@ survey_df_clean_append <- map_df(years, function(year_i){
     survey_df <- survey_all_df[survey_all_df$year %in% year_i,]
   }
   
-  # Create bins ------------------------------------------------------------------
+  # Create bins ----------------------------------------------------------------
   mclust_fit = Mclust(survey_df$avg_rad, G=N_BINS, model="V")
   survey_df$ntl_group <- predict(mclust_fit, survey_df$avg_rad)$classification
   
@@ -55,12 +56,28 @@ survey_df_clean_append <- map_df(years, function(year_i){
   survey_df <- survey_df %>%
     arrange(runif(n()))
   
+  ### Split into groups
+  # (1) For CNN - train
+  # (2) For CNN - test
+  # (3) For CNN - validation
+  
   # Create survey with balanced groups
   survey_df_forcnn <- map_df(unique(survey_df$ntl_group), function(i){
     survey_df_gi <- survey_df[survey_df$ntl_group %in% i,]
     return(survey_df_gi[1:min_group_size,])
   })
   
+  # For cnn - train/test
+  n_test_bin <- floor(nrow(survey_df_forcnn)/N_BINS * TEST_PROP)
+  
+  survey_df_forcnn_test <- map_df(unique(survey_df_forcnn$ntl_group), function(i){
+    survey_df_forcnn_gi <- survey_df_forcnn[survey_df_forcnn$ntl_group %in% i,]
+    return(survey_df_forcnn_gi[1:n_test_bin,])
+  })
+  
+  survey_df_forcnn_train <- survey_df_forcnn[!(survey_df_forcnn$uid %in% survey_df_forcnn_test$uid),]
+  
+  # Observations not used for cnn
   survey_df_nocnn <- survey_df[!(survey_df$uid %in% survey_df_forcnn$uid),]
   
   # Add TFRecord Name ------------------------------------------------------------
@@ -88,12 +105,17 @@ survey_df_clean_append <- map_df(years, function(year_i){
     return(dhs_all_df_coll)
   }
   
-  survey_df_forcnn_tf <- make_tfrecord_name(survey_df_forcnn, "forcnn", N_OBS_IN_TFR) %>%
-    dplyr::mutate(use_for_cnn = "yes")
+  survey_df_forcnn_test_tf <- make_tfrecord_name(survey_df_forcnn_test, "forcnn_test", N_OBS_IN_TFR) %>%
+    dplyr::mutate(use_for_cnn = "yes",
+                  traintest = "test")
+  survey_df_forcnn_train_tf <- make_tfrecord_name(survey_df_forcnn_train, "forcnn_train", N_OBS_IN_TFR) %>%
+    dplyr::mutate(use_for_cnn = "yes",
+                  traintest = "train")
   survey_df_nocnn_tf <- make_tfrecord_name(survey_df_nocnn, "nocnn", N_OBS_IN_TFR) %>%
     dplyr::mutate(use_for_cnn = "no")
   
-  survey_df_clean <- bind_rows(survey_df_forcnn_tf,
+  survey_df_clean <- bind_rows(survey_df_forcnn_test_tf,
+                               survey_df_forcnn_train_tf,
                                survey_df_nocnn_tf)
   
   # Export -----------------------------------------------------------------------
@@ -121,5 +143,8 @@ write.csv(survey_df_clean_append, file.path(gdrive_dir,
 
 
 survey_df_clean_append$ntl_group %>% table()
-survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_")] %>% table()
+survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn")] %>% table()
+survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_train")] %>% table()
+survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_test")] %>% table()
 
+survey_df_clean_append$uid %>% table %>% table()

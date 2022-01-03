@@ -176,6 +176,7 @@ library(gghalves)
 library(ggthemes)
 library(rnaturalearth)
 library(ggrepel)
+library(ggcorrplot)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")

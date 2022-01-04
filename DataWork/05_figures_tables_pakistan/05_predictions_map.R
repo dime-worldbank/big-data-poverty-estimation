@@ -78,8 +78,9 @@ make_city_figure <- function(city_name){
     theme(plot.title = element_text(face = "bold",
                                     hjust = 0.5),
           legend.position = "bottom") +
-    scale_fill_viridis(labels = c("Least\nWealthly", "\nMost\nWealthly"),
-                       breaks = c(min_value, max_value)) +
+    scale_fill_viridis(labels = c("Least\nWealthly", "Most\nWealthly"),
+                       breaks = c(min_value, max_value),
+                       limits = c(min_value, max_value)) +
     labs(fill = "Predicted\nWealth\nScore",
          title = city_name) +
     coord_quickmap() 
@@ -90,7 +91,6 @@ p_city_2 <- make_city_figure("Lahore")
 p_city_3 <- make_city_figure("Faisalabad")
 p_city_4 <- make_city_figure("Islamabad-Rawalpindi")
 
-# Arrange and export -----------------------------------------------------------
 p_city <- ggarrange(p_city_1,
                     p_city_2,
                     p_city_3,
@@ -98,6 +98,8 @@ p_city <- ggarrange(p_city_1,
                     common.legend = TRUE,
                     legend = "bottom")
 
+
+# Export -----------------------------------------------------------------------
 ggsave(p_country, 
        filename = file.path(figures_pak_dir, "pred_map_country.png"),
        height = 5.8,

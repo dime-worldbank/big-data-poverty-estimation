@@ -177,16 +177,8 @@ osm_dir_df <- osm_dir_df %>%
   dplyr::filter(!is.na(country_code))
 
 # Implement Functions ----------------------------------------------------------
-if(SURVEY_NAME %in% "DHS"){
-  BUFFERS_TO_USE <- 5000
-} else if(SURVEY_NAME %in% "PAK_POINTS"){
-  BUFFERS_TO_USE <- 1500
-} else{
-  BUFFERS_TO_USE <- 5000
-}
-
 #### N POI
-for(buffer_i in BUFFERS_TO_USE){
+for(buffer_i in BUFFER_OSM){
   for(country_code_i in country_codes_all){
     print(paste0("N POI: ", country_code_i, " - ", buffer_i, " =============="))
     

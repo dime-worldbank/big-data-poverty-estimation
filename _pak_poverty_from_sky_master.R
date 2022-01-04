@@ -1,6 +1,9 @@
 # Poverty Estimation from Satellite Imagery in Pakistan
 
-SURVEY_NAME <- "DHS"
+# DHS
+# PAK_POINTS
+# PAK_CITY_POINTS
+SURVEY_NAME <- "PAK_CITY_POINTS"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -59,7 +62,7 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 # Create Directory Structure for Survey Data -----------------------------------
 survey_name_i <- "DHS"
 
-for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS")){
+for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS")){
   
   ### DROPBOX
   file.path(data_dir, survey_name_i) %>% dir.create()
@@ -109,6 +112,22 @@ for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS")){
 # Parameters -------------------------------------------------------------------
 PAK_UTM_PROJ <- "+init=epsg:24313"
 PK_UTM_PROJ <- PAK_UTM_PROJ
+
+#### Buffers
+if(SURVEY_NAME %in% "DHS"){
+  BUFFER_OSM       <- 5000
+  BUFFER_SATELLITE <- 2500
+} 
+
+if(SURVEY_NAME %in% "PAK_POINTS"){
+  BUFFER_OSM       <- 1500
+  BUFFER_SATELLITE <- 1500
+} 
+
+if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
+  BUFFER_OSM       <- 750
+  BUFFER_SATELLITE <- 750
+} 
 
 # Packages ---------------------------------------------------------------------
 library(rgdal)

@@ -1,13 +1,7 @@
 # Extract road density and distance to nearest road for each survey location
 # and road type
 
-if(SURVEY_NAME %in% "DHS"){
-  buffer_m = 5000
-} else if(SURVEY_NAME %in% "PAK_POINTS"){
-  buffer_m = 1500
-} else{
-  buffer_m = 5000
-}
+buffer_m <- BUFFER_OSM
 
 # Functions ====================================================================
 load_prep_osm_roads <- function(country_code, 

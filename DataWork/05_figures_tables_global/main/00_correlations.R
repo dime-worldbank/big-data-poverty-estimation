@@ -377,6 +377,16 @@ cor_var_sumstat_df <- cor_var_sumstat_df %>%
   merge(cor_median_topvars_clean_df, by.x = "Var1", by.y = "variable") %>%
   merge(cor_median_topvars_clean_df, by.x = "Var2", by.y = "variable")
 
+#cor_var_sumstat_df <- cor_var_sumstat_df %>%
+#  dplyr::mutate(cor_mean = case_when(
+#    Var1 == Var2 ~ NA_real_,
+#    TRUE ~ cor_mean
+#  )) %>%
+#  dplyr::mutate(cor_sd = case_when(
+#    Var1 == Var2 ~ NA_real_,
+#    TRUE ~ cor_sd
+#  ))
+
 #### Mean Figure
 p_cor_mean <- cor_var_sumstat_df %>%
   ggplot(aes(x = reorder(variable_clean_with_dataset.x,  cor_wealth_score.x),
@@ -388,7 +398,7 @@ p_cor_mean <- cor_var_sumstat_df %>%
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
                        midpoint = 0, limit = c(-1,1), space = "Lab", 
                        na.value = "white",
-                       name="Correlation") +
+                       name="Average Correlation") +
   scale_y_discrete(position = "right") +
   theme_minimal()+ 
   theme(axis.text.y.right = element_text(hjust = 0.5,
@@ -400,11 +410,11 @@ p_cor_mean <- cor_var_sumstat_df %>%
                                           size = 12),
         
         legend.position = "top",
-        plot.title = element_text(face = "bold", size = 13)) +
+        plot.title = element_text(face = "bold", size = 15)) +
   coord_fixed() +
   labs(x = NULL,
        y = NULL,
-       title = "A. Average Correlation Between Variables Across Countries")
+       title = "A. Average Correlation Across Countries")
 
 #### Standard Deviation Figure
 p_cor_sd <- cor_var_sumstat_df %>%
@@ -413,13 +423,14 @@ p_cor_sd <- cor_var_sumstat_df %>%
              fill = cor_sd)) +
   geom_tile(color = "white") +
   geom_text(aes(label = round(cor_sd, 2)),
-            color = "white",
+            color = "black",
             size = 3.5) +
   #scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
   #                     midpoint = 0, limit = c(0,0.4), space = "Lab", 
   #                     na.value = "white",
   #                     name="Correlation") +
-  scale_fill_viridis() +
+  #scale_fill_viridis() +
+  scale_fill_distiller(palette = "Spectral") +
   scale_y_discrete(position = "right") +
   theme_minimal()+ 
   theme(axis.text.y.right = element_blank(),
@@ -429,12 +440,12 @@ p_cor_sd <- cor_var_sumstat_df %>%
                                           size = 12),
         
         legend.position = "top",
-        plot.title = element_text(face = "bold", size = 13)) +
+        plot.title = element_text(face = "bold", size = 15)) +
   coord_fixed() +
   labs(x = NULL,
        y = NULL,
-       fill = "Std. Deviation",
-       title = "B. Std. Deviation of Correlation Between Variables Across Countries")
+       fill = "Standard Deviation of Correlation",
+       title = "B. Standard Deviation of Correlation Across Countries")
 
 p <- ggarrange(p_cor_mean + 
                  theme(plot.margin=unit(c(0,-4,0,0), "cm")), 

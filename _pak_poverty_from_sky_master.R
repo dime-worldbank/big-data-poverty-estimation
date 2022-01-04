@@ -41,6 +41,7 @@ fb_rwi_dir       <- file.path(data_dir, "Facebook Relative Wealth Index")
 globcover_dir    <- file.path(data_dir, "Globcover")
 worldclim_dir    <- file.path(data_dir, "WorldClim")
 cntry_dtls_dir   <- file.path(data_dir, "Country Details")
+pak_points_dir   <- file.path(data_dir, "")
 
 #### Overleaf Paths
 tables_global_dir  <- file.path(overleaf_global_dir, "tables")
@@ -58,7 +59,7 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 # Create Directory Structure for Survey Data -----------------------------------
 survey_name_i <- "DHS"
 
-for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS")){
+for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS")){
   
   ### DROPBOX
   file.path(data_dir, survey_name_i) %>% dir.create()

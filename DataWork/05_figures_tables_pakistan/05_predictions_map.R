@@ -71,7 +71,9 @@ make_city_figure <- function(city_name){
     geom_tile(data = city_points_df,
               aes(x = longitude,
                   y = latitude,
-                  fill = predict_wealth_index_score)) +
+                  fill = predict_wealth_index_score,
+                  width = 2.45/111.12,
+                  height = 2.45/111.12)) +
     theme_void() +
     theme(plot.title = element_text(face = "bold",
                                     hjust = 0.5),

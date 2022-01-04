@@ -41,7 +41,7 @@ truncate_1 <- function(x){
 df_fb_prop <- df %>%
   dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), ~(. / fb_estimate_mau_upper_bound_1)) %>%
   dplyr::select(-c(fb_estimate_mau_upper_bound_1)) %>%
-  dplyr::select(uid, contains("fb_")) %>%
+  dplyr::select(uid, contains("fb_"), -contains("fb_rwi")) %>%
   dplyr::mutate_at(vars(contains("fb_")), truncate_1) %>%
   rename_at(vars(-uid), ~ str_replace_all(., "fb_", "fb_prop_")) 
 

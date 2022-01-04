@@ -38,7 +38,8 @@ grab_x_features <- function(df,
   # --feature_type_i: Character describing feature category (e.g., "all", "osm")
   
   ## Restrict features
-  if(feature_type_i %in% "all"){
+  if( (feature_type_i %in% "all") | (feature_type_i %>% str_detect("all_not_"))){
+    
     X <- df %>%
       dplyr::select_at(vars(contains("osm_"),
                             contains("fb_prop_"),
@@ -52,8 +53,21 @@ grab_x_features <- function(df,
                             contains("cnn_s2_rgb_"),
                             contains("cnn_s2_ndvi_"),
                             contains("cnn_s2_bu_"),
-                            contains("viirs_"))) %>%
+                            contains("viirs_"))) 
+    
+    if(feature_type_i %>% str_detect("all_not_")){
+      
+      var_to_rm <- feature_type_i %>%
+        str_replace_all("all_not_", "")
+      
+      X <- X %>%
+        dplyr::select_at(vars(-contains(var_to_rm)))
+      
+    }
+    
+    X <- X %>%
       as.matrix()
+    
   } else if(feature_type_i %in% "satellites"){
     X <- df %>%
       dplyr::select_at(vars(contains("l8_"),
@@ -212,17 +226,25 @@ run_model <- function(df,
 
 # Implement Functions ----------------------------------------------------------
 #feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb", "gc")
-feature_types <- c("cnn_s2_rgb", "cnn_s2_ndvi", "cnn_s2_bu", 
-                   "osm",
-                   "fb_prop", 
-                   "gc",
-                   "pollution",
-                   "l8",
-                   #"viirs",
-                   "weather",
-                   "all") # all
 
-names(df)
+feature_types_indiv <- c("cnn_s2_rgb", 
+                         "cnn_s2_ndvi", 
+                         "cnn_s2_bu", 
+                         "osm",
+                         "fb_prop", 
+                         "gc",
+                         "pollution",
+                         "l8",
+                         "weather") 
+
+feature_types_all_but_indiv <- paste0("all_not_", 
+                                      c(feature_types_indiv, "viirs")) 
+
+feature_types <- c(feature_types_indiv,
+                   feature_types_all_but_indiv,
+                   "all")
+
+feature_types <- "viirs"
 
 if(SURVEY_NAME == "DHS"){
   

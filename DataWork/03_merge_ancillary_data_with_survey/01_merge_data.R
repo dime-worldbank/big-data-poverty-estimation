@@ -12,6 +12,9 @@ fb_df <- fb_df %>%
   dplyr::select(uid, contains("estimate_mau_upper_bound_")) %>%
   rename_at(vars(-uid), ~ paste0("fb_", .))
 
+# [Load] Facebook RWI ----------------------------------------------------------
+fb_rwi_df <- readRDS(file.path(INV_DATA_DIR, "fb_relative_wealth.Rds"))
+
 # [Load] OSM -------------------------------------------------------------------
 osm_poi_df  <- readRDS(file.path(INV_DATA_DIR, "osm_poi.Rds"))
 osm_road_df <- readRDS(file.path(INV_DATA_DIR, "osm_road.Rds"))
@@ -186,6 +189,7 @@ pollution_df <- pollution_df %>%
 survey_ancdata_df <- list(survey_df, 
                           fb_df, 
                           #fb_prop_df, 
+                          fb_rwi_df,
                           cnn_rgb_df,
                           cnn_ndvi_df,
                           cnn_bu_df,

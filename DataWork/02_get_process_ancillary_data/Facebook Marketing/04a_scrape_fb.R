@@ -17,6 +17,9 @@
 # https://github.com/SofiaG1l/Using_Facebook_API
 # https://worldbank.github.io/connectivity_mapping/intro.html
 
+# TODO: DELETE THIS LATER!!
+SURVEY_NAME <- "PAK_POINTS"
+
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
@@ -33,7 +36,11 @@ if(SURVEY_NAME %in% "OPM"){
 api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad")
 
-api_keys <- api_keys[api_keys$Details != "pakistanprojectroute4@gmail.com",]
+#api_keys <- api_keys[api_keys$Details != "pakistanprojectroute4@gmail.com",]
+
+api_keys <- api_keys[api_keys$Working %in% "yes",]
+
+#api_keys<- api_keys[seq(dim(api_keys)[1],1),] # REVERSE ORDER: can delete later
 
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
 N_KEYS <- length(KEYS_ACCOUNTS)
@@ -269,7 +276,7 @@ for(country_code_i in country_code_all_rep){
       }
       
       if(SCRAPE_ALL_DATA){
-        print(paste0("Radius: ", radius, "; uid = ", uid_i, "; u/r = ", df_i$urban_rural))
+        print(paste0("Radius: ", radius, "; uid = ", uid_i))
         
         fb_df <- map_df(1:nrow(parameters_df), function(param_i){
 

@@ -141,7 +141,7 @@ extract_dist_poi <- function(country_code, survey_df, osm_dir_df){
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 survey_df <- survey_df %>%
-  dplyr::select(uid, country_code, year, urban_rural, latitude, longitude) %>%
+  dplyr::select(uid, country_code, year, latitude, longitude) %>%
   dplyr::filter(!is.na(latitude))
 
 if(SURVEY_NAME %in% "OPM"){

@@ -63,7 +63,7 @@ load_prep_osm_roads <- function(country_code,
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 survey_df <- survey_df %>%
-  dplyr::select(uid, country_code, year, urban_rural, latitude, longitude, GID_2) %>%
+  dplyr::select(uid, country_code, year, latitude, longitude, GID_2) %>%
   dplyr::filter(!is.na(latitude)) %>%
   dplyr::mutate(uid = uid %>% as.character)
 

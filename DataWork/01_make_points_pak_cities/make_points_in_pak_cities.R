@@ -5,18 +5,18 @@ PAK_UTM <- "+init=epsg:24312"
 set.seed(42)
 
 # Make Grid --------------------------------------------------------------------
-pak_adm <- readRDS(file.path(gadm_dir, "RawData", "gadm36_PAK_0_sp.rds"))
+pak_adm <- readRDS(file.path(gadm_dir, "RawData", "gadm36_PAK_2_sp.rds"))
 
-lahore_sp <- as(raster::extent(74.094614, 74.566002, 31.213211, 31.728413), "SpatialPolygons")
+lahore_sp <- as(raster::extent(74.034614, 74.566002, 31.213211, 31.728413), "SpatialPolygons")
 lahore_sp$name <- "Lahore"
 
 karachi_sp <- as(raster::extent(66.647193, 67.500191, 24.731122, 25.112577), "SpatialPolygons")
 karachi_sp$name <- "Karachi"
 
-faisalabad_sp <- as(raster::extent(72.900377, 73.274058, 31.275037, 31.580412), "SpatialPolygons") 
+faisalabad_sp <- as(raster::extent(72.720377, 73.534058, 31.115037, 31.780412), "SpatialPolygons") 
 faisalabad_sp$name <- "Faisalabad"
 
-isl_raw_sp <- as(raster::extent(72.757109, 73.394805, 33.426272, 33.806593), "SpatialPolygons")
+isl_raw_sp <- as(raster::extent(72.707109, 73.394805, 33.406272, 33.826593), "SpatialPolygons")
 isl_raw_sp$name <- "Islamabad-Rawalpindi"
 
 pak_cities <- rbind(lahore_sp,
@@ -32,8 +32,8 @@ city_df <- map_df(unique(pak_cities$name), function(city_i){
   
   pak_cities <- spTransform(pak_cities, CRS(PAK_UTM))
   pak_cities_grid <- sp::makegrid(pak_cities, cellsize = 1000)
-
-  pak_cities_grid$name <- city_i
+  
+  pak_cities_grid$city_name <- city_i
   pak_cities_grid$uid <- paste0(city_i, "_", 1:nrow(pak_cities_grid)) %>% tolower()
   
   return(pak_cities_grid)
@@ -46,16 +46,43 @@ city_df <- spTransform(city_df, CRS("+init=epsg:4326"))
 
 ## Must be in Pakistan
 # Some points cross border and go over wayer
-
 city_OVER_pak <- over(city_df, pak_adm)
 
-city_df <- city_df[city_OVER_pak$NAME_0 %in% "Pakistan",]
+city_df$NAME_1 <- city_OVER_pak$NAME_1
+city_df$NAME_2 <- city_OVER_pak$NAME_2
+city_df$GID_1 <- city_OVER_pak$GID_1
+city_df$GID_2 <- city_OVER_pak$GID_2
+
+city_df <- city_df[!is.na(city_df$NAME_1),]
+
+city_df <- as.data.frame(city_df)
+
+# Add variables ----------------------------------------------------------------
+city_df <- city_df %>%
+  dplyr::mutate(year = 2020,
+                country_code = "PK",
+                country_name = "Pakistan",
+                most_recent_survey = T) %>%
+  dplyr::rename(latitude = x2,
+                longitude = x1)
 
 # Export -----------------------------------------------------------------------
+saveRDS(city_df,
+        file.path(data_dir, "PAK_CITY_POINTS", "FinalData", "Individual Datasets", 
+                  "survey_socioeconomic.Rds"))
 
-
-head(city_df)
-
+# a <- city_df %>%
+#   arrange(latitude, longitude) %>%
+#   head(1500)
+# 
+# coordinates(a) <- ~longitude+latitude
+# crs(a) <- CRS("+init=epsg:4326")
+# 
+# ab <- gBuffer(a, byid = T, width = 0.75/111.12)
+# 
+# leaflet() %>%
+#   addTiles() %>%
+#   addPolygons(data = ab)
 
 
 

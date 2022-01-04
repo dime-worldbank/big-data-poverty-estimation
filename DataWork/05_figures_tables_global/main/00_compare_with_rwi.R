@@ -72,7 +72,7 @@ p <- ggarrange(p_boxplot,
                ncol = 1)
 
 ggsave(p, filename = file.path(figures_global_dir, "compare_rwi.png"),
-       height = 5, width = 8)
+       height = 4, width = 6.25)
 
 # Model Estimate vs FB RWI Correlation -----------------------------------------
 p_cor <- r2_df %>%

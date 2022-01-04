@@ -180,24 +180,30 @@ run_model <- function(df,
                                   country_group = country_i)
     
     ## Feature Importance
-    if(grid_search){
-      # Make feature importance dataframe outputted from caret similar to dataframe 
-      # outputted by xgboost. varImp returns Overall, which is Gain. By default,
-      # scales between 0 and 100; xgboost doesn't do that, so don't do here.
-      # https://stackoverflow.com/questions/59632899/does-the-caret-varimp-wrapper-for-xgboost-xgbtree-use-xgboost-gain
-      feat_imp_fold_df <- varImp(xgb_model, scale=FALSE)$importance
-      feat_imp_fold_df$Feature <- row.names(feat_imp_fold_df)
-      
-      feat_imp_fold_df <- feat_imp_fold_df %>%
-        dplyr::rename(Gain = Overall)
+    # Don't run feature importance using viirs (only one variable)
+    if(feature_type_i %in% "viirs"){
+      feat_imp_fold_df <- NULL
     } else{
-      feat_imp_fold_df                 <- xgb.importance(model = xgb_model)
+
+      if(grid_search){
+        # Make feature importance dataframe outputted from caret similar to dataframe 
+        # outputted by xgboost. varImp returns Overall, which is Gain. By default,
+        # scales between 0 and 100; xgboost doesn't do that, so don't do here.
+        # https://stackoverflow.com/questions/59632899/does-the-caret-varimp-wrapper-for-xgboost-xgbtree-use-xgboost-gain
+        feat_imp_fold_df <- varImp(xgb_model, scale=FALSE)$importance
+        feat_imp_fold_df$Feature <- row.names(feat_imp_fold_df)
+        
+        feat_imp_fold_df <- feat_imp_fold_df %>%
+          dplyr::rename(Gain = Overall)
+      } else{
+        feat_imp_fold_df                 <- xgb.importance(model = xgb_model)
+      }
+      
+      feat_imp_fold_df$fold            <- fold_i
+      feat_imp_fold_df$estimation_type <- estimation_type_i
+      feat_imp_fold_df$target_var      <- target_var_i
+      feat_imp_fold_df$country_group   <- country_i
     }
-    
-    feat_imp_fold_df$fold            <- fold_i
-    feat_imp_fold_df$estimation_type <- estimation_type_i
-    feat_imp_fold_df$target_var      <- target_var_i
-    feat_imp_fold_df$country_group   <- country_i
     
     ## Best Parameters
     if(grid_search){

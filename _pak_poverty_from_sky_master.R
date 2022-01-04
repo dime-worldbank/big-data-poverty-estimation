@@ -353,6 +353,10 @@ if(F){
   # results.
   # --
   
+  source(file.path(datawork_dir, "04_poverty_estimation", "01_pov_estimation_xgboost.R"))
+  source(file.path(datawork_dir, "04_poverty_estimation", "02_add_prediction_to_survey.R"))
+  source(file.path(datawork_dir, "04_poverty_estimation", "02_append_results.R"))
+  
   # 5. Tables/Figures: Global analysis -----------------------------------------
   # Makes tables and figures for paper
   # --

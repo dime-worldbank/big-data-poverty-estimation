@@ -41,7 +41,15 @@ extract_worldclim <- function(df_country, year_i, buffer_m){
 }
 
 # Implement Function and Export ------------------------------------------------
-for(buffer_i in c(2500)){
+if(SURVEY_NAME %in% "DHS"){
+  BUFFERS_TO_USE <- 2500
+} else if(SURVEY_NAME %in% "PAK_POINTS"){
+  BUFFERS_TO_USE <- 1500
+} else{
+  BUFFERS_TO_USE <- 2500
+}
+
+for(buffer_i in BUFFERS_TO_USE){
   for(country_i in unique(df$country_code)){
     
     df_country <- df[df$country_code %in% country_i,]

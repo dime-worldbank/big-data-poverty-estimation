@@ -1,5 +1,10 @@
 # Maps of City Data
 
+# TO ADD:
+# 1. Nighttime Lights
+# 2. OSM variable(s)
+# 3. Map of cities (ggmap)
+
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
@@ -11,6 +16,31 @@ df$fb_estimate_mau_upper_bound_1[df$fb_estimate_mau_upper_bound_1 >= 150000] <- 
 fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
 fb_param_df <- fb_param_df %>%
   dplyr::select(param_id, param_name_simple)
+
+# Basemap figures --------------------------------------------------------------
+if(F){
+  get_map <- function(city_name, zoom){
+    city <- df[df$city_name %in% city_name,]
+    
+    city_bbox <- c(left = min(city$longitude), 
+                   bottom = min(city$latitude), 
+                   right = max(city$longitude), 
+                   top = max(city$latitude))
+    
+    city_smap  <- get_stamenmap(city_bbox, zoom = zoom)
+    return(city_smap)
+  }
+  
+  lahore_map <- get_map("Lahore", 11)
+  karachi_map <- get_map("Karachi", 11)
+  Faisalabad_map <- get_map("Faisalabad", 11)
+  islamabad_map <- get_map("Islamabad-Rawalpindi", 11)
+  
+  ggmap(lahore_map) + theme_void()
+  ggmap(karachi_map) + theme_void()
+  ggmap(Faisalabad_map) + theme_void()
+  ggmap(islamabad_map) + theme_void()
+}
 
 # Figures ----------------------------------------------------------------------
 theme_fig <- theme(plot.title = element_text(face = "bold"),

@@ -85,8 +85,8 @@ df <- df %>%
                    worldpop2020_2km,
                    worldpop2020_5km,
                    worldpop2020_10km))
-  
-  ## Facebook daily active users
+
+## Facebook daily active users
 #  dplyr::select_at(vars(-contains("_dau_")))
 
 # Remove Observations ----------------------------------------------------------
@@ -108,18 +108,20 @@ saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "su
 #write.csv(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.csv"),
 #          row.names = F)
 
-## Check NAs
-df_sum <- df %>%
-  dplyr::filter(country_code != "GY") %>%
-  dplyr::select_if(is.numeric) %>%
-  mutate(id = 1:n()) %>%
-  pivot_longer(cols = -id) %>%
-  group_by(name) %>%
-  summarise_at(vars(value), .funs = list(N_NA = ~ sum(is.na(.)),
-                                         mean = ~ mean(., na.rm = T),
-                                         min = ~ min(., na.rm = T),
-                                         max = ~ max(., na.rm = T)))
-
-df_sum_na <- df_sum %>%
-  dplyr::filter(N_NA > 0)
+if(F){
+  ## Check NAs
+  df_sum <- df %>%
+    dplyr::filter(country_code != "GY") %>%
+    dplyr::select_if(is.numeric) %>%
+    mutate(id = 1:n()) %>%
+    pivot_longer(cols = -id) %>%
+    group_by(name) %>%
+    summarise_at(vars(value), .funs = list(N_NA = ~ sum(is.na(.)),
+                                           mean = ~ mean(., na.rm = T),
+                                           min = ~ min(., na.rm = T),
+                                           max = ~ max(., na.rm = T)))
+  
+  df_sum_na <- df_sum %>%
+    dplyr::filter(N_NA > 0)
+}
 

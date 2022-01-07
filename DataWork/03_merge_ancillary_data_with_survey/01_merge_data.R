@@ -210,6 +210,24 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           pollution_df) %>%
   reduce(full_join, by = c("uid", "year"))
 
+#### LATER DELETE
+if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
+  survey_ancdata_df <- list(survey_df, 
+                            fb_df, 
+                            fb_rwi_df) %>%
+    reduce(full_join, by = "uid")
+  
+  survey_ancdata_df <- list(survey_ancdata_df,
+                            gc_df, 
+                            wc_df) %>%
+    reduce(full_join, by = c("uid", "year"))
+}
+
+# Dataset specific fixes -------------------------------------------------------
+if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
+  survey_ancdata_df$iso2 <- "PK" 
+}
+
 # [Export] Data ----------------------------------------------------------------
 saveRDS(survey_ancdata_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))

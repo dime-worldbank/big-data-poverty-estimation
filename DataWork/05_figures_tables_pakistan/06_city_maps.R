@@ -17,6 +17,22 @@ fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "f
 fb_param_df <- fb_param_df %>%
   dplyr::select(param_id, param_name_simple)
 
+# Zoom in on cities ------------------------------------------------------------
+df$latitude[df$city_name %in% "Karachi"] %>% summary()
+df$longitude[df$city_name %in% "Karachi"] %>% summary()
+
+buffer <- 0.01
+
+df <- df %>%
+  dplyr::mutate(keep = case_when(
+    (city_name %in% "Faisalabad") & (latitude >= 31.56+buffer) ~ F,
+    (city_name %in% "Faisalabad") & (latitude <= 31.29-buffer) ~ F,
+    (city_name %in% "Faisalabad") & (longitude >= 73.26+buffer) ~ F,
+    (city_name %in% "Faisalabad") & (longitude <= 72.89-buffer) ~ F,
+    TRUE ~ TRUE
+  )) %>%
+  dplyr::filter(keep %in% T)
+
 # Basemap figures --------------------------------------------------------------
 if(F){
   get_map <- function(city_name, zoom){
@@ -46,17 +62,34 @@ if(F){
 theme_fig <- theme(plot.title = element_text(face = "bold"),
                    strip.text = element_text(face = "bold")) 
 
-n_fb <- df %>%
+viirs <- df %>%
   ggplot() +
   geom_tile(aes(x = longitude,
                 y = latitude,
-                fill = fb_estimate_mau_upper_bound_1,
+                fill = viirs_avg_rad,
                 width = 1.2/111.12,
                 height = 1.2/111.12),
             alpha = 1) +
   scale_fill_viridis() +
   labs(fill = NULL,
-       title = "N Monthly Active Facebook Users") +
+       title = "Nighttime Lights") +
+  theme_void() +
+  theme_fig +
+  facet_wrap(~city_name, 
+             scales = "free",
+             nrow = 1) 
+
+n_fb <- df %>%
+  ggplot() +
+  geom_tile(aes(x = longitude,
+                y = latitude,
+                fill = log(fb_estimate_mau_upper_bound_1+1),
+                width = 1.2/111.12,
+                height = 1.2/111.12),
+            alpha = 1) +
+  scale_fill_viridis() +
+  labs(fill = NULL,
+       title = "N Monthly Active Facebook Users (Logged)") +
   theme_void() +
   theme_fig +
   facet_wrap(~city_name, 
@@ -143,11 +176,13 @@ p_gc_urban <- df %>%
              scales = "free",
              nrow = 1) 
 
-p <- ggarrange(n_fb, 
+# Arrange and export -----------------------------------------------------------
+p <- ggarrange(viirs,
+               p_gc_urban,
+               n_fb, 
                n_fb_prop_3, 
                n_fb_prop_30, 
                n_fb_prop_7, 
-               p_gc_urban,
                ncol = 1)
 
 ggsave(p, filename = file.path(figures_pak_dir, "city_variables.png"),

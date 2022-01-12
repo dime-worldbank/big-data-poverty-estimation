@@ -70,6 +70,10 @@ city_df <- city_df %>%
 saveRDS(city_df,
         file.path(data_dir, "PAK_CITY_POINTS", "FinalData", "Individual Datasets", 
                   "survey_socioeconomic.Rds"))
+write.csv(city_df,
+        file.path(data_dir, "PAK_CITY_POINTS", "FinalData", "Individual Datasets", 
+                  "survey_socioeconomic.csv"),
+        row.names = F)
 
 # a <- city_df %>%
 #   arrange(latitude, longitude) %>%

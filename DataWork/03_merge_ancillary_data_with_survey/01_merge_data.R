@@ -46,14 +46,19 @@ wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
 ##### ** VIIRS #####
 viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "viirs_2500_ubuff2500_rbuff2500.Rds"))
+                              paste0("viirs_",
+                                     BUFFER_SATELLITE,
+                                     "_ubuff",
+                                     BUFFER_SATELLITE,
+                                     "_rbuff",
+                                     BUFFER_SATELLITE,".Rds")))
 
 viirs_df <- viirs_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
 
 ##### ** Landsat 8 #####
 l8_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                           "l8_ubuff2500_rbuff2500.Rds"))
+                           paste0("l8_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
 
 l8_df <- l8_df %>%
   rename_at(vars(-uid, -year), ~ paste0("l8_", .))
@@ -96,11 +101,15 @@ wp_df <- list(wp2km_df,
 
 ##### ** Elevation/Slope #####
 elev_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                             "elevation_ubuff5000_rbuff5000.Rds")) %>%
+                             paste0("elevation_ubuff",
+                                    BUFFER_SATELLITE,
+                                    "_rbuff",
+                                    BUFFER_SATELLITE,
+                                    ".Rds"))) %>%
   dplyr::rename(elev = mean)
 
 slope_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "slope_ubuff5000_rbuff5000.Rds")) %>%
+                              paste0("slope_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds"))) %>%
   dplyr::rename(slope = mean)
 
 elevslope <- full_join(elev_df, slope_df, by = c("uid", "year")) %>%
@@ -108,14 +117,14 @@ elevslope <- full_join(elev_df, slope_df, by = c("uid", "year")) %>%
 
 ##### ** Global human modification index #####
 gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              "GlobalHumanModification_ubuff10000_rbuff10000.Rds"))
+                              paste0("GlobalHumanModification_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
 
 gbmod_df <- gbmod_df %>%
   dplyr::rename(globalmod_mean = mean)
 
 ##### ** AOD #####
 aod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                            "aod_ubuff2500_rbuff2500.Rds"))
+                            paste0("aod_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
 
 aod_df <- aod_df %>%
   dplyr::rename(pollution_aod_047 = Optical_Depth_047,
@@ -123,23 +132,23 @@ aod_df <- aod_df %>%
 
 ##### ** Weather #####
 weather_q1 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                                "ecmwf_weather_q1_ubuff10000_rbuff10000.Rds")) %>%
+                                paste0("ecmwf_weather_q1_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_q1_", .))
 
 weather_q2 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                                "ecmwf_weather_q2_ubuff10000_rbuff10000.Rds")) %>%
+                                paste0("ecmwf_weather_q2_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_q2_", .))
 
 weather_q3 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                                "ecmwf_weather_q3_ubuff10000_rbuff10000.Rds")) %>%
+                                paste0("ecmwf_weather_q3_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_q3_", .))
 
 weather_q4 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                                "ecmwf_weather_q4_ubuff10000_rbuff10000.Rds")) %>%
+                                paste0("ecmwf_weather_q4_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_q4_", .))
 
 weather_annual <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                                    "ecmwf_weather_ubuff10000_rbuff10000.Rds")) %>%
+                                    paste0("ecmwf_weather_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_all_", .))
 
 weather <- weather_annual %>%
@@ -156,7 +165,7 @@ pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset(poll_prefix) %>%
-  str_subset("2500") %>%
+  str_subset(as.character(BUFFER_SATELLITE)) %>%
   lapply(readRDS) %>%
   reduce(full_join, by = c("uid", "year")) %>%
   rename_at(vars(-uid, -year), ~ paste0("pollution_s5p_", .)) %>%
@@ -219,7 +228,8 @@ if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
   
   survey_ancdata_df <- list(survey_ancdata_df,
                             gc_df, 
-                            wc_df) %>%
+                            wc_df,
+                            viirs_df) %>%
     reduce(full_join, by = c("uid", "year"))
 }
 

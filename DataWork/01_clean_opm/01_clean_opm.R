@@ -265,13 +265,14 @@ bisp_df <- left_join(bisp_df,
                      by = "uid")
 
 # Aggregate to PSU -------------------------------------------------------------
-bisp_df$uid <- paste0(bisp_df$psu, "_", bisp_df$GID_3)
+bisp_df$uid <- paste(bisp_df$locality, bisp_df$psu, bisp_df$year, bisp_df$province)
+
+leaflet() %>%
+  addTiles() %>%
+  addCircles(data = bisp_df[bisp_df$uid %in% unique(bisp_df$uid)[6],])
 
 bisp_mean_df <- bisp_df %>%
-  dplyr::group_by(uid, locality, year, survey_round,
-                  GID_3, GID_2, GID_1, 
-                  NAME_3, NAME_2, NAME_1,
-                  within_country_fold) %>%
+  dplyr::group_by(uid, psu, locality, year, province, survey_round) %>%
   dplyr::summarise_at(vars(pscores, 
                            income_last_month, 
                            consumption_total,
@@ -283,30 +284,25 @@ bisp_latlon_df <- bisp_df %>%
   dplyr::summarise_at(vars(latitude, longitude), median, na.rm = T)
 
 bisp_sum_df <- bisp_df %>%
-  dplyr::group_by(uid, locality, year, survey_round) %>%
+  dplyr::group_by(uid) %>%
   mutate(N = 1) %>%
   dplyr::summarise_at(vars(N), sum, na.rm = T)
 
 bisp_agg_df <- bisp_mean_df %>%
   left_join(bisp_latlon_df, by = c("uid")) %>%
-  left_join(bisp_sum_df, by = c("uid", "locality", "year", "survey_round")) %>%
+  left_join(bisp_sum_df, by = c("uid")) %>%
   dplyr::rename(urban_rural = locality) %>%
   dplyr::mutate(urban_rural = urban_rural %>% 
                   haven::as_factor() %>% 
                   as.character() %>% 
                   substring(1,1),
-                country_code = "PK") 
-
-## Remove if no coordinates
-bisp_agg_df <- bisp_agg_df %>%
+                country_code = "PK") %>%
+  ungroup() %>%
+  # Remove if no coordinates
   dplyr::filter(!is.na(latitude),
-                !is.na(longitude))
-
-bisp_agg_df <- bisp_agg_df %>%
-  ungroup()
-
-## Add country name
-bisp_agg_df$country_name <- "Pakistan"
+                !is.na(longitude)) %>%
+  # Add variables
+  dplyr::mutate(country_name = "Pakistan")
 
 # CHECK DIST BETWEEN PSUs
 if(F){

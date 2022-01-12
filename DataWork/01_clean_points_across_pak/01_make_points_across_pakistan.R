@@ -58,6 +58,10 @@ fb_df <- as.data.frame(fb_sp)
 # Export -----------------------------------------------------------------------
 saveRDS(fb_df,
         file.path(data_dir, "PAK_POINTS", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+write.csv(fb_df,
+          file.path(data_dir, "PAK_POINTS", "FinalData", "Individual Datasets", 
+                    "survey_socioeconomic.csv"),
+          row.names = F)
 
 # a <- fb_df %>%
 #   arrange(latitude, longitude) %>%

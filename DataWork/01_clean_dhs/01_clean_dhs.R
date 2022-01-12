@@ -31,8 +31,13 @@ clean_hh <- function(df){
   
   #### Education variables
   ## Functions
-  to_na_if_large <- function(x){
+  to_na_if_30above <- function(x){
     x[x >= 30] <- NA
+    return(x)
+  }
+  
+  to_na_if_4above <- function(x){
+    x[x >= 4] <- NA
     return(x)
   }
   
@@ -48,14 +53,38 @@ clean_hh <- function(df){
     return(x)
   }
   
+  median_ig_na <- function(x){
+    x <- median(x, na.rm = T)
+    x[x %in% c(Inf,-Inf)] <- NA
+    return(x)
+  }
+  
+  ## Education Completed in Single Years
   educ_years <- df %>%
     dplyr::select(contains("hv108")) %>%
     mutate_all(to_numeric) %>%
     mutate_all(as.numeric) %>%
-    mutate_all(to_na_if_large) 
+    mutate_all(to_na_if_30above) 
   
   df$educ_years_hh_max  <- apply(educ_years, 1, max_ig_na)
   df$educ_years_hh_mean <- apply(educ_years, 1, mean_ig_na)
+  
+  ## Highest Education Level Obtained
+  # 0 = Early childhoon education program
+  # 1 = Primary
+  # 2 = Secondary
+  # 3 = Higher
+  # 8 = Don't Know
+  # 00 = Less than 1 year completed
+  # 98 = Don't know
+  educ_levels <- df %>%
+    dplyr::select(contains("hv106")) %>%
+    mutate_all(to_numeric) %>%
+    mutate_all(as.numeric) %>%
+    mutate_all(to_na_if_4above) 
+  
+  df$educ_levels_hh_max  <- apply(educ_years, 1, max_ig_na)
+  #df$educ_years_hh_mean <- apply(educ_years, 1, mean_ig_na)
   
   # Earlier DHS don't have this variable
   if(is.null(df$hv216)){
@@ -83,6 +112,7 @@ clean_hh <- function(df){
                   wealth_index = hv270,
                   wealth_index_score = hv271) %>%
     dplyr::select(cluster_id, 
+                  educ_levels_hh_max,
                   educ_years_hh_max,
                   educ_years_hh_mean,
                   water_source,
@@ -181,6 +211,14 @@ process_dhs <- function(dir){
     hh108_names <- NULL
   } 
   
+  # Levels of education
+  if(TRUE %in% (df_onerow_names %>% str_detect("hv106"))){
+    hh106_names <- df_onerow_names %>%
+      str_subset("hv106")
+  } else{
+    hh106_names <- NULL
+  } 
+  
   if(TRUE %in% (df_onerow_names %>% str_detect("sh110j"))){
     sh110j_var <- "sh110j"
   } else{
@@ -199,9 +237,10 @@ process_dhs <- function(dir){
   } else{
     hv216_var <- NULL
   } 
-
+  
   hh_vars <- c("hv000",
                hh108_names,
+               hh106_names,
                hv216_var,
                sh110j_var,
                sh110k_var,

@@ -1,7 +1,8 @@
 # Append Poverty Estimation Results
 
 # Load/append data -------------------------------------------------------------
-acc_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "accuracy") %>%
+acc_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", 
+                    "accuracy") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   map_df(readRDS)
@@ -15,6 +16,16 @@ acc_df <- acc_df %>%
     TRUE ~ cor_all
   )) %>%
   dplyr::mutate(country_code = country_code %>% as.character()) %>%
+  
+  # Retains original value of country; for "continent" (predict on other continents), 
+  # is "all" instead of country code
+  dplyr::mutate(country_predict_group = country) %>%
+  
+  # For continent, originally:
+  # --"country" --> "all"
+  # --"country_code" -->  individual country code
+  # Change so "country" contains the individual country code, as interested in
+  # how well the continent predicts in individual countries.
   dplyr::mutate(country = case_when(
     estimation_type %in% "continent" ~ country_code,
     TRUE ~ country
@@ -70,14 +81,18 @@ acc_all_df <- acc_df %>%
   group_by(estimation_type, estimation_type_clean,
            feature_type, feature_type_clean,
            target_var, target_var_clean, 
-           country, country_name, continent_adj, iso2) %>%
+           xg_max.depth, xg_eta, xg_nthread, xg_nrounds, xg_subsample, xg_objective,
+           country_predict_group, country, country_name, continent_adj, iso2) %>%
   dplyr::summarise(N = sum(N_fold),
                    cor = cor_country[1]) %>% # This repeats across folds
   dplyr::mutate(r2 = cor^2)
 
-# Add rows for best estimation type --------------------------------------------
+# Add rows for best estimation type WITHIN each set of parameters --------------
 acc_all_best_df <- acc_all_df %>%
-  group_by(country, target_var, feature_type, feature_type_clean) %>%
+  group_by(country, 
+           target_var, target_var_clean, 
+           feature_type, feature_type_clean,
+           xg_max.depth, xg_eta, xg_nthread, xg_nrounds, xg_subsample, xg_objective) %>%
   slice_max(order_by = r2, n = 1) %>%
   mutate(estimation_type_clean = "Using Best Training Sample\nType for Each Country",
          estimation_type = "best") %>%
@@ -88,9 +103,41 @@ acc_all_df <- bind_rows(
   acc_all_best_df
 )
 
+# Dataset using best parameters ------------------------------------------------
+# Test multiple parameters; here, only keep best set of parameters for each model
+# and country
+acc_all_best_param_df <- acc_all_df %>%
+  group_by(country, 
+           estimation_type, estimation_type_clean,
+           target_var, target_var_clean, 
+           feature_type, feature_type_clean) %>%
+  slice_max(order_by = r2, n = 1) 
+
 # Export data ------------------------------------------------------------------
+#### All data
 saveRDS(acc_all_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                   "accuracy_appended.Rds"))
+
+#### Best params
+saveRDS(acc_all_best_param_df, 
+        file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                  "accuracy_appended_bestparam.Rds"))
+
+#### For each xg_param_set
+acc_all_df <- acc_all_df %>%
+  dplyr::mutate(xg_param_set = paste(xg_max.depth,
+                                     xg_eta,
+                                     xg_nthread,
+                                     xg_nrounds,
+                                     xg_subsample,
+                                     xg_objective, sep = "_") %>%
+                  str_replace_all("[:punct:]", "_"))
+
+for(param_set_i in unique(acc_all_df$xg_param_set)){
+  saveRDS(acc_all_df[acc_all_df$xg_param_set %in% param_set_i,], 
+          file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                    paste0("accuracy_appended_paramset_",param_set_i,".Rds")))
+}
 
 

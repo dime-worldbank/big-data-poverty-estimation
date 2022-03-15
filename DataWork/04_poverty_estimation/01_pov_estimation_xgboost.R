@@ -1,10 +1,19 @@
 # Poverty Estimation Using XGBoost
 
+### Parameters
+
+# For each model / time xgBoost is run, implement a grid search to determine the
+# optimal parameters. Otherwise, use same set of parameters across all settings.
+# Implementing the grid search adds significant time to code but improves model
+# performance
 grid_search <- F
+
+# Check if model has already been implemented. If TRUE, replace; if FALSE, skip.
 REPLACE_IF_EXTRACTED <- F
 
 # Load Data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+                        "survey_alldata_clean.Rds"))
 
 OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results")
 
@@ -83,17 +92,26 @@ grab_x_features <- function(df,
 }
 
 #### PARAMS
-estimation_type_i <- "continent"
+estimation_type_i <- "within_country_cv" #  "continent"
 feature_type_i <- "all"
 target_var_i <- "wealth_index_score"
 country_i <- "PK"
+grid_search <- T
+# within_country_fold
 
 run_model <- function(df,
                       estimation_type_i,
                       feature_type_i,
                       target_var_i,
                       country_i,
-                      grid_search){
+                      xg_max.depth,
+                      xg_eta,
+                      xg_nthread,
+                      xg_nrounds,
+                      xg_subsample,
+                      xg_objective){
+  
+  grid_search <- F # REMOVE CODE FOR THIS
   
   ## Set Target Var
   df$target_var <- df[[target_var_i]]
@@ -155,15 +173,17 @@ run_model <- function(df,
       )
       
     } else{
+      
       xgb_model <- xgboost(data = X_train, 
                            label = y_train, 
-                           max.depth = 5, 
-                           eta = 0.1, 
-                           nthread = 4, 
-                           nrounds = 50, 
-                           subsample = 0.3,
-                           objective = "reg:squarederror",
+                           max.depth = xg_max.depth, 
+                           eta = xg_eta, 
+                           nthread = xg_nthread, 
+                           nrounds = xg_nrounds, 
+                           subsample = xg_subsample,
+                           objective = xg_objective,
                            print_every_n = 1000L)
+      
     }
     
     ## Predictions
@@ -177,14 +197,20 @@ run_model <- function(df,
                                   estimation_type = estimation_type_i,
                                   feature_type = feature_type_i,
                                   target_var = target_var_i,
-                                  country_group = country_i)
+                                  country_group = country_i,
+                                  xg_max.depth = xg_max.depth,
+                                  xg_eta = xg_eta,
+                                  xg_nthread = xg_nthread,
+                                  xg_nrounds = xg_nrounds,
+                                  xg_subsample = xg_subsample,
+                                  xg_objective = xg_objective)
     
     ## Feature Importance
     # Don't run feature importance using viirs (only one variable)
     if(feature_type_i %in% "viirs"){
       feat_imp_fold_df <- NULL
     } else{
-
+      
       if(grid_search){
         # Make feature importance dataframe outputted from caret similar to dataframe 
         # outputted by xgboost. varImp returns Overall, which is Gain. By default,
@@ -266,7 +292,7 @@ if(SURVEY_NAME == "DHS"){
                            "continent_africa_country_pred",
                            "continent_americas_country_pred",
                            "continent_eurasia_country_pred", 
-                           "continent")
+                           "continent") # "continent" means "other continents"
   
   target_vars_vec <- c("pca_allvars", 
                        #"pca_allvars_noroof",
@@ -296,153 +322,184 @@ for(estimation_type_i in estimation_type_vec){
     for(feature_type_i in feature_types){
       for(country_i in countries_vec){
         
-        # Skip -----------------------------------------------------------------
-        # Only implement within country on individual countries
-        if((estimation_type_i == "within_country_cv") & (country_i == "all")) next
-        
-        # Only implement "country_pred" types on individual countries
-        if((str_detect(estimation_type_i, "country_pred")) & (country_i == "all")) next
-        
-        # Only implement continent on all countries
-        if((estimation_type_i == "continent") & (country_i != "all")) next
-        
-        # Only implement weath_score with individual countries for DHS
-        if((target_var_i == "wealth_index_score") & 
-           (SURVEY_NAME == "DHS") & 
-           (estimation_type_i != "within_country_cv")) next
-        
-        # Skip: If continent, country_pred, must be in same continent ----------
-        if(estimation_type_i == "continent_africa_country_pred"){
-          continent_i <- df$continent_adj[df$country_code %in% country_i][1]
-          if(continent_i != "Africa") next
-        }
-        
-        if(estimation_type_i == "continent_americas_country_pred"){
-          continent_i <- df$continent_adj[df$country_code %in% country_i][1]
-          if(continent_i != "Americas") next
-        }
-        
-        if(estimation_type_i == "continent_eurasia_country_pred"){
-          continent_i <- df$continent_adj[df$country_code %in% country_i][1]
-          if(continent_i != "Eurasia") next
-        }
-        
-        # Define Out Paths -----------------------------------------------------
-        file_name_suffix <- paste0(estimation_type_i,"_",
-                                   country_i,"_",
-                                   target_var_i,"_",
-                                   feature_type_i,
-                                   ".Rds")
-        
-        PRED_OUT <- file.path(OUT_PATH, "predictions", 
-                              paste0("predictions_", file_name_suffix))
-        
-        FI_OUT <- file.path(OUT_PATH, "feature_importance", 
-                            paste0("fi_", file_name_suffix))
-        
-        ACCURACY_OUT <- file.path(OUT_PATH, "accuracy", 
-                                  paste0("accuracy_", file_name_suffix))
-        
-        GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
-                                    paste0("gs_", file_name_suffix))
-        
-        # Check if file exists/ should run -------------------------------------
-        if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
-          
-          print(paste(estimation_type_i,
-                      target_var_i,
-                      feature_type_i,
-                      country_i,
-                      sep = " - "))
-          
-          # Subset Data & Define Fold ------------------------------------------
-          # For defining the fold: 
-          # -- If "country_pred" in "estimation_type_i" name, then have only one 
-          # fold; the function will treat country_i as train and others as test
-          # -- If "country_pred" not in name, need to define > 1 fold; all
-          # observations will be in train and test at some point
-          
-          if(estimation_type_i == "within_country_cv"){
-            df_traintest <- df %>%
-              dplyr::filter(country_code %in% country_i) %>%
-              dplyr::mutate(fold = within_country_fold)
+        ## XG Boost Parameters
+        for(xg_max.depth  in c(5, 10)){
+          for(xg_eta in c(0.1)){
+            for(xg_nthread in c(4)){
+              for(xg_nrounds in c(50)){
+                for(xg_subsample in c(0.3)){
+                  for(xg_objective in c("reg:squarederror")){
+                    
+                    # Skip -----------------------------------------------------------------
+                    # Only implement within country on individual countries
+                    if((estimation_type_i == "within_country_cv") & (country_i == "all")) next
+                    
+                    # Only implement "country_pred" types on individual countries
+                    if((str_detect(estimation_type_i, "country_pred")) & (country_i == "all")) next
+                    
+                    # Only implement continent on all countries
+                    if((estimation_type_i == "continent") & (country_i != "all")) next
+                    
+                    # Only implement weath_score with individual countries for DHS
+                    if((target_var_i == "wealth_index_score") & 
+                       (SURVEY_NAME == "DHS") & 
+                       (estimation_type_i != "within_country_cv")) next
+                    
+                    # Skip: If continent, country_pred, must be in same continent ----------
+                    if(estimation_type_i == "continent_africa_country_pred"){
+                      continent_i <- df$continent_adj[df$country_code %in% country_i][1]
+                      if(continent_i != "Africa") next
+                    }
+                    
+                    if(estimation_type_i == "continent_americas_country_pred"){
+                      continent_i <- df$continent_adj[df$country_code %in% country_i][1]
+                      if(continent_i != "Americas") next
+                    }
+                    
+                    if(estimation_type_i == "continent_eurasia_country_pred"){
+                      continent_i <- df$continent_adj[df$country_code %in% country_i][1]
+                      if(continent_i != "Eurasia") next
+                    }
+                    
+                    # Define Out Paths -----------------------------------------------------
+                    file_name_suffix <- paste0(estimation_type_i,"_",
+                                               country_i,"_",
+                                               target_var_i,"_",
+                                               feature_type_i,
+                                               xg_max.depth %>% str_replace_all("[:punct:]", ""), "_",
+                                               xg_eta %>% str_replace_all("[:punct:]", ""), "_",
+                                               xg_nthread %>% str_replace_all("[:punct:]", ""), "_",
+                                               xg_nrounds %>% str_replace_all("[:punct:]", ""), "_",
+                                               xg_subsample %>% str_replace_all("[:punct:]", ""), "_",
+                                               xg_objective %>% str_replace_all("[:punct:]", ""), 
+                                               ".Rds")
+                    
+                    PRED_OUT <- file.path(OUT_PATH, "predictions", 
+                                          paste0("predictions_", file_name_suffix))
+                    
+                    FI_OUT <- file.path(OUT_PATH, "feature_importance", 
+                                        paste0("fi_", file_name_suffix))
+                    
+                    ACCURACY_OUT <- file.path(OUT_PATH, "accuracy", 
+                                              paste0("accuracy_", file_name_suffix))
+                    
+                    GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
+                                                paste0("gs_", file_name_suffix))
+                    
+                    # Check if file exists/ should run -------------------------------------
+                    if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
+                      
+                      print(paste(estimation_type_i,
+                                  target_var_i,
+                                  feature_type_i,
+                                  country_i,
+                                  sep = " - "))
+                      
+                      # Subset Data & Define Fold ------------------------------------------
+                      # For defining the fold: 
+                      # -- If "country_pred" in "estimation_type_i" name, then have only one 
+                      # fold; the function will treat country_i as train and others as test
+                      # -- If "country_pred" not in name, need to define > 1 fold; all
+                      # observations will be in train and test at some point
+                      
+                      if(estimation_type_i == "within_country_cv"){
+                        df_traintest <- df %>%
+                          dplyr::filter(country_code %in% country_i) %>%
+                          dplyr::mutate(fold = within_country_fold)
+                      }
+                      
+                      if(estimation_type_i == "global_country_pred"){
+                        df_traintest <- df %>%
+                          dplyr::mutate(fold = "fold_1")
+                      }
+                      
+                      if(estimation_type_i == "continent_africa_country_pred"){
+                        df_traintest <- df %>%
+                          dplyr::filter((country_code %in% country_i) |
+                                          (continent_adj %in% "Africa")) %>%
+                          dplyr::mutate(fold = "fold_1")
+                      }
+                      
+                      if(estimation_type_i == "continent_americas_country_pred"){
+                        df_traintest <- df %>%
+                          dplyr::filter((country_code %in% country_i) |
+                                          (continent_adj %in% "Americas")) %>%
+                          dplyr::mutate(fold = "fold_1")
+                      }
+                      
+                      if(estimation_type_i == "continent_eurasia_country_pred"){
+                        df_traintest <- df %>%
+                          dplyr::filter((country_code %in% country_i) |
+                                          (continent_adj %in% "Eurasia")) %>%
+                          dplyr::mutate(fold = "fold_1")
+                      }
+                      
+                      # Train on all countries in continent x and predict on countries in continent y
+                      if(estimation_type_i == "continent"){
+                        df_traintest <- df %>%
+                          dplyr::mutate(fold = continent_adj)
+                      }
+                      
+                      # Run Model ----------------------------------------------------------
+                      xg_results_list <- run_model(df = df_traintest,
+                                                   estimation_type_i = estimation_type_i,
+                                                   feature_type_i = feature_type_i,
+                                                   target_var_i = target_var_i,
+                                                   country_i = country_i,
+                                                   xg_max.depth = xg_max.depth,
+                                                   xg_eta = xg_eta,
+                                                   xg_nthread = xg_nthread,
+                                                   xg_nrounds = xg_nrounds,
+                                                   xg_subsample = xg_subsample,
+                                                   xg_objective = xg_objective)
+                      
+                      # Accuracy Stats -----------------------------------------------------
+                      results_df_i <- xg_results_list$results_df
+                      
+                      if(estimation_type_i == "continent"){
+                        acc_fold_df <- results_df_i %>%
+                          dplyr::group_by(country_code, fold) %>%
+                          dplyr::summarise(cor_fold = cor(truth, prediction),
+                                           N_fold = n()) %>%
+                          ungroup()
+                      } else{
+                        acc_fold_df <- results_df_i %>%
+                          dplyr::group_by(fold) %>%
+                          dplyr::summarise(cor_fold = cor(truth, prediction),
+                                           N_fold = n()) %>%
+                          ungroup()
+                      }
+                      
+                      acc_fold_df$cor_all <- cor(results_df_i$truth,
+                                                 results_df_i$prediction)
+                      
+                      acc_fold_df <- acc_fold_df %>%
+                        dplyr::mutate(estimation_type = estimation_type_i,
+                                      feature_type = feature_type_i,
+                                      target_var = target_var_i,
+                                      country = country_i,
+                                      xg_max.depth = xg_max.depth,
+                                      xg_eta = xg_eta,
+                                      xg_nthread = xg_nthread,
+                                      xg_nrounds = xg_nrounds,
+                                      xg_subsample = xg_subsample,
+                                      xg_objective = xg_objective)
+                      
+                      # Export Results -----------------------------------------------------
+                      saveRDS(xg_results_list$results_df,  PRED_OUT)
+                      saveRDS(xg_results_list$feat_imp_df, FI_OUT)
+                      saveRDS(acc_fold_df,                 ACCURACY_OUT)
+                      
+                      if(grid_search){
+                        saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)
+                      }
+                      
+                    }
+                  }
+                }
+              }
+            }
           }
-          
-          if(estimation_type_i == "global_country_pred"){
-            df_traintest <- df %>%
-              dplyr::mutate(fold = "fold_1")
-          }
-          
-          if(estimation_type_i == "continent_africa_country_pred"){
-            df_traintest <- df %>%
-              dplyr::filter((country_code %in% country_i) |
-                              (continent_adj %in% "Africa")) %>%
-              dplyr::mutate(fold = "fold_1")
-          }
-          
-          if(estimation_type_i == "continent_americas_country_pred"){
-            df_traintest <- df %>%
-              dplyr::filter((country_code %in% country_i) |
-                              (continent_adj %in% "Americas")) %>%
-              dplyr::mutate(fold = "fold_1")
-          }
-          
-          if(estimation_type_i == "continent_eurasia_country_pred"){
-            df_traintest <- df %>%
-              dplyr::filter((country_code %in% country_i) |
-                              (continent_adj %in% "Eurasia")) %>%
-              dplyr::mutate(fold = "fold_1")
-          }
-          
-          # Train on all countries in continent x and predict on countries in continent y
-          if(estimation_type_i == "continent"){
-            df_traintest <- df %>%
-              dplyr::mutate(fold = continent_adj)
-          }
-          
-          # Run Model ----------------------------------------------------------
-          xg_results_list <- run_model(df = df_traintest,
-                                       estimation_type_i = estimation_type_i,
-                                       feature_type_i = feature_type_i,
-                                       target_var_i = target_var_i,
-                                       country_i = country_i,
-                                       grid_search = grid_search)
-          
-          # Accuracy Stats -----------------------------------------------------
-          results_df_i <- xg_results_list$results_df
-          
-          if(estimation_type_i == "continent"){
-            acc_fold_df <- results_df_i %>%
-              dplyr::group_by(country_code, fold) %>%
-              dplyr::summarise(cor_fold = cor(truth, prediction),
-                               N_fold = n()) %>%
-              ungroup()
-          } else{
-            acc_fold_df <- results_df_i %>%
-              dplyr::group_by(fold) %>%
-              dplyr::summarise(cor_fold = cor(truth, prediction),
-                               N_fold = n()) %>%
-              ungroup()
-          }
-          
-          acc_fold_df$cor_all <- cor(results_df_i$truth,
-                                     results_df_i$prediction)
-          
-          acc_fold_df <- acc_fold_df %>%
-            dplyr::mutate(estimation_type = estimation_type_i,
-                          feature_type = feature_type_i,
-                          target_var = target_var_i,
-                          country = country_i)
-          
-          # Export Results -----------------------------------------------------
-          saveRDS(xg_results_list$results_df,  PRED_OUT)
-          saveRDS(xg_results_list$feat_imp_df, FI_OUT)
-          saveRDS(acc_fold_df,                 ACCURACY_OUT)
-          
-          if(grid_search){
-            saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)
-          }
-          
         }
       }
     }

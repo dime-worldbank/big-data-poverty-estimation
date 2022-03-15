@@ -301,5 +301,6 @@ dhs_all_df$country_code <- dhs_all_df$country_year %>% substring(1,2)
 dhs_all_df$year <- dhs_all_df$country_year %>% substring(4,7) %>% as.numeric()
 
 # Export HH Level Data ---------------------------------------------------------
-saveRDS(dhs_all_df, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_hhlevel.Rds"))
+saveRDS(dhs_all_df, file.path(dhs_dir, "FinalData", "Individual Datasets", 
+                              "survey_socioeconomic_hhlevel.Rds"))
 

@@ -396,13 +396,3 @@ write.csv(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets"
 saveRDS(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 write.csv(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
 
-#saveRDS(dhs_all_df_coll, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.Rds"))
-#write.csv(dhs_all_df_coll, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "survey_socioeconomic_geo.csv"), row.names = F)
-
-## Geo Only
-#df_geoonly <- dhs_all_df_coll %>%
-#  dplyr::select(uid, latitude, longitude, urban_rural, most_recent_survey, country_code, year)
-
-#saveRDS(df_geoonly, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.Rds"))
-#write.csv(df_geoonly, file.path(secure_dir, "Data", "DHS",  "FinalData - PII", "GPS_uid_crosswalk.csv"), row.names = F)
-

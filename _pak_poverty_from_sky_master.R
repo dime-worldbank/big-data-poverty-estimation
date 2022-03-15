@@ -3,7 +3,7 @@
 # DHS
 # PAK_POINTS
 # PAK_CITY_POINTS
-SURVEY_NAME <- "PAK_CITY_POINTS"
+SURVEY_NAME <- "DHS"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -382,10 +382,13 @@ if(F){
   
   figures_tables_global_dir <- file.path(datawork_dir, "05_figures_tables_global")
   
+  ## Main
   source(file.path(figures_tables_global_dir, "main", "00_correlations.R"))
   source(file.path(figures_tables_global_dir, "main", "00_global_scatterplot_map.R"))
   source(file.path(figures_tables_global_dir, "main", "01_avg_performance_by_type.R"))
   
+  ## SI
+  source(file.path(figures_tables_global_dir, "si", "fb_education_analysis.R"))
   
 }
 

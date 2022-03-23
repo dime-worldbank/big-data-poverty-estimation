@@ -9,7 +9,7 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
 
 fb_df <- fb_df %>%
-  dplyr::select(uid, contains("estimate_mau_upper_bound_")) %>%
+  dplyr::select(uid, radius, contains("estimate_mau_upper_bound_")) %>%
   rename_at(vars(-uid), ~ paste0("fb_", .))
 
 # [Load] Facebook RWI ----------------------------------------------------------
@@ -44,7 +44,19 @@ wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 # [Load] Satellite data from GEE -----------------------------------------------
 #file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
 
-##### ** VIIRS #####
+##### ** VIIRS, Median #####
+viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              paste0("viirs_",
+                                     BUFFER_SATELLITE,
+                                     "_ubuff",
+                                     BUFFER_SATELLITE,
+                                     "_rbuff",
+                                     BUFFER_SATELLITE,".Rds")))
+
+viirs_df <- viirs_df %>%
+  rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
+
+##### ** VIIRS, Std. Dev #####
 viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                               paste0("viirs_",
                                      BUFFER_SATELLITE,
@@ -116,11 +128,11 @@ elevslope <- full_join(elev_df, slope_df, by = c("uid", "year")) %>%
   rename_at(vars(-uid, -year), ~ paste0("elevslope_", .))
 
 ##### ** Global human modification index #####
-gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              paste0("GlobalHumanModification_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
+#gbmod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+#                              paste0("GlobalHumanModification_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
 
-gbmod_df <- gbmod_df %>%
-  dplyr::rename(globalmod_mean = mean)
+#gbmod_df <- gbmod_df %>%
+#  dplyr::rename(globalmod_mean = mean)
 
 ##### ** AOD #####
 aod_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -214,7 +226,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           weather,
                           wp_df, 
                           elevslope, 
-                          gbmod_df, 
+                          #gbmod_df, 
                           aod_df,
                           pollution_df) %>%
   reduce(full_join, by = c("uid", "year"))
@@ -241,4 +253,26 @@ if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
 # [Export] Data ----------------------------------------------------------------
 saveRDS(survey_ancdata_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
+
+## Check NAs
+nas_df <- survey_ancdata_df %>%
+  is.na() %>%
+  as.data.frame() %>%
+  summarise_all(sum) %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "var") %>%
+  dplyr::rename(n_na = V1)
+
+nas_df[nas_df$var %>% str_detect("poll")]
+
+nas_df <- nas_df %>%
+  dplyr::filter(n_na > 0)
+
+
+head(survey_ancdata_df)
+names(survey_ancdata_df)
+
+
+
 

@@ -17,10 +17,6 @@ df <- df %>%
 df <- df %>%
   dplyr::filter(country_code != "GY")
 
-# Remove missing
-#df <- df %>%
-#  dplyr::filter(!is.na(fb_estimate_mau_1))
-
 # Facebook - Cleanup -----------------------------------------------------------
 # For all Facebook variables except total users, if 1000, make 0
 
@@ -33,6 +29,7 @@ df <- df %>%
   dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), if_1000_make_0)
 
 # Facebook - Proportion --------------------------------------------------------
+# Create variables of the proportion of Facebook users within each category
 truncate_1 <- function(x){
   x[x > 1] <- 1
   return(x)
@@ -49,24 +46,33 @@ df <- df %>%
   left_join(df_fb_prop, by = "uid")
 
 # Facebook - Divide by World Pop -----------------------------------------------
-# Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
+# Calculate proportion of population is on Facebook
 
 # TODO: Update with radius; 2, 5, 10 -- for Facebook
 
+# Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
 inf_to_zero <- function(x){
   x[x == Inf] <- 0
   return(x)
 }
 
-df_fb_wp <- df %>%
-  dplyr::mutate_at(vars(contains("fb_estimate_")), ~ . / worldpop_10km) %>%
-  dplyr::select_at(vars(uid, year, contains("fb_estimate_"))) %>%
-  rename_at(vars(-uid, -year), ~ str_replace_all(., "fb_estimate", "fb_wp_estimate")) %>%
+df_fb_wp <- df %>% 
+  ## Divide by World Pop population, depending on Facebook radius used
+  mutate(across(contains('fb_estimate_'), 
+                ~ case_when(fb_radius %in% 2 ~ . / worldpop_2km, 
+                            fb_radius %in% 5 ~ . / worldpop_5km, 
+                            fb_radius %in% 10 ~ . / worldpop_10km))) %>%
+  
+  ## Select specific variables and rename
+  dplyr::select(uid, contains("fb_estimate_")) %>%
+  rename_at(vars(-uid), ~ str_replace_all(., "fb_estimate", "fb_wp_estimate")) %>%
+  
+  ## Cleanup values
   dplyr::mutate_at(vars(contains("fb_wp")), inf_to_zero) %>%
   dplyr::mutate_at(vars(contains("fb_wp")), truncate_1) 
 
 df <- df %>%
-  left_join(df_fb_wp, by = c("uid", "year"))
+  left_join(df_fb_wp, by = c("uid"))
 
 # Log Values -------------------------------------------------------------------
 log_p1 <- function(x){
@@ -79,15 +85,53 @@ df <- df %>%
 df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
 
 # Remove Variables -------------------------------------------------------------
+dfa <- df %>%
+  dplyr::select_at(vars(
+    # ID/Information variables
+    "uid", "year", "country_code", "country_name", "continent_adj",
+    
+    # Target variables
+    "pca_allvars",
+    "pca_allvars_noroof",
+    "pca_physicalvars",
+    "pca_physicalvars_noroof",
+    "pca_nonphysicalvars",
+    "pca_allvars_rmna",
+    "pca_allvars_noroof_rmna",
+    "pca_physicalvars_rmna",
+    "pca_physicalvars_noroof_rmna",
+    "pca_nonphysicalvars_rmna",
+    "wealth_index_score",
+    
+    # Features
+    contains("osm_"),
+    contains("fb_prop_"),
+    contains("gc_"),
+    contains("weather_"),
+    contains("l8_"),
+    contains("elevslope_"),
+    contains("pollution_"),
+    contains("worldclim_"),
+    contains("globalmod_"),
+    contains("cnn_s2_rgb_"),
+    contains("cnn_s2_ndvi_"),
+    contains("cnn_s2_bu_"),
+    contains("viirs_"))
+  )
+
+
+
+
+
+dplyr::select_at() 
+
 df <- df %>%
   dplyr::select(-c(worldpop_5km,
                    worldpop_10km,
                    worldpop2020_2km,
                    worldpop2020_5km,
-                   worldpop2020_10km))
-
-## Facebook daily active users
-#  dplyr::select_at(vars(-contains("_dau_")))
+                   worldpop2020_10km,
+                   fb_radius))
 
 # Remove Observations ----------------------------------------------------------
 

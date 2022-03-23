@@ -31,11 +31,11 @@ for(BANDS in c("rgb", "ndvi", "bu")){
                                         SURVEY_NAME,
                                         "FinalData",
                                         "cnn_predictions",
-                                        paste0('predictions', SATELLITE, '_',BANDS,'.csv')))
+                                        paste0('predictions_', SATELLITE, '_b_',BANDS,'.csv')))
   
   cnn_predictions_df$uid <- cnn_predictions_df$uid %>%  str_replace_all("b'", "") %>% str_replace_all("'", "")
   
-  saveRDS(cnn_predictions_df,
+  saveRDS(cnn_predictions_df %>% as.data.frame(),
           file.path(data_dir,
                     SURVEY_NAME,
                     "FinalData",

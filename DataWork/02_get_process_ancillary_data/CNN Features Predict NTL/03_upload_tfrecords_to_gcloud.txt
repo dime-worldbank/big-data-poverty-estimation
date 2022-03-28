@@ -7,5 +7,4 @@ gsutil config
 
 # -m flag: parallel processing (I think)?
 # -n flag: skip if already exists
-gsutil -m cp ~/Google\ Drive/World\ Bank/IEs/Pakistan\ Poverty\ Estimation/Data/DHS/FinalData/Individual\ Datasets/cnn_s2/tfrecords/*.tfrecord gs://ieconnectpovest/cnn_s2/tfrecords
-
+gsutil -m cp -n ~/Google\ Drive/World\ Bank/IEs/Pakistan\ Poverty\ Estimation/Data/DHS/FinalData/Individual\ Datasets/cnn_s2/tfrecords/*.tfrecord gs://ieconnectpovest/cnn_s2/tfrecords

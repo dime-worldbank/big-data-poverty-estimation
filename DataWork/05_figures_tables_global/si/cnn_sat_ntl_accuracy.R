@@ -37,3 +37,14 @@ bu_df %>%
   pull(correct) %>%
   mean()
 
+
+head(rgb_df)
+
+rgb_df %>%
+  ggplot() +
+  geom_histogram(aes(x = predictions)) +
+  facet_wrap(~true_values)
+
+
+
+

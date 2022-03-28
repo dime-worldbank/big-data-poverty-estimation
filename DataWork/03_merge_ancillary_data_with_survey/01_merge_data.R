@@ -57,16 +57,16 @@ viirs_df <- viirs_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
 
 ##### ** VIIRS, Std. Dev #####
-viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              paste0("viirs_",
+viirs_sd_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              paste0("viirs_sd_",
                                      BUFFER_SATELLITE,
                                      "_ubuff",
                                      BUFFER_SATELLITE,
                                      "_rbuff",
                                      BUFFER_SATELLITE,".Rds")))
 
-viirs_df <- viirs_df %>%
-  rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
+viirs_sd_df <- viirs_sd_df %>%
+  rename_at(vars(-uid, -year), ~ paste0("viirs_", .) %>% tolower())
 
 ##### ** Landsat 8 #####
 l8_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -222,6 +222,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           gc_df, 
                           wc_df, 
                           viirs_df, 
+                          viirs_sd_df,
                           l8_df, 
                           weather,
                           wp_df, 

@@ -3,16 +3,40 @@
 # Append data. Raw files split across countries; here append into one dataset
 
 # Load data --------------------------------------------------------------------
-fb_rwi_df <- file.path(fb_rwi_dir, "RawData", "relative-wealth-index-april-2021") %>%
-  list.files(pattern = "*.csv",
-             full.names = T) %>%
+rwi_files <- c(
+  file.path(fb_rwi_dir, "RawData", "relative-wealth-index-april-2021") %>%
+    list.files(pattern = "*.csv",
+               full.names = T),
+  
+  file.path(fb_rwi_dir, "RawData", "individual-downloads") %>%
+    list.files(pattern = "*.csv",
+               full.names = T)
+)
+
+fb_rwi_df <- rwi_files %>%
   map_df(function(file_i){
     
     df <- fread(file_i)
     
-    df$iso3s <- file_i %>%
+    iso3s <- file_i %>%
       str_replace_all(".*/", "") %>%
       str_replace_all("_relative_wealth_index.csv", "")
+    
+    iso3s[iso3s %in% "albania"] <- "ALB"
+    iso3s[iso3s %in% "armenia"] <- "ARM"
+    iso3s[iso3s %in% "azerbaijan"] <- "AZE"
+    iso3s[iso3s %in% "bosnia-and-herzegovina"] <- "BIH"
+    iso3s[iso3s %in% "egypt"] <- "EGY"
+    iso3s[iso3s %in% "georgia"] <- "GEO"
+    iso3s[iso3s %in% "moldova"] <- "MDA"
+    iso3s[iso3s %in% "montenegro"] <- "MNE"
+    iso3s[iso3s %in% "north-macedonia"] <- "MKD"
+    iso3s[iso3s %in% "romania"] <- "ROU"
+    iso3s[iso3s %in% "serbia"] <- "SRB"
+    iso3s[iso3s %in% "turkey"] <- "TUR"
+    iso3s[iso3s %in% "ukraine"] <- "UKR"
+
+    df$iso3s <- iso3s
     
     return(df)
   }) %>%

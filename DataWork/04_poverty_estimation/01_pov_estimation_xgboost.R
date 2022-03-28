@@ -21,13 +21,10 @@ if(SURVEY_NAME == "OPM"){
   df <- df[df$year %in% 2014,]
 }
 
-# Country code: CNN issues??
-#df <- df[!(df$country_code %in% c("KE", "TG", "MW")),]
-
 # Delete existing files --------------------------------------------------------
 if(REPLACE_IF_EXTRACTED){
-  print("Removing files!")
-  Sys.sleep(3)
+  print("Removing files!!!")
+  Sys.sleep(10)
   
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)

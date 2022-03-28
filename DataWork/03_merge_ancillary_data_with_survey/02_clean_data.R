@@ -48,8 +48,6 @@ df <- df %>%
 # Facebook - Divide by World Pop -----------------------------------------------
 # Calculate proportion of population is on Facebook
 
-# TODO: Update with radius; 2, 5, 10 -- for Facebook
-
 # Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
 inf_to_zero <- function(x){
   x[x == Inf] <- 0
@@ -65,11 +63,14 @@ df_fb_wp <- df %>%
   
   ## Select specific variables and rename
   dplyr::select(uid, contains("fb_estimate_")) %>%
-  rename_at(vars(-uid), ~ str_replace_all(., "fb_estimate", "fb_wp_estimate")) %>%
+  rename_at(vars(-uid), ~ str_replace_all(., "fb_estimate", "fb_wp_prop_estimate")) %>%
   
   ## Cleanup values
   dplyr::mutate_at(vars(contains("fb_wp")), inf_to_zero) %>%
-  dplyr::mutate_at(vars(contains("fb_wp")), truncate_1) 
+  dplyr::mutate_at(vars(contains("fb_wp")), truncate_1) %>%
+  
+  ## Only keep % of population on Facebook
+  dplyr::select(uid, fb_wp_prop_estimate_mau_upper_bound_1)
 
 df <- df %>%
   left_join(df_fb_wp, by = c("uid"))
@@ -82,10 +83,11 @@ log_p1 <- function(x){
 df <- df %>%
   dplyr::mutate_at(vars(contains("osm_dist")), log_p1)
 
-df$viirs_avg_rad <- log(df$viirs_avg_rad+1)
+df$viirs_avg_rad <- log(df$viirs_avg_rad)
+df$viirs_avg_rad_stddev <- log(df$viirs_avg_rad_stddev)
 
 # Remove Variables -------------------------------------------------------------
-dfa <- df %>%
+df <- df %>%
   dplyr::select_at(vars(
     # ID/Information variables
     "uid", "year", "country_code", "country_name", "continent_adj",
@@ -106,6 +108,7 @@ dfa <- df %>%
     # Features
     contains("osm_"),
     contains("fb_prop_"),
+    contains("fb_wp_prop"),
     contains("gc_"),
     contains("weather_"),
     contains("l8_"),
@@ -117,55 +120,30 @@ dfa <- df %>%
     contains("cnn_s2_ndvi_"),
     contains("cnn_s2_bu_"),
     contains("viirs_"))
-  )
-
-
-
-
-
-dplyr::select_at() 
-
-df <- df %>%
-  dplyr::select(-c(worldpop_5km,
-                   worldpop_10km,
-                   worldpop2020_2km,
-                   worldpop2020_5km,
-                   worldpop2020_10km,
-                   fb_radius))
+  ) %>%
+  dplyr::select(-c(fb_prop_radius))
 
 # Remove Observations ----------------------------------------------------------
-
-# CAN WE IMPUTE MISSING VALUES?
-# pollution_s5p_NO2_column_number_density
-
-df$cnn_s2_rgb_pc1 %>% is.na %>% table()
-
 df <- df %>%
-  dplyr::filter(!is.na(worldclim_bio_1),
-                !is.na(fb_estimate_mau_upper_bound_2),
-                !is.na(globalmod_mean),
-                !is.na(l8_B1),
-                !is.na(cnn_s2_rgb_pc1))
+  dplyr::filter(!is.na(cnn_s2_bu_pc1),
+                !is.na(fb_prop_estimate_mau_upper_bound_2),
+                !is.na(worldclim_bio_1))
+
+## Check NAs
+if(F){
+  df_long <- df %>%
+    dplyr::filter(!is.na(cnn_s2_bu_pc1),
+                  !is.na(fb_prop_estimate_mau_upper_bound_2),
+                  !is.na(worldclim_bio_1)) %>%
+    pivot_longer(cols = -c("uid", "year", "country_code", "country_name", "continent_adj")) %>%
+    dplyr::mutate(is_na = is.na(value)) %>%
+    group_by(name) %>%
+    dplyr::summarise(n_na = sum(is_na))
+  
+  df_long %>%
+    dplyr::filter(n_na > 0) %>%
+    View()
+}
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
-#write.csv(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.csv"),
-#          row.names = F)
-
-if(F){
-  ## Check NAs
-  df_sum <- df %>%
-    dplyr::filter(country_code != "GY") %>%
-    dplyr::select_if(is.numeric) %>%
-    mutate(id = 1:n()) %>%
-    pivot_longer(cols = -id) %>%
-    group_by(name) %>%
-    summarise_at(vars(value), .funs = list(N_NA = ~ sum(is.na(.)),
-                                           mean = ~ mean(., na.rm = T),
-                                           min = ~ min(., na.rm = T),
-                                           max = ~ max(., na.rm = T)))
-  
-  df_sum_na <- df_sum %>%
-    dplyr::filter(N_NA > 0)
-}
-

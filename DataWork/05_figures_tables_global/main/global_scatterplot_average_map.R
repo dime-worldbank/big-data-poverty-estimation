@@ -17,7 +17,8 @@ for(aggregate_district in c(F, T)){
     #           full.names = T) %>%
     list.files(pattern = "*.Rds",
                full.names = T) %>%
-    str_subset("pca_allvars_all.Rds") %>%
+    str_subset("pca_allvars_all") %>%
+    str_subset("10_01_4_50_03") %>% # Parameter type
     map_df(readRDS)
   
   # Select best estimation type for each country ---------------------------------
@@ -38,7 +39,8 @@ for(aggregate_district in c(F, T)){
   pred_df <- pred_df[pred_df$country_est_id %in% cor_df$country_est_id,]
   
   # Merge with select survey variables -------------------------------------------
-  survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+  survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+                                 "survey_alldata_clean.Rds"))
   
   survey_df <- survey_df %>%
     dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
@@ -90,7 +92,7 @@ for(aggregate_district in c(F, T)){
       scale_color_manual(values = c("chartreuse4", "chocolate2")) +
       labs(color = NULL,
            title = ifelse(aggregate_district,
-                          "C. Estimated vs. True Wealth Asset Index [District]",
+                          "C. Estimated vs. True Wealth Asset Index [ADM 2]",
                           "A. Estimated vs. True Wealth Asset Index"),
            x = "True Wealth Asset Index",
            y = "Estimated Wealth Asset Index") +

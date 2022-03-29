@@ -12,6 +12,8 @@ R2_SCATTER_TEXT_SIZE <- 3
 # Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                                 "accuracy_appended.Rds"))
+results_df <- results_df %>%
+  dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
 
 wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 
@@ -55,7 +57,7 @@ results_df <- results_df %>%
 # Analysis ---------------------------------------------------------------------
 #### Dataset subsets for analysis
 results_fb_sum_df <- results_df %>%
-  dplyr::filter(feature_type %in% "fb_prop",
+  dplyr::filter(feature_type %in% "fb",
                 estimation_type %in% "best",
                 target_var %in% "pca_allvars")
 
@@ -115,7 +117,7 @@ p_all_gdp_scatter <- results_all_sum_df %>%
              x = wdi_gdp_pc_ln)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  geom_richtext(aes(label = paste0("r<sup>2</sup> = ", round(cor(r2, wdi_gdp_pc_ln)^2,2)),
+  geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, wdi_gdp_pc_ln),2)),
                     x = 6,
                     y = 0.35),
                 size = R2_SCATTER_TEXT_SIZE) +
@@ -130,7 +132,7 @@ p_all_wealthsd_scatter <- results_all_sum_df %>%
              x = pca_allvars_sd)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  geom_richtext(aes(label = paste0("r<sup>2</sup> = ", round(cor(r2, pca_allvars_sd)^2,2)),
+  geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, pca_allvars_sd),2)),
                     x = 0.6,
                     y = 0.8),
                 size = R2_SCATTER_TEXT_SIZE) +
@@ -145,7 +147,7 @@ p_fb_propfb_scatter <- results_fb_sum_df %>%
              x = prop_pop_on_fb)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  geom_richtext(aes(label = paste0("r<sup>2</sup> = ", round(cor(r2, prop_pop_on_fb)^2,2)),
+  geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, prop_pop_on_fb),2)),
                     x = 0.4,
                     y = 0.6),
                 size = R2_SCATTER_TEXT_SIZE) +
@@ -158,12 +160,12 @@ p_fb_propfb_scatter <- results_fb_sum_df %>%
 p_weather_aggdp_scatter <- results_df %>%
   dplyr::filter(estimation_type %in% "best",
                 target_var %in% "pca_allvars",
-                feature_type %in% "weather") %>%
+                feature_type %in% "weatherclimate") %>%
   ggplot(aes(y = r2,
              x = wdi_agric_per_gdp)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  geom_richtext(aes(label = paste0("r<sup>2</sup> = ", round(cor(r2, wdi_agric_per_gdp)^2,2)),
+  geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, wdi_agric_per_gdp),2)),
                     x = 10,
                     y = 0.5),
                 size = R2_SCATTER_TEXT_SIZE) +
@@ -199,7 +201,7 @@ p_boxplot_income <- results_best_df %>%
                     guide = guide_legend(reverse = FALSE)) +
   labs(x = expression(r^2),
        y = NULL,
-       title = "E. Model performance by income group across all feature types",
+       title = "D. Model performance by income group across all feature types",
        fill = "Income Group")
 
 ## Agriculture GDP Boxplot [For Appendix]
@@ -222,6 +224,59 @@ p_boxplot_agdgdp <- results_best_df %>%
                     guide = guide_legend(reverse = TRUE))
 
 # Arrange ----------------------------------------------------------------------
+#p_all_income_box
+#p_all_wealthsd_scatter
+#p_all_gdp_scatter
+#p_fb_propfb_scatter
+
+theme_scatter <- theme(plot.title = element_text(face = "bold", size = 9),
+                       plot.subtitle = element_text(size = 8),
+                       axis.title.x = element_text(size = 8))
+
+p_l <- ggarrange(p_all_gdp_scatter + 
+                   labs(plot.title = "A. Model Performance vs. GDP Per Capita") + 
+                   theme_scatter,
+                 p_all_wealthsd_scatter + labs(plot.title = "A.") + theme_scatter,
+                 p_fb_propfb_scatter + labs(plot.title = "A.") + theme_scatter,
+                 #p_weather_aggdp_scatter + labs(plot.title = "A.") + theme_scatter,
+                 ncol = 1)
+
+#p_boxplot_income + 
+#  theme(legend.position = "bottom",
+#        axis.text.y = element_text(color = "black")) +
+#  theme_scatter +
+#  guides(fill=guide_legend(nrow=3, byrow=T))
+
+# p_r <- ggarrange(p_boxplot_income + 
+#                    theme(legend.position = "bottom",
+#                          axis.text.y = element_text(color = "black"),
+#                          legend.margin=margin(l = -2, unit='cm')) +
+#                    theme_scatter +
+#                    guides(fill=guide_legend(nrow=1, byrow=T)),
+#                  p_wealthsd_income +
+#                    theme_scatter +
+#                    theme(legend.position = "none",
+#                          legend.margin=margin(l = -1, unit='cm')) +
+#                    guides(fill=guide_legend(nrow=1, byrow=T)),
+#                  ncol = 1,
+#                  heights = c(0.75, 0.25))
+
+p_all <- ggarrange(p_l,
+                   p_boxplot_income + 
+                     theme(legend.position = "bottom",
+                           axis.text.y = element_text(color = "black"),
+                           legend.margin=margin(l = -2, unit='cm')) +
+                     theme_scatter +
+                     guides(fill=guide_legend(nrow=1, byrow=T)),
+                   widths = c(0.4, 0.6),
+                   nrow = 1)
+
+ggsave(p_all,
+       filename = file.path(figures_global_dir, "explain_var_in_r2.png"),
+       height = 7,
+       width = 9.1)
+
+# Arrange - Extra --------------------------------------------------------------
 #p_all_income_box
 #p_all_wealthsd_scatter
 #p_all_gdp_scatter
@@ -265,15 +320,9 @@ p_all <- ggarrange(p_l,
                    nrow = 1)
 
 ggsave(p_all,
-       filename = file.path(figures_global_dir, "explain_var_in_r2.png"),
+       filename = file.path(figures_global_dir, "explain_var_in_r2_extra.png"),
        height = 9,
        width = 9.1)
-
-#### Export appendix figures
-ggsave(p_boxplot_agdgdp,
-       filename = file.path(figures_global_dir, "explain_var_in_r2_agric_gdp.png"),
-       height = 5,
-       width = 5)
 
 # Testing ----------------------------------------------------------------------
 if(F){

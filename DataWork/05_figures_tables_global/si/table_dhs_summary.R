@@ -21,7 +21,7 @@ df_sum <- df %>%
                             pca_physicalvars_mean, " (", pca_physicalvars_sd, ")  ",
                             " \\\\ \n "))
 
-sink(file.path(tables_dir, "dhs_summary_table.tex"))
+sink(file.path(tables_global_dir, "dhs_summary_table.tex"))
 cat("\\begin{tabular}{l cc | ccc} \n")
 cat("\\hline \n")
 cat("Country & DHS Year & N Obs & Global Index & HH Index & Non-HH Index \\\\ \n")

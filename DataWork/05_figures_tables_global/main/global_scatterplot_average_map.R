@@ -25,8 +25,6 @@ for(aggregate_district in c(F, T)){
   pred_df <- pred_df %>%
     mutate(country_est_id = paste(estimation_type, country_code))
   
-  #pred_df <- pred_df[pred_df$estimation_type %in% "within_country_cv",]
-  
   cor_df <- pred_df %>%
     group_by(country_est_id, estimation_type, country_code) %>%
     dplyr::summarise(cor = cor(truth, prediction)) %>%
@@ -440,15 +438,4 @@ p <- ggarrange(p1,
 
 ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
        height = 4.5*2, width = 15) 
-
-
-
-# p <- ggarrange(p_scatter + theme(legend.position = "none"),
-#                p_map,
-#                ncol = 2,
-#                widths = c(0.4, 0.6))
-# 
-# ggsave(p, filename = file.path(figures_global_dir, "global_scatter_map.png"),
-#        height = 4.5, width = 15) 
-
 

@@ -197,6 +197,7 @@ library(ggthemes)
 library(rnaturalearth)
 library(ggrepel)
 library(ggcorrplot)
+library(scales)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
@@ -383,12 +384,18 @@ if(F){
   figures_tables_global_dir <- file.path(datawork_dir, "05_figures_tables_global")
   
   ## Main
-  source(file.path(figures_tables_global_dir, "main", "00_correlations.R"))
-  source(file.path(figures_tables_global_dir, "main", "00_global_scatterplot_map.R"))
-  source(file.path(figures_tables_global_dir, "main", "01_avg_performance_by_type.R"))
-  
+  source(file.path(figures_tables_global_dir, "main", "correlations.R"))
+  source(file.path(figures_tables_global_dir, "main", "global_scatterplot_average_map.R"))
+  source(file.path(figures_tables_global_dir, "main", "avg_performance_by_type.R"))
+  source(file.path(figures_tables_global_dir, "main", "determinants_of_model_performance.R"))
+  source(file.path(figures_tables_global_dir, "main", "compare_with_rwi.R"))
+
   ## SI
-  source(file.path(figures_tables_global_dir, "si", "fb_education_analysis.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_educ_fb_dhs.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_fb_features_cor_each_country.R"))
+  source(file.path(figures_tables_global_dir, "si", "table_dhs_summary.R"))
   
 }
 

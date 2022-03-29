@@ -47,6 +47,11 @@ acc_df <- acc_df %>%
     feature_type == "cnn_s2_ndvi" ~ "CNN: NDVI",
     feature_type == "cnn_s2_rgb" ~ "CNN: RGB",
     feature_type == "fb_prop" ~ "Facebook: Proportion",
+    feature_type == "fb" ~ "Facebook",
+    feature_type == "satellites" ~ "Satellites",
+    feature_type == "viirs" ~ "Nighttime Lights",
+    feature_type == "landcover" ~ "Landcover",
+    feature_type == "weatherclimate" ~ "Weather/Climate",
     feature_type == "gc" ~ "Landcover - GlobCover",
     feature_type == "l8" ~ "Daytime Imagery - Average",
     feature_type == "osm" ~ "OpenStreetMap",
@@ -60,10 +65,16 @@ acc_df <- acc_df %>%
     target_var == "pca_physicalvars" ~ "Asset Index: Physical Assets",
     target_var == "wealth_index_score" ~ "DHS Wealth Index",
     TRUE ~ target_var
-  ))
+  )) %>%
+  dplyr::mutate(target_var_clean = factor(target_var_clean,
+                                          levels = c("DHS Wealth Index",
+                                                     "Asset Index",
+                                                     "Asset Index: Physical Assets",
+                                                     "Asset Index: Non-Physical Assets")))
 
 # Merge with select survey variables -------------------------------------------
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+                               "survey_alldata_clean.Rds"))
 
 survey_df <- survey_df %>%
   distinct(country_code, country_name, continent_adj, iso2) %>%
@@ -113,6 +124,16 @@ acc_all_best_param_df <- acc_all_df %>%
            feature_type, feature_type_clean) %>%
   slice_max(order_by = r2, n = 1) 
 
+# Add variable for parameter set -----------------------------------------------
+acc_all_df <- acc_all_df %>%
+  dplyr::mutate(xg_param_set = paste(xg_max.depth,
+                                     xg_eta,
+                                     xg_nthread,
+                                     xg_nrounds,
+                                     xg_subsample,
+                                     xg_objective, sep = "_") %>%
+                  str_replace_all("[:punct:]", "_"))
+
 # Export data ------------------------------------------------------------------
 #### All data
 saveRDS(acc_all_df, 
@@ -124,16 +145,7 @@ saveRDS(acc_all_best_param_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                   "accuracy_appended_bestparam.Rds"))
 
-#### For each xg_param_set
-acc_all_df <- acc_all_df %>%
-  dplyr::mutate(xg_param_set = paste(xg_max.depth,
-                                     xg_eta,
-                                     xg_nthread,
-                                     xg_nrounds,
-                                     xg_subsample,
-                                     xg_objective, sep = "_") %>%
-                  str_replace_all("[:punct:]", "_"))
-
+#### Dataset for each paramet set
 for(param_set_i in unique(acc_all_df$xg_param_set)){
   saveRDS(acc_all_df[acc_all_df$xg_param_set %in% param_set_i,], 
           file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",

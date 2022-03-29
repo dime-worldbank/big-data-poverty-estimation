@@ -47,19 +47,18 @@ grab_x_features <- function(df,
   if( (feature_type_i %in% "all") | (feature_type_i %>% str_detect("all_not_"))){
     
     X <- df %>%
-      dplyr::select_at(vars(contains("osm_"),
-                            contains("fb_prop_"),
-                            contains("gc_"),
-                            contains("weather_"),
-                            contains("l8_"),
-                            contains("elevslope_"),
-                            contains("pollution_"),
-                            contains("worldclim_"),
-                            contains("globalmod_"),
-                            contains("cnn_s2_rgb_"),
-                            contains("cnn_s2_ndvi_"),
-                            contains("cnn_s2_bu_"),
-                            contains("viirs_"))) 
+      dplyr::select_at(vars(starts_with("viirs_"),
+                            starts_with("cnn_s2_rgb_"),
+                            starts_with("cnn_s2_ndvi_"),
+                            starts_with("cnn_s2_bu_"),
+                            starts_with("fb_prop_"),
+                            starts_with("fb_wp_prop"),
+                            starts_with("osm_"),
+                            starts_with("gc_"),
+                            starts_with("elevslope_"),
+                            starts_with("weather_"),
+                            starts_with("worldclim_"),
+                            starts_with("pollution_"))) 
     
     if(feature_type_i %>% str_detect("all_not_")){
       
@@ -67,7 +66,7 @@ grab_x_features <- function(df,
         str_replace_all("all_not_", "")
       
       X <- X %>%
-        dplyr::select_at(vars(-contains(var_to_rm)))
+        dplyr::select_at(vars(-starts_with(var_to_rm)))
       
     }
     
@@ -76,12 +75,23 @@ grab_x_features <- function(df,
     
   } else if(feature_type_i %in% "satellites"){
     X <- df %>%
-      dplyr::select_at(vars(contains("l8_"),
-                            contains("viirs_"))) %>%
+      dplyr::select_at(vars(starts_with("l8_"),
+                            starts_with("cnn_"),
+                            starts_with("viirs_"))) %>%
+      as.matrix()
+  } else if(feature_type_i %in% "landcover"){
+    X <- df %>%
+      dplyr::select_at(vars(starts_with("gc_"),
+                            starts_with("elevslope_"))) %>%
+      as.matrix()
+  } else if(feature_type_i %in% "weatherclimate"){
+    X <- df %>%
+      dplyr::select_at(vars(starts_with("weather_"),
+                            starts_with("worldclim_"))) %>%
       as.matrix()
   } else{
     X <- df %>%
-      dplyr::select_at(vars(contains( paste0(feature_type_i, "_") ))) %>%
+      dplyr::select_at(vars(starts_with( paste0(feature_type_i, "_") ))) %>%
       as.matrix()
   }
   
@@ -256,33 +266,34 @@ run_model <- function(df,
 # Implement Functions ----------------------------------------------------------
 #feature_types <- c("all", "cnn_l8_rgb", "satellites", "osm", "fb", "gc")
 
-feature_types_indiv <- c("cnn_s2_rgb", 
+feature_types_indiv <- c("viirs",
+                         "cnn_s2_rgb", 
                          "cnn_s2_ndvi", 
                          "cnn_s2_bu", 
-                         "osm",
-                         "fb_prop", 
-                         "gc",
-                         "pollution",
                          "l8",
-                         "weather") 
+                         "fb",
+                         "osm",
+                         "landcover",
+                         "weatherclimate",
+                         "pollution",
+                         
+                         "satellites") 
 
 feature_types_all_but_indiv <- paste0("all_not_", 
                                       c(feature_types_indiv, "viirs")) 
 
 feature_types <- c(feature_types_indiv,
-                   feature_types_all_but_indiv,
+                   #feature_types_all_but_indiv,
                    "all")
-
-feature_types <- "viirs"
 
 if(SURVEY_NAME == "DHS"){
   
-  estimation_type_vec <- c("within_country_cv",
-                           #"global_country_pred",
-                           #"continent_africa_country_pred",
-                           #"continent_americas_country_pred",
-                           #"continent_eurasia_country_pred", 
-                           "continent")
+  # estimation_type_vec <- c("within_country_cv",
+  #                          #"global_country_pred",
+  #                          #"continent_africa_country_pred",
+  #                          #"continent_americas_country_pred",
+  #                          #"continent_eurasia_country_pred", 
+  #                          "continent")
   
   estimation_type_vec <- c("within_country_cv",
                            "global_country_pred",
@@ -317,7 +328,7 @@ if(SURVEY_NAME == "OPM"){
 for(estimation_type_i in estimation_type_vec){
   for(target_var_i in target_vars_vec){
     for(feature_type_i in feature_types){
-      for(country_i in countries_vec){
+      for(country_i in rev(countries_vec)){
         
         ## XG Boost Parameters
         for(xg_max.depth  in c(5, 10)){
@@ -483,9 +494,9 @@ for(estimation_type_i in estimation_type_vec){
                                       xg_objective = xg_objective)
                       
                       # Export Results -----------------------------------------------------
-                      saveRDS(xg_results_list$results_df,  PRED_OUT)
                       saveRDS(xg_results_list$feat_imp_df, FI_OUT)
                       saveRDS(acc_fold_df,                 ACCURACY_OUT)
+                      saveRDS(xg_results_list$results_df,  PRED_OUT)
                       
                       if(grid_search){
                         saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)

@@ -90,7 +90,9 @@ df$viirs_avg_rad_stddev <- log(df$viirs_avg_rad_stddev)
 df <- df %>%
   dplyr::select_at(vars(
     # ID/Information variables
-    "uid", "year", "country_code", "country_name", "continent_adj",
+    "uid", "year", "iso2", "country_code", "country_name", 
+    "continent_adj", "within_country_fold", "urban_rural",
+    "latitude", "longitude", "gadm_uid",
     
     # Target variables
     "pca_allvars",
@@ -106,20 +108,26 @@ df <- df %>%
     "wealth_index_score",
     
     # Features
-    contains("osm_"),
-    contains("fb_prop_"),
-    contains("fb_wp_prop"),
-    contains("gc_"),
-    contains("weather_"),
-    contains("l8_"),
-    contains("elevslope_"),
-    contains("pollution_"),
-    contains("worldclim_"),
-    contains("globalmod_"),
-    contains("cnn_s2_rgb_"),
-    contains("cnn_s2_ndvi_"),
-    contains("cnn_s2_bu_"),
-    contains("viirs_"))
+    starts_with("viirs_"),
+    
+    starts_with("cnn_s2_rgb_"),
+    starts_with("cnn_s2_ndvi_"),
+    starts_with("cnn_s2_bu_"),
+    
+    starts_with("l8_"),
+    
+    starts_with("fb_prop_"),
+    starts_with("fb_wp_prop"),
+    
+    starts_with("osm_"),
+    
+    starts_with("gc_"),
+    starts_with("elevslope_"),
+    
+    starts_with("weather_"),
+    starts_with("worldclim_"),
+    
+    starts_with("pollution_"))
   ) %>%
   dplyr::select(-c(fb_prop_radius))
 

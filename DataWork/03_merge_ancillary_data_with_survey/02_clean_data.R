@@ -92,7 +92,10 @@ df <- df %>%
     # ID/Information variables
     "uid", "year", "iso2", "country_code", "country_name", 
     "continent_adj", "within_country_fold", "urban_rural",
-    "latitude", "longitude", "gadm_uid",
+    "latitude", "longitude", "gadm_uid", "GID_1", "GID_2",
+    
+    # DHS variables to compare FB data with
+    "educ_years_hh_max",
     
     # Target variables
     "pca_allvars",
@@ -106,6 +109,7 @@ df <- df %>%
     "pca_physicalvars_noroof_rmna",
     "pca_nonphysicalvars_rmna",
     "wealth_index_score",
+    "wealth_index",
     
     # Features
     starts_with("viirs_"),

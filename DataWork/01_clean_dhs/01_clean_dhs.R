@@ -5,9 +5,9 @@
 
 # Don't contain hv216 (n rooms for sleeping). These are earlier DHS rounds,
 # and likely just too early to be included in this paper.
-countries_to_remove <- c("MA_2003-04_DHS_09092021_1726_82518",
-                         "MB_2005_DHS_09092021_1725_82518") %>%
-  paste0(collapse = "|")
+#countries_to_remove <- c("MA_2003-04_DHS_09092021_1726_82518",
+#                         "MB_2005_DHS_09092021_1725_82518") %>%
+#  paste0(collapse = "|")
 
 # Example data
 #df_tmp <- read_dta("/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/Data/DHS/RawData/ZW/ZW_2015_DHS_09092021_1734_82518/ZWHR72DT/ZWHR72FL.DTA")   
@@ -18,15 +18,24 @@ countries_to_remove <- c("MA_2003-04_DHS_09092021_1726_82518",
 # 998 --> NA
 
 # Functions to Clean Data ------------------------------------------------------
-clean_hh <- function(df){
+clean_hh <- function(df, 
+                     hh_vars){
   
   #### Country specific fixes
-  if(grepl("KH", df$hv000[1])){
+  if(grepl("KH_2014|KH_2010", df$hv000[1])){
     # DH doesn't record anything for hv201 (water source); however, has water source
     # during dry and wet times. Use dry (sh102)
     df <- df %>%
       dplyr::select(-hv201) %>%
       dplyr::rename(hv201 = sh102)
+  }
+  
+  if(grepl("KH_2005", df$hv000[1])){
+    # DH doesn't record anything for hv201 (water source); however, has water source
+    # during dry and wet times. Use dry (sh102)
+    df <- df %>%
+      dplyr::select(-hv201) %>%
+      dplyr::rename(hv201 = hv201d)
   }
   
   #### Education variables
@@ -86,9 +95,11 @@ clean_hh <- function(df){
   df$educ_levels_hh_max  <- apply(educ_years, 1, max_ig_na)
   #df$educ_years_hh_mean <- apply(educ_years, 1, mean_ig_na)
   
-  # Earlier DHS don't have this variable
-  if(is.null(df$hv216)){
-    df$hv216 <- NA
+  # Make sure has all variables, which is needed for renaming
+  for(var_i in hh_vars){
+    if(is.null(df[[var_i]])){
+      df[[var_i]] <- NA
+    }
   }
   
   df_out <- df %>%
@@ -219,31 +230,12 @@ process_dhs <- function(dir){
     hh106_names <- NULL
   } 
   
-  if(TRUE %in% (df_onerow_names %>% str_detect("sh110j"))){
-    sh110j_var <- "sh110j"
-  } else{
-    sh110j_var <- NULL
-  } 
-  
-  if(TRUE %in% (df_onerow_names %>% str_detect("sh110k"))){
-    sh110k_var <- "sh110k"
-  } else{
-    sh110k_var <- NULL
-  } 
-  
-  # N rooms for sleeping
-  if(TRUE %in% (df_onerow_names %>% str_detect("hv216"))){
-    hv216_var <- "hv216"
-  } else{
-    hv216_var <- NULL
-  } 
-  
   hh_vars <- c("hv000",
                hh108_names,
                hh106_names,
-               hv216_var,
-               sh110j_var,
-               sh110k_var,
+               "hv216",
+               "sh110j",
+               "sh110k",
                "hv001",
                "hv201",
                "hv204",
@@ -256,12 +248,9 @@ process_dhs <- function(dir){
                "hv211",
                "hv212",
                "hv214",
-               #"hv242",
-               #"hv247",
                "hv215",
                "hv221",
                "hv009",
-               #"hv216",
                "hv270",
                "hv271")
   
@@ -269,7 +258,10 @@ process_dhs <- function(dir){
     hh_vars <- c(hh_vars, "sh102")
   }
   
-  hh_df <- read_dta(hh_path, col_select = all_of(hh_vars)) %>% clean_hh()
+  # Sometimes not all variables are in the dataset
+  hh_vars_import <- hh_vars[hh_vars %in% df_onerow_names]
+  
+  hh_df <- read_dta(hh_path, col_select = all_of(hh_vars_import)) %>% clean_hh(hh_vars = hh_vars)
   geo_sdf <- readOGR(geo_path) %>% clean_geo()
   
   # Merge data
@@ -289,9 +281,6 @@ country_year_dirs <- lapply(countries, function(country_i){
 
 ## Remove archive folders
 country_year_dirs <- country_year_dirs[!grepl("archive", country_year_dirs)]
-
-## Process Data
-#country_year_dirs <- country_year_dirs[!grepl(countries_to_remove, country_year_dirs)]
 
 dhs_all_df <- map_df(country_year_dirs, process_dhs)
 

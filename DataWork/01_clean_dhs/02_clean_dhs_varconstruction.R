@@ -41,16 +41,13 @@ dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "su
 dhs_all_df <- dhs_all_df %>%
   dplyr::filter(!is.na(latitude))
 
-# Add variable most recent and subset to most recent ---------------------------
+# Add most recent survey variable ----------------------------------------------
 dhs_all_df <- dhs_all_df %>%
   dplyr::group_by(country_code) %>%
   dplyr::mutate(latest_survey_country = max(year)) %>%
   dplyr::ungroup() %>%
   dplyr::mutate(most_recent_survey = latest_survey_country == year) %>%
   dplyr::select(-latest_survey_country)
-
-dhs_all_df <- dhs_all_df %>%
-  dplyr::filter(most_recent_survey %in% T)
 
 # Deal with missing/don't know codes -------------------------------------------
 # e.g., value of 99 that means "don't know" -- these should be NA

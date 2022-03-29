@@ -193,6 +193,7 @@ process_dhs <- function(dir){
   
   # List of all files for that country & year
   files_all <- file.path(dir) %>% list.files(recursive=T, full.names = T)
+  files_all <- files_all[!grepl("archive", files_all)]
   
   # Grab HH and geo file paths
   hh_path <- files_all %>% str_subset("[A-Z]{2}HR") %>% str_subset(".dta$|.DTA$")

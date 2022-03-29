@@ -277,6 +277,7 @@ feature_types_indiv <- c("viirs",
                          "weatherclimate",
                          "pollution",
                          
+                         "cnn_s2",
                          "satellites") 
 
 feature_types_all_but_indiv <- paste0("all_not_", 

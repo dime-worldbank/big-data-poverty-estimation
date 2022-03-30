@@ -14,6 +14,10 @@ viirs_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Da
                               "satellite_data_from_gee", 
                               "viirs181920_1120_ubuff1120_rbuff1120.Rds"))
 
+if(SURVEY_NAME %in% "DHS"){
+  survey_all_df <- survey_all_df[survey_all_df$most_recent_survey %in% T,]
+}
+
 survey_all_df <- survey_all_df %>%
   left_join(viirs_df, by = c("uid", "year")) %>%
   dplyr::filter(!is.na(avg_rad)) %>%

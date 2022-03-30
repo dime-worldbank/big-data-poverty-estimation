@@ -35,7 +35,8 @@ over_nearest <- function(sp_i, gadm_i){
 }
 
 # Load Data --------------------------------------------------------------------
-dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_hhlevel.Rds"))
+dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", 
+                                "survey_socioeconomic_hhlevel.Rds"))
 
 ## Subset - needs coordinates
 dhs_all_df <- dhs_all_df %>%
@@ -67,7 +68,7 @@ dhs_all_df$has_motorbike[dhs_all_df$has_motorbike %in% 9] <- NA
 dhs_all_df$has_radio[dhs_all_df$has_radio %in% 9] <- NA
 dhs_all_df$has_tv[dhs_all_df$has_tv %in% 9] <- NA
 
-# Asset Index ------------------------------------------------------------------
+# Prep variables for asset index -------------------------------------------------
 # (1) High values = wealthier, lower values = poorer
 # (2) Remove NAs
 
@@ -145,7 +146,54 @@ if(F){
   na_df$prop <- na_df$V1 / nrow(dhs_all_df) 
 }
 
-##### ** Variable sets for PCA #####
+# Make variables numeric -------------------------------------------------------
+# Some variables labelled double, which causes issues
+
+pca_allvars <- c("has_electricity",
+                 "has_radio",
+                 "has_tv",
+                 "has_fridge",
+                 "has_motorbike",
+                 "has_car",
+                 "floor_material_cat",
+                 "wall_material_cat",
+                 "roof_material_cat",
+                 "water_time_to_get_cat",
+                 "water_source_piped_dwelling",
+                 "flush_toilet_sewer",
+                 "educ_years_hh_max_scale",
+                 "n_sleeping_rooms_pp_cat")
+
+dhs_all_df <- dhs_all_df %>%
+  mutate_at(pca_allvars, as.numeric)
+
+dhs_all_df_sub <- dhs_all_df %>%
+  dplyr::filter(year < 2010,
+                !is.na(has_radio))
+
+N <- dhs_all_df_sub %>% nrow()
+N
+dhs_all_df_sub %>%
+  dplyr::select_at(vars(pca_allvars)) %>%
+  dplyr::summarise_all( . %>% is.na %>% sum) %>%
+  t %>%
+  as.data.frame() %>%
+  dplyr::mutate(prop = V1/N)
+
+
+
+# Variable sets for PCA --------------------------------------------------------
+
+# PCA - constant over time
+pca_allvars_constanttime <- c("has_electricity",
+                              "has_radio",
+                              "has_tv",
+                              "has_fridge",
+                              "has_motorbike",
+                              "has_car",
+                              "floor_material_cat",
+                              "water_source_piped_dwelling",
+                              "flush_toilet_sewer")
 
 # Version without roof_material due to high number of missing values
 pca_allvars <- c("has_electricity",

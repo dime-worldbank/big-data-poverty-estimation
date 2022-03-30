@@ -50,6 +50,34 @@ dhs_all_df <- dhs_all_df %>%
   dplyr::mutate(most_recent_survey = latest_survey_country == year) %>%
   dplyr::select(-latest_survey_country)
 
+# Cleanup wealth index ---------------------------------------------------------
+dhs_all_df <- dhs_all_df %>%
+  
+  # Wealth Index Category
+  dplyr::mutate(wealth_index = wealth_index %>% as.numeric(),
+                wlthind5 = wlthind5 %>% as.numeric()) %>%
+  dplyr::mutate(wealth_index = case_when(
+    is.na(wealth_index) ~ wlthind5,
+    TRUE ~ wealth_index
+  )) %>%
+  
+  # Wealth Index Score
+  dplyr::mutate(wealth_index_score = case_when(
+    is.na(wealth_index_score) ~ wlthindf,
+    TRUE ~ wealth_index_score
+  )) %>%
+  
+  # Standardize Wealth Score
+  # Some countries had wealth score scaled differently; rescale so that, for all
+  # country-years, ranged from 1-5.
+  group_by(country_code, year) %>%
+  dplyr::mutate(wealth_index_score = rescale(wealth_index_score, to = c(1,5)))
+
+# dhs_all_df %>%
+#   dplyr::filter(is.na(wealth_index)) %>%
+#   group_by(country_code, year) %>%
+#   dplyr::summarise(N = n())
+
 # Deal with missing/don't know codes -------------------------------------------
 # e.g., value of 99 that means "don't know" -- these should be NA
 

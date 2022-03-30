@@ -27,6 +27,7 @@ extract_globcover <- function(df_country,
   df_country <- geo.buffer_chunks(df_country, r = buffer_m, chunk_size = 100)
   
   ## Load globcover
+  if(year_i < 1992) year_i <- 1992
   if(year_i > 2018) year_i <- 2018
   
   if(year_i <= 2015){

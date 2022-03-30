@@ -17,7 +17,8 @@
 # https://github.com/SofiaG1l/Using_Facebook_API
 
 # Load Coordinates -------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
+                        "survey_socioeconomic.Rds"))
 
 # Setup Credentials ------------------------------------------------------------
 api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
@@ -71,7 +72,7 @@ for(iso_i in country_isos){
     
     ## Scape
     print(account_i)
-
+    
     fb_df <- map_df(1:nrow(parameters_df), function(param_i){
       parameters_df_i <- parameters_df[param_i,]
       
@@ -95,7 +96,7 @@ for(iso_i in country_isos){
       
       return(fb_df_i)
     })
-
+    
     ## Export; Only export if scraped all parameters
     if(nrow(fb_df) == nrow(parameters_df)){
       print("Saved!")

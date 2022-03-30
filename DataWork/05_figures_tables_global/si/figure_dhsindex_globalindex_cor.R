@@ -1,8 +1,11 @@
 # DHS Index vs Global Asset Index
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
-                        "survey_alldata_clean.Rds"))
+#df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+#                        "survey_alldata_clean.Rds"))
+
+df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+df <- df[df$most_recent_survey %in% T,]
 
 # Make title -------------------------------------------------------------------
 # Title: "[iso2]; Cor = [cor]"

@@ -138,7 +138,13 @@ extract_dist_poi <- function(country_code, survey_df, osm_dir_df){
 }
 
 # Load survey data -------------------------------------------------------------
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
+                               "survey_socioeconomic.Rds"))
+
+if(SURVEY_NAME %in% "DHS"){
+  survey_df <- survey_df %>%
+    dplyr::filter(most_recent_survey %in% T)
+}
 
 survey_df <- survey_df %>%
   dplyr::select(uid, country_code, year, latitude, longitude) %>%
@@ -192,6 +198,11 @@ for(buffer_i in BUFFER_OSM){
     }
   }
 }
+
+buffer_m = buffer_i
+country_code = country_code_i
+survey_df = survey_df
+osm_dir_df = osm_dir_df
 
 #### Dist POI
 for(country_code_i in country_codes_all){

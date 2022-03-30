@@ -5,6 +5,10 @@ INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datase
 # [Load] Survey data -----------------------------------------------------------
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
+#survey_df <- survey_df[survey_df$most_recent_survey %in% T,]
+#a <- survey_df[!(survey_df$uid %in% osm_poi_df$uid),]
+#a$country_code %>% unique()
+
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
 
@@ -58,12 +62,12 @@ viirs_df <- viirs_df %>%
 
 ##### ** VIIRS, Std. Dev #####
 viirs_sd_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                              paste0("viirs_sd_",
-                                     BUFFER_SATELLITE,
-                                     "_ubuff",
-                                     BUFFER_SATELLITE,
-                                     "_rbuff",
-                                     BUFFER_SATELLITE,".Rds")))
+                                 paste0("viirs_sd_",
+                                        BUFFER_SATELLITE,
+                                        "_ubuff",
+                                        BUFFER_SATELLITE,
+                                        "_rbuff",
+                                        BUFFER_SATELLITE,".Rds")))
 
 viirs_sd_df <- viirs_sd_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .) %>% tolower())

@@ -50,8 +50,7 @@ api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F)
 
 api_keys <- api_keys[api_keys$Working %in% "yes",]
 
-api_keys <- api_keys[!(api_keys$Details %in% c("robmarty3@gmail.com",
-                                               "robertandrewmarty3@gmail.com")),]
+api_keys <- api_keys[!(api_keys$Details %in% c("robertandrewmarty3@gmail.com")),]
 
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
 N_KEYS <- length(KEYS_ACCOUNTS)
@@ -291,7 +290,7 @@ for(country_code_i in country_code_all_rep){
         print(paste0("Radius: ", radius, "; uid = ", uid_i))
         
         fb_df <- map_df(1:nrow(parameters_df), function(param_i){
-
+          
           parameters_df_i <- parameters_df[param_i,]
           
           fb_df_i <- query_fb_marketing_api(location_type = "coordinates",
@@ -333,7 +332,7 @@ for(country_code_i in country_code_all_rep){
         
         sleep_time_check <- 0
         while(sleep_time_check < sleep_time_after_loc){
-
+          
           if(sleep_time_check == 0){
             cat("Sleeping ")
             cat(round(sleep_time_after_loc))

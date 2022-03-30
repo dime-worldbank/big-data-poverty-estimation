@@ -259,25 +259,3 @@ if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
 saveRDS(survey_ancdata_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
 
-## Check NAs
-nas_df <- survey_ancdata_df %>%
-  is.na() %>%
-  as.data.frame() %>%
-  summarise_all(sum) %>%
-  t() %>%
-  as.data.frame() %>%
-  rownames_to_column(var = "var") %>%
-  dplyr::rename(n_na = V1)
-
-nas_df[nas_df$var %>% str_detect("poll")]
-
-nas_df <- nas_df %>%
-  dplyr::filter(n_na > 0)
-
-
-head(survey_ancdata_df)
-names(survey_ancdata_df)
-
-
-
-

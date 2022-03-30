@@ -122,7 +122,8 @@ clean_hh <- function(df,
                   n_rooms_sleeping = hv216,
                   wealth_index = hv270,
                   wealth_index_score = hv271) %>%
-    dplyr::select(cluster_id, 
+    dplyr::select(hhid,
+                  cluster_id, 
                   educ_levels_hh_max,
                   educ_years_hh_max,
                   educ_years_hh_mean,
@@ -231,7 +232,8 @@ process_dhs <- function(dir){
     hh106_names <- NULL
   } 
   
-  hh_vars <- c("hv000",
+  hh_vars <- c("hhid",
+               "hv000",
                hh108_names,
                hh106_names,
                "hv216",
@@ -268,6 +270,17 @@ process_dhs <- function(dir){
   # Merge data
   survey_df <- merge_clean(hh_df, geo_sdf)
   survey_df$country_year <- dir %>% str_replace_all(".*/", "")
+  
+  # If wealth index in separate dataset, merge in. In earlier DHS rounds, WI
+  # was in a separate dataset and not in the Household Record dataset.
+  wi_path <- files_all %>% str_subset("[A-Z]{2}WI") %>% str_subset(".dta$|.DTA$")
+  if(length(wi_path) > 0){
+    wi_df <- read_dta(wi_path)
+    
+    survey_df <- survey_df %>%
+      left_join(wi_df, c("hhid" = "whhid")) %>%
+      dplyr::mutate(wi_from_diff_dataset = T)
+  }
   
   return(survey_df)
 }

@@ -124,6 +124,11 @@ extract_density_fclass_i <- function(fclass_i,
 # 1. Load survey data ----------------------------------------------------------
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
+if(SURVEY_NAME %in% "DHS"){
+  survey_df <- survey_df %>%
+    dplyr::filter(most_recent_survey %in% T)
+}
+
 survey_df <- survey_df %>%
   dplyr::select(uid, country_code, year, latitude, longitude, GID_2) %>%
   dplyr::filter(!is.na(latitude)) %>%

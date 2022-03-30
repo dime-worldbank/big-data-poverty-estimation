@@ -18,7 +18,7 @@
 # https://worldbank.github.io/connectivity_mapping/intro.html
 
 # TODO: DELETE THIS LATER!!
-SURVEY_NAME <- "PAK_POINTS"
+#SURVEY_NAME <- "PAK_POINTS"
 
 if(SURVEY_NAME %in% c("DHS", "PAK_POINTS")){
   RADIUS_TRY_1 <- 2
@@ -48,17 +48,17 @@ if(SURVEY_NAME %in% "OPM"){
 api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F) %>%
   filter(Service == "facebook_marketing_ad")
 
-#api_keys <- api_keys[api_keys$Details != "pakistanprojectroute4@gmail.com",]
-
 api_keys <- api_keys[api_keys$Working %in% "yes",]
 
-#api_keys<- api_keys[seq(dim(api_keys)[1],1),] # REVERSE ORDER: can delete later
+api_keys <- api_keys[!(api_keys$Details %in% c("robmarty3@gmail.com",
+                                               "robertandrewmarty3@gmail.com")),]
 
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
 N_KEYS <- length(KEYS_ACCOUNTS)
 
 # Load Parameters to Scrape ----------------------------------------------------
-parameters_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters.Rds"))
+parameters_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", 
+                                   "facebook_marketing_parameters.Rds"))
 
 # Determine Sleep Time ---------------------------------------------------------
 # Determine time to pause when scraping the API due to API rate limits.

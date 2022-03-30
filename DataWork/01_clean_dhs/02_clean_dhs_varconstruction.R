@@ -3,37 +3,6 @@
 
 set.seed(42)
 
-over_nearest <- function(sp_i, gadm_i){
-  # For each sp_i, takes the nearest polygon from gadm_i. Returns data frame
-  # of sp_i with gadm data merged in
-  
-  # Add uids in same order as rows
-  gadm_i$gadm_uid <- 1:nrow(gadm_i)
-  
-  # gadm uid, where intersect
-  sp_i$gadm_uid <- over(sp_i, gadm_i)$gadm_uid
-  
-  # determine gadm uid of nearest (if doesn't intersect)
-  sp_nonintersect_i <- sp_i[is.na(sp_i$gadm_uid),]
-  
-  if(nrow(sp_nonintersect_i) > 0){
-    gadm_uid_nonintersect <- lapply(1:nrow(sp_nonintersect_i), function(i){
-      print(paste(i, "/", nrow(sp_nonintersect_i)))
-      gDistance(sp_nonintersect_i[i,],
-                gadm_i,
-                byid = T) %>% which.min()
-    }) %>% unlist()
-    
-    sp_i$gadm_uid[is.na(sp_i$gadm_uid)] <- gadm_uid_nonintersect
-  }
-  
-  # Add GADM data
-  df_i <- as.data.frame(sp_i)
-  df_i <- merge(df_i, gadm_i@data, by = "gadm_uid")
-  
-  return(df_i)
-}
-
 # Load Data --------------------------------------------------------------------
 dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", 
                                 "survey_socioeconomic_hhlevel.Rds"))
@@ -70,13 +39,12 @@ dhs_all_df <- dhs_all_df %>%
   # Standardize Wealth Score
   # Some countries had wealth score scaled differently; rescale so that, for all
   # country-years, ranged from 1-5.
+  ungroup() %>%
   group_by(country_code, year) %>%
-  dplyr::mutate(wealth_index_score = rescale(wealth_index_score, to = c(1,5)))
-
-# dhs_all_df %>%
-#   dplyr::filter(is.na(wealth_index)) %>%
-#   group_by(country_code, year) %>%
-#   dplyr::summarise(N = n())
+  dplyr::mutate(wealth_index_score = scales::rescale(wealth_index_score, 
+                                                     to = c(1,5), 
+                                                     na.rm=T)) %>%
+  ungroup()
 
 # Deal with missing/don't know codes -------------------------------------------
 # e.g., value of 99 that means "don't know" -- these should be NA
@@ -88,13 +56,17 @@ dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% 996] <- 0
 dhs_all_df$water_time_to_get[dhs_all_df$water_time_to_get %in% c(998,999)] <- NA
 
 #### Assets
-dhs_all_df$has_bank_account[dhs_all_df$has_bank_account %in% 8:9] <- NA
 dhs_all_df$has_car[dhs_all_df$has_car %in% 9] <- NA
 dhs_all_df$has_electricity[dhs_all_df$has_electricity %in% 9] <- NA
 dhs_all_df$has_fridge[dhs_all_df$has_fridge %in% 9] <- NA
 dhs_all_df$has_motorbike[dhs_all_df$has_motorbike %in% 9] <- NA
 dhs_all_df$has_radio[dhs_all_df$has_radio %in% 9] <- NA
 dhs_all_df$has_tv[dhs_all_df$has_tv %in% 9] <- NA
+
+# Fix issues with specific surveys ---------------------------------------------
+# In Tanzania, wall & roof variables coded differently
+dhs_all_df$wall_material[(dhs_all_df$country_code %in% "TZ" & dhs_all_df$year %in% 2010)] <- NA
+dhs_all_df$roof_material[(dhs_all_df$country_code %in% "TZ" & dhs_all_df$year %in% 2010)] <- NA
 
 # Prep variables for asset index -------------------------------------------------
 # (1) High values = wealthier, lower values = poorer
@@ -177,6 +149,9 @@ if(F){
 # Make variables numeric -------------------------------------------------------
 # Some variables labelled double, which causes issues
 
+dhs_all_df <- dhs_all_df %>%
+  mutate_at(pca_allvars, as.numeric)
+
 pca_allvars <- c("has_electricity",
                  "has_radio",
                  "has_tv",
@@ -192,36 +167,46 @@ pca_allvars <- c("has_electricity",
                  "educ_years_hh_max_scale",
                  "n_sleeping_rooms_pp_cat")
 
-dhs_all_df <- dhs_all_df %>%
-  mutate_at(pca_allvars, as.numeric)
-
-dhs_all_df_sub <- dhs_all_df %>%
-  dplyr::filter(year < 2010,
-                !is.na(has_radio))
-
-N <- dhs_all_df_sub %>% nrow()
-N
-dhs_all_df_sub %>%
-  dplyr::select_at(vars(pca_allvars)) %>%
-  dplyr::summarise_all( . %>% is.na %>% sum) %>%
-  t %>%
-  as.data.frame() %>%
-  dplyr::mutate(prop = V1/N)
-
-
+# dhs_all_df %>%
+#   ungroup() %>%
+#   dplyr::select_at(vars(pca_allvars)) %>%
+#   dplyr::summarise_all( . %>% min(na.rm = T)) %>%
+#   t %>%
+#   as.data.frame()
+# 
+# dhs_all_df %>%
+#   ungroup() %>%
+#   dplyr::select_at(vars(pca_allvars)) %>%
+#   dplyr::summarise_all( . %>% max(na.rm = T)) %>%
+#   t %>%
+#   as.data.frame() 
+# 
+# dhs_all_df_sub <- dhs_all_df %>%
+#   dplyr::filter(year < 2000,
+#                 !is.na(has_radio))
+# 
+# N <- nrow(dhs_all_df_sub)
+# dhs_all_df_sub %>%
+#   ungroup() %>%
+#   dplyr::select_at(vars(pca_allvars)) %>%
+#   dplyr::summarise_all( . %>% is.na %>% sum) %>%
+#   t %>%
+#   as.data.frame() %>%
+#   dplyr::mutate(prop = V1/N)
 
 # Variable sets for PCA --------------------------------------------------------
 
 # PCA - constant over time
-pca_allvars_constanttime <- c("has_electricity",
-                              "has_radio",
-                              "has_tv",
-                              "has_fridge",
-                              "has_motorbike",
-                              "has_car",
-                              "floor_material_cat",
-                              "water_source_piped_dwelling",
-                              "flush_toilet_sewer")
+pca_allvars_alltime <- c("has_electricity",
+                         "has_radio",
+                         "has_tv",
+                         "has_fridge",
+                         "has_motorbike", # a lot missing
+                         "has_car", # a lot missing
+                         "floor_material_cat",
+                         "water_source_piped_dwelling",
+                         "educ_years_hh_max_scale",
+                         "flush_toilet_sewer")
 
 # Version without roof_material due to high number of missing values
 pca_allvars <- c("has_electricity",
@@ -235,7 +220,7 @@ pca_allvars <- c("has_electricity",
                  "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 #"educ_years_hh_max_scale",
+                 "educ_years_hh_max_scale",
                  "n_sleeping_rooms_pp_cat")
 
 pca_allvars_noroof <- c("has_electricity",
@@ -248,7 +233,7 @@ pca_allvars_noroof <- c("has_electricity",
                         "water_time_to_get_cat",
                         "water_source_piped_dwelling",
                         "flush_toilet_sewer",
-                        #"educ_years_hh_max_scale",
+                        "educ_years_hh_max_scale",
                         "n_sleeping_rooms_pp_cat")
 
 pca_physicalvars <- c("has_electricity",
@@ -267,17 +252,18 @@ pca_nonphysicalvars <- c("has_tv",
                          "water_time_to_get_cat",
                          "water_source_piped_dwelling",
                          "flush_toilet_sewer",
-                         #"educ_years_hh_max_scale",
+                         "educ_years_hh_max_scale",
                          "n_sleeping_rooms_pp_cat")
 
-##### ** Compute PCA #####
+# Compute PCAs -----------------------------------------------------------------
 dhs_all_df$ind_id <- 1:nrow(dhs_all_df)
 
 compute_pca_impute_missing <- function(pca_vars, dhs_all_df){
   
   pca_df <- dhs_all_df %>%
     dplyr::select(all_of(pca_vars)) %>%
-    mutate_all(as.numeric) 
+    mutate_all(as.numeric) %>%
+    mutate_all(. %>% scales::rescale(to = c(0,1)))
   
   # file:///Users/robmarty/Downloads/v70i01.pdf
   # Estimate number of dimensions; takes a while, so take a random sample
@@ -301,7 +287,9 @@ compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
   
   pca_df <- dhs_all_df %>% 
     dplyr::select(all_of(c("ind_id", pca_vars))) %>%
-    drop_na()
+    drop_na() %>%
+    mutate_at(vars(-ind_id),
+              . %>% scales::rescale(to = c(0,1)))
   
   pca_obj <- pca_df %>%
     dplyr::select(-ind_id) %>%
@@ -315,139 +303,60 @@ compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
   return(out_df)
 }
 
+#### Most Recent Data
+
 ## PCA - Removing NAs
+# dhs_all_df <- dhs_all_df %>%
+#   left_join(compute_pca_rm_na(pca_allvars, "pca_allvars_rmna", dhs_all_df), 
+#             by = "ind_id") %>%
+#   left_join(compute_pca_rm_na(pca_allvars_noroof, "pca_allvars_noroof_rmna", dhs_all_df), 
+#             by = "ind_id") %>%
+#   left_join(compute_pca_rm_na(pca_physicalvars, "pca_physicalvars_rmna", dhs_all_df), 
+#             by = "ind_id") %>%
+#   left_join(compute_pca_rm_na(pca_physicalvars_noroof, "pca_physicalvars_noroof_rmna", dhs_all_df), 
+#             by = "ind_id") %>%
+#   left_join(compute_pca_rm_na(pca_nonphysicalvars, "pca_nonphysicalvars_rmna", dhs_all_df), 
+#             by = "ind_id")
+
+#### PCA - Imputing Missing NAs
+# Subset to most recent
+dhs_all_df_mr <- dhs_all_df %>%
+  dplyr::filter(most_recent_survey %in% T)
+
+# Compute PCA
+dhs_all_df_mr$pca_allvars_mr             <- compute_pca_impute_missing(pca_allvars, dhs_all_df_mr)
+dhs_all_df_mr$pca_allvars_noroof_mr      <- compute_pca_impute_missing(pca_allvars_noroof, dhs_all_df_mr)
+dhs_all_df_mr$pca_physicalvars_mr        <- compute_pca_impute_missing(pca_physicalvars, dhs_all_df_mr)
+dhs_all_df_mr$pca_physicalvars_noroof_mr <- compute_pca_impute_missing(pca_physicalvars_noroof, dhs_all_df_mr)
+dhs_all_df_mr$pca_nonphysicalvars_mr     <- compute_pca_impute_missing(pca_nonphysicalvars, dhs_all_df_mr)
+
+# Merge PCA variables back into main survey
+dhs_all_df_mr <- dhs_all_df_mr %>%
+  dplyr::select(ind_id,
+                pca_allvars_mr,
+                pca_allvars_noroof_mr,
+                pca_physicalvars_mr,
+                pca_physicalvars_noroof_mr,
+                pca_nonphysicalvars_mr)
+
 dhs_all_df <- dhs_all_df %>%
-  left_join(compute_pca_rm_na(pca_allvars, "pca_allvars_rmna", dhs_all_df), 
-            by = "ind_id") %>%
-  left_join(compute_pca_rm_na(pca_allvars_noroof, "pca_allvars_noroof_rmna", dhs_all_df), 
-            by = "ind_id") %>%
-  left_join(compute_pca_rm_na(pca_physicalvars, "pca_physicalvars_rmna", dhs_all_df), 
-            by = "ind_id") %>%
-  left_join(compute_pca_rm_na(pca_physicalvars_noroof, "pca_physicalvars_noroof_rmna", dhs_all_df), 
-            by = "ind_id") %>%
-  left_join(compute_pca_rm_na(pca_nonphysicalvars, "pca_nonphysicalvars_rmna", dhs_all_df), 
-            by = "ind_id")
+  left_join(dhs_all_df_mr, by = "ind_id")
 
-## PCA - Imputing Missing NAs
-dhs_all_df$pca_allvars             <- compute_pca_impute_missing(pca_allvars, dhs_all_df)
-dhs_all_df$pca_allvars_noroof      <- compute_pca_impute_missing(pca_allvars_noroof, dhs_all_df)
-dhs_all_df$pca_physicalvars        <- compute_pca_impute_missing(pca_physicalvars, dhs_all_df)
-dhs_all_df$pca_physicalvars_noroof <- compute_pca_impute_missing(pca_physicalvars_noroof, dhs_all_df)
-dhs_all_df$pca_nonphysicalvars     <- compute_pca_impute_missing(pca_nonphysicalvars, dhs_all_df)
-
-if(F){
-  a <- dhs_all_df[dhs_all_df$country_code %in% "IA",]
-  for(var in c("pca_allvars_rmna",
-               "pca_allvars_noroof_rmna",
-               "pca_physicalvars_rmna",
-               "pca_physicalvars_noroof_rmna",
-               "pca_nonphysicalvars_rmna",
-               
-               "pca_allvars",
-               "pca_allvars_noroof",
-               "pca_physicalvars",
-               "pca_physicalvars_noroof",
-               "pca_nonphysicalvars")){
-    print(var)
-    cor.test(dhs_all_df$wealth_index_score, dhs_all_df[[var]]) %>% print()
-    cor.test(a$wealth_index_score, a[[var]]) %>% print()
-    Sys.sleep(2)
-  }
-}
+#### All Data
+dhs_all_df$pca_allvars <- compute_pca_impute_missing(pca_allvars_alltime, dhs_all_df)
 
 # Aggregate --------------------------------------------------------------------
+# For some continuous DHS, uid repeats; adding year makes unique
+dhs_all_df <- dhs_all_df %>%
+  dplyr::mutate(uid = case_when(
+    (country_code %in% "PE") & (year %in% c(2004, 2007)) ~ paste0(uid, year),
+    TRUE ~ uid
+  ))
+
 dhs_all_df_coll <- dhs_all_df %>%
   group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey) %>%
   summarise_if(is.numeric, mean, na.rm=T) %>%
   ungroup()
-
-# Within Country Folds ---------------------------------------------------------
-dhs_gadm_cw <- bind_rows(
-  data.frame(code_dhs = "AL", code_gadm = "ALB"),
-  data.frame(code_dhs = "AM", code_gadm = "ARM"),
-  data.frame(code_dhs = "AO", code_gadm = "AGO"),
-  data.frame(code_dhs = "BD", code_gadm = "BGD"),
-  data.frame(code_dhs = "BF", code_gadm = "BFA"),
-  data.frame(code_dhs = "BJ", code_gadm = "BEN"),
-  data.frame(code_dhs = "BO", code_gadm = "BOL"),
-  data.frame(code_dhs = "BU", code_gadm = "BDI"), # Burundi
-  data.frame(code_dhs = "CD", code_gadm = "COD"),
-  data.frame(code_dhs = "CI", code_gadm = "CIV"),
-  data.frame(code_dhs = "CM", code_gadm = "CMR"),
-  data.frame(code_dhs = "CO", code_gadm = "COL"),
-  data.frame(code_dhs = "DR", code_gadm = "DOM"), # Dominican Republic
-  data.frame(code_dhs = "EG", code_gadm = "EGY"),
-  data.frame(code_dhs = "ET", code_gadm = "ETH"),
-  data.frame(code_dhs = "GA", code_gadm = "GAB"),
-  data.frame(code_dhs = "GH", code_gadm = "GHA"),
-  data.frame(code_dhs = "GM", code_gadm = "GMB"),
-  data.frame(code_dhs = "GN", code_gadm = "GIN"),
-  data.frame(code_dhs = "GU", code_gadm = "GTM"), # Guatemala
-  data.frame(code_dhs = "GY", code_gadm = "GUY"),
-  data.frame(code_dhs = "HN", code_gadm = "HND"),
-  data.frame(code_dhs = "HT", code_gadm = "HTI"),
-  data.frame(code_dhs = "IA", code_gadm = "IND"),
-  data.frame(code_dhs = "ID", code_gadm = "IDN"),
-  data.frame(code_dhs = "JO", code_gadm = "JOR"),
-  data.frame(code_dhs = "KE", code_gadm = "KEN"),
-  data.frame(code_dhs = "KH", code_gadm = "KHM"),
-  data.frame(code_dhs = "KM", code_gadm = "COM"),
-  data.frame(code_dhs = "KY", code_gadm = "KGZ"),
-  data.frame(code_dhs = "LB", code_gadm = "LBR"),
-  data.frame(code_dhs = "LS", code_gadm = "LSO"),
-  data.frame(code_dhs = "MA", code_gadm = "MAR"),
-  data.frame(code_dhs = "MB", code_gadm = "MDA"), # Moldova
-  data.frame(code_dhs = "MD", code_gadm = "MDG"), ### Madagascar?
-  data.frame(code_dhs = "ML", code_gadm = "MLI"), ### Mali
-  data.frame(code_dhs = "MM", code_gadm = "MMR"),
-  data.frame(code_dhs = "MW", code_gadm = "MWI"), #### Malawi
-  data.frame(code_dhs = "MZ", code_gadm = "MOZ"),
-  data.frame(code_dhs = "NG", code_gadm = "NGA"),
-  data.frame(code_dhs = "NM", code_gadm = "NAM"), # Namibia
-  data.frame(code_dhs = "NP", code_gadm = "NPL"),
-  data.frame(code_dhs = "PE", code_gadm = "PER"),
-  data.frame(code_dhs = "PH", code_gadm = "PHL"),
-  data.frame(code_dhs = "PK", code_gadm = "PAK"),
-  data.frame(code_dhs = "RW", code_gadm = "RWA"),
-  data.frame(code_dhs = "SL", code_gadm = "SLE"),
-  data.frame(code_dhs = "SN", code_gadm = "SEN"),
-  data.frame(code_dhs = "SZ", code_gadm = "SWZ"),
-  data.frame(code_dhs = "TD", code_gadm = "TCD"),
-  data.frame(code_dhs = "TG", code_gadm = "TGO"),
-  data.frame(code_dhs = "TJ", code_gadm = "TJK"),
-  data.frame(code_dhs = "TL", code_gadm = "TLS"),
-  data.frame(code_dhs = "TZ", code_gadm = "TZA"),
-  data.frame(code_dhs = "UG", code_gadm = "UGA"),
-  data.frame(code_dhs = "ZA", code_gadm = "ZAF"),
-  data.frame(code_dhs = "ZM", code_gadm = "ZMB"),
-  data.frame(code_dhs = "ZW", code_gadm = "ZWE")
-) %>%
-  mutate(code_dhs = code_dhs %>% as.character,
-         code_gadm = code_gadm %>% as.character)
-
-dhs_all_df_coll <- map_df(unique(dhs_all_df$country_code), function(cc_dhs){
-  print(cc_dhs)
-  
-  cc_gadm <- dhs_gadm_cw$code_gadm[dhs_gadm_cw$code_dhs %in% cc_dhs]
-  
-  df_i <- dhs_all_df_coll[dhs_all_df_coll$country_code %in% cc_dhs,]
-  gadm_i <- readRDS(file.path(data_dir, "GADM", "FinalData", "adm2", paste0("gadm36_",cc_gadm,"_2_sp.rds")))
-  
-  gadm_i[,c("GID_0", "GID_1", "GID_2",
-            "NAME_0", "NAME_1", "NAME_2")]
-  
-  # Random fold
-  within_country_fold <- rep_len(1:5, length.out = nrow(gadm_i)) %>% sample()
-  gadm_i$within_country_fold <- paste0(cc_dhs, "_", within_country_fold)
-  
-  sp_i <- df_i
-  coordinates(sp_i) <- ~longitude+latitude
-  crs(sp_i) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
-  
-  df_out <- over_nearest(sp_i, gadm_i)
-  
-  return(df_out)
-}) 
 
 # Country Name -----------------------------------------------------------------
 dhs_all_df_coll$iso2 <- countrycode(dhs_all_df_coll$country_code, origin = "dhs", destination = "iso2c")
@@ -463,11 +372,11 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
 
 # Export -----------------------------------------------------------------------
 ## All
-saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-write.csv(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
+saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.Rds"))
+#write.csv(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.csv"), row.names = F)
 
-saveRDS(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-write.csv(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic.csv"), row.names = F)
+#saveRDS(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.Rds"))
+#write.csv(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.csv"), row.names = F)
 
 
 

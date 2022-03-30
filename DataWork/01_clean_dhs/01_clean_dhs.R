@@ -277,6 +277,12 @@ process_dhs <- function(dir){
   if(length(wi_path) > 0){
     wi_df <- read_dta(wi_path)
     
+    # For Egypt in 2000, hhids didn't match; needed to remove extra while space
+    if(dir %>% str_detect("EG_2000")){
+      wi_df$whhid <- wi_df$whhid %>% str_squish() 
+      survey_df$hhid <- survey_df$hhid %>% str_squish() 
+    }
+
     survey_df <- survey_df %>%
       left_join(wi_df, c("hhid" = "whhid")) %>%
       dplyr::mutate(wi_from_diff_dataset = T)

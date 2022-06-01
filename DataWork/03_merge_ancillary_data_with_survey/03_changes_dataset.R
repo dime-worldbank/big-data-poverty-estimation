@@ -10,14 +10,14 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 
 df_agg <- df %>%
   dplyr::filter(year >= 2000) %>%
-  dplyr::select(country_code, gadm_uid, iso2, year, 
-                pca_allvars, 
+  dplyr::select(country_code, gadm_uid, iso2, year, within_country_fold, continent_adj, 
+                pca_allvars, wealth_index_score,
                 contains("l7_"),
                 contains("gc_"),
                 contains("ntlharmon_"),
                 contains("weather_"),
                 contains("pollution_aod_")) %>%
-  group_by(country_code, gadm_uid, iso2, year) %>%
+  group_by(country_code, gadm_uid, iso2, year, within_country_fold, continent_adj) %>%
   summarise_if(is.numeric, ~mean(., na.rm = T)) %>%
   ungroup() 
 
@@ -41,7 +41,7 @@ df_agg_diff <- map_df(1:max_lag, function(i){
   df_agg %>%
     dplyr::mutate(year_str = year %>% as.character()) %>%
     arrange(year) %>%
-    group_by(country_code, gadm_uid, iso2) %>%
+    group_by(country_code, gadm_uid, within_country_fold, continent_adj, iso2) %>%
     mutate_if(is.numeric, ~lag_x(., i)) %>%
     ungroup() %>%
     dplyr::rename(year_diff = year,
@@ -56,11 +56,23 @@ df_agg_diff <- df_agg_diff %>%
   dplyr::mutate(year_diff_max = year_diff == max(year_diff)) %>%
   ungroup()
 
+## Make complete
+df_agg_diff <- df_agg_diff %>%
+  dplyr::filter(!is.na(ntlharmon_avg),
+                !is.na(l7_B1),
+                !is.na(gc_190),
+                !is.na(weather_all_maximum_2m_air_temperature),
+                !is.na(pollution_aod_047))
+
 ## Number of observations within each country
 df_agg_diff <- df_agg_diff %>%
   group_by(year, country_code) %>%
   dplyr::mutate(n_obs = n()) %>%
   ungroup()
+
+## Make uid
+df_agg_diff <- df_agg_diff %>%
+  dplyr::mutate(uid = paste(country_code, gadm_uid, year, lag))
 
 # Export -----------------------------------------------------------------------
 saveRDS(df_agg_diff, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes.Rds"))

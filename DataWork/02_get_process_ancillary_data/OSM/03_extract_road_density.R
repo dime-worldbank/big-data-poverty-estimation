@@ -140,7 +140,6 @@ if(SURVEY_NAME %in% "OPM"){
 }
 
 country_codes_all <- survey_df$country_code %>% unique()
-country_codes_all <- country_codes_all[country_codes_all != "GY"]
 
 # 2. Load country_code to OSM dir data -----------------------------------------
 # Make dataset that has [country_code] and [osm_root_name] (root name of OSM dir)

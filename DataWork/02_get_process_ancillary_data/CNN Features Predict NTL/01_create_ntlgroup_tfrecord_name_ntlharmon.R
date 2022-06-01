@@ -1,7 +1,9 @@
 # Create bins for nighttime lights
 
+# For CNN: Data after 1999, as landsat 7, but still predict beforehand
+
 set.seed(4242)
-N_BINS <- 5
+N_BINS <- 3
 N_OBS_IN_TFR <- 250
 TEST_PROP <- 0.2
 
@@ -11,7 +13,7 @@ survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData",
                                    "survey_socioeconomic.Rds"))
 
 ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
-                              "ntl_harmonized.Rds"))
+                            "ntl_harmonized.Rds"))
 
 survey_all_df <- survey_all_df %>%
   left_join(ntl_df, by = c("uid", "year")) %>%
@@ -34,8 +36,17 @@ survey_df_clean_append <- map_df(years, function(year_i){
   }
   
   # Create bins ----------------------------------------------------------------
-  mclust_fit = Mclust(survey_df$ntlharmon_avg, G=N_BINS, model="V")
-  survey_df$ntl_group <- predict(mclust_fit, survey_df$ntlharmon_avg)$classification
+  #mclust_fit = Mclust(survey_df$ntlharmon_avg, G=N_BINS) # , model="V"
+  #survey_df$ntl_group <- predict(mclust_fit, survey_df$ntlharmon_avg)$classification
+  #table(survey_df$ntl_group)
+  
+  # Use same bins from Jean et al
+  survey_df <- survey_df %>%
+    dplyr::mutate(ntl_group = case_when(
+      ntlharmon_avg <= 3 ~ 1,
+      ntlharmon_avg > 3 & ntlharmon_avg <= 34 ~ 2,
+      ntlharmon_avg > 34 ~ 3
+    ))
   
   if(F){
     survey_df %>%
@@ -46,14 +57,19 @@ survey_df_clean_append <- map_df(years, function(year_i){
     table(survey_df$ntl_group)
   }
   # Create balanced groups -------------------------------------------------------
-  min_group_size <- survey_df$ntl_group %>%
+  survey_df <- survey_df %>%
+    arrange(runif(n()))
+  
+  survey_df_recent <- survey_df %>%
+    dplyr::filter(year >= 1999)
+  #survey_df_old <- survey_df %>%
+  #  dplyr::filter(year < 1999)
+  
+  min_group_size <- survey_df_recent$ntl_group %>%
     table() %>%
     as.data.frame() %>%
     pull(Freq) %>% 
     min()
-  
-  survey_df <- survey_df %>%
-    arrange(runif(n()))
   
   ### Split into groups
   # (1) For CNN - train
@@ -61,8 +77,8 @@ survey_df_clean_append <- map_df(years, function(year_i){
   # (3) For CNN - validation
   
   # Create survey with balanced groups
-  survey_df_forcnn <- map_df(unique(survey_df$ntl_group), function(i){
-    survey_df_gi <- survey_df[survey_df$ntl_group %in% i,]
+  survey_df_forcnn <- map_df(unique(survey_df_recent$ntl_group), function(i){
+    survey_df_gi <- survey_df_recent[survey_df_recent$ntl_group %in% i,]
     return(survey_df_gi[1:min_group_size,])
   })
   
@@ -78,6 +94,8 @@ survey_df_clean_append <- map_df(years, function(year_i){
   
   # Observations not used for cnn
   survey_df_nocnn <- survey_df[!(survey_df$uid %in% survey_df_forcnn$uid),]
+  #survey_df_nocnn <- bind_rows(survey_df_nocnn,
+  #                             survey_df_old)
   
   # Add TFRecord Name ------------------------------------------------------------
   # Folder name for storing individual tfrecords. Google drive complains when
@@ -144,5 +162,15 @@ survey_df_clean_append$ntl_group %>% table()
 survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn")] %>% table()
 survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_train")] %>% table()
 survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_test")] %>% table()
+
+cnn_all <- survey_df_clean_append$tfrecord_name %>% 
+  str_detect("forcnn") %>% sum()
+cnn_train <- survey_df_clean_append$tfrecord_name %>% 
+  str_detect("forcnn_train") %>% sum()
+cnn_test <- survey_df_clean_append$tfrecord_name %>% 
+  str_detect("forcnn_test") %>% sum()
+
+cnn_train/cnn_all
+cnn_test/cnn_all
 
 survey_df_clean_append$uid %>% table %>% table()

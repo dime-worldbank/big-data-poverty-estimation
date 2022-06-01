@@ -205,7 +205,7 @@ def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b): # nir_b, swir
     #return "Done"
 
 def prep_cnn_np(survey_df,
-                satellite,
+                satellite_name,
                 kernel_size,
                 year):
     '''
@@ -225,7 +225,18 @@ def prep_cnn_np(survey_df,
     list = ee.List.repeat(1, kernel_size)
     lists = ee.List.repeat(list, kernel_size)
     kernel = ee.Kernel.fixed(kernel_size, kernel_size, lists)
-
+    
+    # Define satellite
+    if satellite_name == 's2':
+        satellite = 's2'
+    elif satellite_name == 'landsat':
+        if year >= 2014:
+            satellite = 'l8'
+        else:
+            satellite = 'l7'
+    elif satellite_name == 'landsat_7':
+        satellite = 'l7'
+            
     # Define scale
     if satellite in ['l7', 'l8']:
         SCALE = 30
@@ -236,41 +247,41 @@ def prep_cnn_np(survey_df,
     
     # Year
     # VIIRS starts in 2012. At minimum, use 2013 to have year before and after
-    if False:
-        if year <= 2013:
-            year_use = 2013
-        else:
-            year_use = year
+    #if False:
+    #    if year <= 2013:
+    #        year_use = 2013
+    #    else:
+    #        year_use = year
 
-        year_plus = year_use + 1
-        year_minus = year_use - 1
+    #    year_plus = year_use + 1
+    #    year_minus = year_use - 1
 
-        year_minus_str = str(year_minus) + '-01-01'
-        year_plus_str = str(year_plus) + '-12-31'
+    #    year_minus_str = str(year_minus) + '-01-01'
+    #    year_plus_str = str(year_plus) + '-12-31'
 
         # Reduce image collection
-        ntl_image = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG')\
-            .filterDate(year_minus_str, year_plus_str)\
-            .median()
+    #    ntl_image = ee.ImageCollection('NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG')\
+    #        .filterDate(year_minus_str, year_plus_str)\
+    #        .median()
 
         # Select Bands  
-        ntl_image = ntl_image.select(['avg_rad'])
+    #    ntl_image = ntl_image.select(['avg_rad'])
 
         # Image to neighborhood array
-        ntl_arrays = ntl_image.neighborhoodToArray(kernel)
+    #    ntl_arrays = ntl_image.neighborhoodToArray(kernel)
 
         # Extract values from GEE    
-        ntl_values_ee = ntl_arrays.sample(
-          region = survey_fc, 
-          scale = SCALE,
-          tileScale = 10 #8
-        )
+    #    ntl_values_ee = ntl_arrays.sample(
+    #      region = survey_fc, 
+    #      scale = SCALE,
+    #      tileScale = 10 #8
+    #    )
 
-        ntl_dict_ee = ntl_values_ee.getInfo()
+    #    ntl_dict_ee = ntl_values_ee.getInfo()
 
         # Convert values to numpy array
         #n_rows = survey_df.shape[0]
-        ntl_f = ntl_dict_ee['features']    
+    #    ntl_f = ntl_dict_ee['features']    
         
     # l7 ----------------------------------------------------------------
     if satellite == "l7":
@@ -289,6 +300,14 @@ def prep_cnn_np(survey_df,
         BANDS.append(r_b)
         BANDS.append(nir_b)
         BANDS.append(swir_b)
+        
+        # Year
+        # landsat 8 starts in May 1999; if year is less than
+        # 2000, use 2000 as year (to ensure have year before and after)
+        if year < 2000:
+            year_use = 2000
+        else:
+            year_use = year
 
         # Year
         year_use = year
@@ -299,7 +318,7 @@ def prep_cnn_np(survey_df,
         year_minus_str = str(year_minus) + '-01-01'
         year_plus_str = str(year_plus) + '-12-31'
         
-        image = ee.ImageCollection('LANDSAT/LC07/C01/T1_SR')\
+        image = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR')\
             .filterDate(year_minus_str, year_plus_str)\
             .map(cloud_mask_landsatSR)\
             .median() #\

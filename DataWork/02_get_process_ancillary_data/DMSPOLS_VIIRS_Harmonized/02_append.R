@@ -1,4 +1,4 @@
-# Append Globcover Data
+# Append Harmonized NTL Data
 
 ## Load data
 ntl_all_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "ntl_harmonized") %>%

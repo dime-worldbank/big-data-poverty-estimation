@@ -112,7 +112,6 @@ osm_dir_df <- osm_dir_df %>%
 
 # 3. Extract density -----------------------------------------------------------
 country_codes_all <- unique(survey_sf$country_code)
-country_codes_all <- country_codes_all[country_codes_all != "GY"]
 
 for(country_code in country_codes_all){
   

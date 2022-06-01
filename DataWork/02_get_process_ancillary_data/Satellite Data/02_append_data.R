@@ -47,6 +47,8 @@ data_root_names <- list.files(GEE_PATH) %>%
   unique() %>%
   sort()
 
+data_root_names <- data_root_names[data_root_names != "_archive"]
+
 # Load and append --------------------------------------------------------------
 # Check how many observations each data file has
 df_nrow <- data.frame(NULL)

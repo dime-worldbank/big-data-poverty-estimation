@@ -12,9 +12,11 @@ clean_varnames <- function(df){
   df <- df %>%
     dplyr::mutate(variable_cat = case_when(
       variable %>% str_detect("viirs_") ~ "Nighttime Lights",
+      variable %>% str_detect("ntlharmon_") ~ "Nighttime Lights",
       variable %>% str_detect("gc_") ~ "Land Cover",
       variable %>% str_detect("osm_") ~ "OpenStreetMap",
       variable %>% str_detect("l8_") ~ "Daytime Imagery, Average",
+      variable %>% str_detect("l7_") ~ "Daytime Imagery, Average",
       variable %>% str_detect("cnn_s2_rgb_") ~ "Daytime Imagery, CNN: RGB",
       variable %>% str_detect("cnn_s2_ndvi_") ~ "Daytime Imagery, CNN: NDVI",
       variable %>% str_detect("cnn_s2_bu_") ~ "Daytime Imagery, CNN: BU",
@@ -79,6 +81,9 @@ clean_varnames <- function(df){
       variable_clean %in% "pollution_aod_047" ~ "AOD: Blue Band",
       variable_clean %in% "pollution_aod_055" ~ "AOD: Green Band",
       
+      variable_clean %in% "ntlharmon_avg" ~ "Nighttime Lights (Avg.)",
+      variable_clean %in% "ntlharmon_sd"  ~ "Nighttime Lights (Std. Dev.)",
+      
       variable_clean %in% "l8_B1" ~ "Band 1 - Ultra Blue",
       variable_clean %in% "l8_B2" ~ "Band 2 - Blue",
       variable_clean %in% "l8_B3" ~ "Band 3 - Green",
@@ -91,6 +96,16 @@ clean_varnames <- function(df){
       variable_clean %in% "l8_NDVI" ~ "NDVI",
       variable_clean %in% "l8_NDBI" ~ "NDBI",
       variable_clean %in% "l8_BU" ~ "BU",
+      
+      variable_clean %in% "l7_B1" ~ "Band 1 - Blue",
+      variable_clean %in% "l7_B2" ~ "Band 2 - Green",
+      variable_clean %in% "l7_B3" ~ "Band 3 - Red",
+      variable_clean %in% "l7_B4" ~ "Band 4 - Near Infrared",
+      variable_clean %in% "l7_B5" ~ "Band 5 - Shortwave Infrared 1",
+      variable_clean %in% "l7_B7" ~ "Band 7 - Shortwave Infrared 2",
+      variable_clean %in% "l7_NDVI" ~ "NDVI",
+      variable_clean %in% "l7_NDBI" ~ "NDBI",
+      variable_clean %in% "l7_BU" ~ "BU",
       
       variable_clean %in% "globalmod_mean" ~ "Index",
       
@@ -140,7 +155,7 @@ clean_varnames <- function(df){
         str_replace_all("2m", "") %>%
         str_squish() %>%
         tools::toTitleCase(),
-    
+      
       TRUE ~ variable_clean
     ))
   

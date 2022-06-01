@@ -45,6 +45,9 @@ gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
 # [Load] WorldClim -------------------------------------------------------------
 wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
+# [Load] Harmonized NTL --------------------------------------------------------
+ntlharmon_df <- readRDS(file.path(INV_DATA_DIR, "ntl_harmonized.Rds"))
+
 # [Load] Satellite data from GEE -----------------------------------------------
 #file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
 
@@ -78,6 +81,13 @@ l8_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
 
 l8_df <- l8_df %>%
   rename_at(vars(-uid, -year), ~ paste0("l8_", .))
+
+##### ** Landsat 7 #####
+l7_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                           paste0("l7_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
+
+l7_df <- l7_df %>%
+  rename_at(vars(-uid, -year), ~ paste0("l7_", .))
 
 ##### ** World pop #####
 ## Year of survey
@@ -227,7 +237,9 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           wc_df, 
                           viirs_df, 
                           viirs_sd_df,
+                          ntlharmon_df,
                           l8_df, 
+                          l7_df,
                           weather,
                           wp_df, 
                           elevslope, 

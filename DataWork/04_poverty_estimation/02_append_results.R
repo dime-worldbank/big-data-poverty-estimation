@@ -89,7 +89,8 @@ acc_df <- acc_df %>%
 # - cor_all only different than cor_country for other continents estimation
 
 acc_all_df <- acc_df %>%
-  group_by(estimation_type, estimation_type_clean,
+  group_by(level_change,
+           estimation_type, estimation_type_clean,
            feature_type, feature_type_clean,
            target_var, target_var_clean, 
            xg_max.depth, xg_eta, xg_nthread, xg_nrounds, xg_subsample, xg_objective,
@@ -101,6 +102,7 @@ acc_all_df <- acc_df %>%
 # Add rows for best estimation type WITHIN each set of parameters --------------
 acc_all_best_df <- acc_all_df %>%
   group_by(country, 
+           level_change,
            target_var, target_var_clean, 
            feature_type, feature_type_clean,
            xg_max.depth, xg_eta, xg_nthread, xg_nrounds, xg_subsample, xg_objective) %>%
@@ -119,6 +121,7 @@ acc_all_df <- bind_rows(
 # and country
 acc_all_best_param_df <- acc_all_df %>%
   group_by(country, 
+           level_change,
            estimation_type, estimation_type_clean,
            target_var, target_var_clean, 
            feature_type, feature_type_clean) %>%

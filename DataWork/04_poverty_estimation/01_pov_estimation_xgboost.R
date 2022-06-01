@@ -110,6 +110,7 @@ grid_search <- T
 # within_country_fold
 
 run_model <- function(df,
+                      level_change,
                       estimation_type_i,
                       feature_type_i,
                       target_var_i,
@@ -204,6 +205,7 @@ run_model <- function(df,
                                   uid = df_test$uid,
                                   country_code = df_test$country_code,
                                   fold = fold_i,
+                                  level_change = level_change,
                                   estimation_type = estimation_type_i,
                                   feature_type = feature_type_i,
                                   target_var = target_var_i,
@@ -235,7 +237,9 @@ run_model <- function(df,
         feat_imp_fold_df                 <- xgb.importance(model = xgb_model)
       }
       
+      feat_imp_fold_df$level_change    <- level_change
       feat_imp_fold_df$fold            <- fold_i
+      feat_imp_fold_df$level_change <- level_change
       feat_imp_fold_df$estimation_type <- estimation_type_i
       feat_imp_fold_df$target_var      <- target_var_i
       feat_imp_fold_df$country_group   <- country_i
@@ -245,6 +249,7 @@ run_model <- function(df,
     if(grid_search){
       grid_results_fold_df <- xgb_model$results %>%
         dplyr::mutate(fold = fold_i,
+                      level_change = level_change,
                       estimation_type = estimation_type_i,
                       target_var = target_var_i,
                       country_group = country_i)
@@ -363,7 +368,7 @@ for(level_change in c("changes", "levels")){
   for(estimation_type_i in estimation_type_vec){
     for(target_var_i in target_vars_vec){
       for(feature_type_i in feature_types){
-        for(country_i in rev(countries_vec)){
+        for(country_i in countries_vec){
           
           ## XG Boost Parameters
           for(xg_max.depth  in c(5, 10)){
@@ -433,7 +438,8 @@ for(level_change in c("changes", "levels")){
                       # Check if file exists/ should run -------------------------------------
                       if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
                         
-                        print(paste(estimation_type_i,
+                        print(paste(level_change,
+                                    estimation_type_i,
                                     target_var_i,
                                     feature_type_i,
                                     country_i,
@@ -486,6 +492,7 @@ for(level_change in c("changes", "levels")){
                         
                         # Run Model ----------------------------------------------------------
                         xg_results_list <- run_model(df = df_traintest,
+                                                     level_change = level_change,
                                                      estimation_type_i = estimation_type_i,
                                                      feature_type_i = feature_type_i,
                                                      target_var_i = target_var_i,
@@ -518,7 +525,8 @@ for(level_change in c("changes", "levels")){
                                                    results_df_i$prediction)
                         
                         acc_fold_df <- acc_fold_df %>%
-                          dplyr::mutate(estimation_type = estimation_type_i,
+                          dplyr::mutate(level_change = level_change,
+                                        estimation_type = estimation_type_i,
                                         feature_type = feature_type_i,
                                         target_var = target_var_i,
                                         country = country_i,

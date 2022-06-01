@@ -8,7 +8,8 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 # Calc Correlations ------------------------------------------------------------
 df_cor <- df %>%
   dplyr::filter(year_diff_max %in% T) %>%
-  pivot_longer(cols = -c(country_code, gadm_uid, iso2, year_diff, year, lag, pca_allvars)) %>%
+  pivot_longer(cols = -c(country_code, gadm_uid, iso2, year_diff, year, lag, 
+                         pca_allvars, wealth_index_score)) %>%
   dplyr::filter(!is.na(value)) %>%
   group_by(name, country_code, year, year_diff, lag) %>%
   dplyr::summarise(cor = cor(pca_allvars, value),

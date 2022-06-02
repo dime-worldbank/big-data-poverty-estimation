@@ -5,6 +5,21 @@
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes.Rds"))
 
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_predictions.Rds"))
+
+cor.test(survey_df$wealth_index_score, survey_df$pca_allvars)
+
+ggplot() +
+  geom_point(data = survey_df,
+             aes(x = predict_wealth_index_score_best,
+                 y = wealth_index_score))
+
+cor.test(survey_df$predict_wealth_index_score_best,
+         survey_df$wealth_index_score)
+
+
+survey_df$predict_pca_allvars_best
+
 # Calc Correlations ------------------------------------------------------------
 df_cor <- df %>%
   dplyr::filter(year_diff_max %in% T) %>%

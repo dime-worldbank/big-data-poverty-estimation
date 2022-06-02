@@ -183,7 +183,7 @@ for(aggregate_district in c(F, T)){
     )) %>%
     dplyr::mutate(r2 = cor^2)
   
-
+  
   if(aggregate_district){
     cor_mean_all_district <- mean(cor_df$r2)
     cor_mean_africa_district <- mean(cor_df$r2[cor_df$continent_adj %in% "Africa"])
@@ -195,7 +195,7 @@ for(aggregate_district in c(F, T)){
     cor_mean_americas <- mean(cor_df$r2[cor_df$continent_adj %in% "Americas"])
     cor_mean_eurasia <- mean(cor_df$r2[cor_df$continent_adj %in% "Eurasia"])
   }
-
+  
   cor_df$r2[cor_df$r2 <= 0.3] <- 0.3
   
   # Map --------------------------------------------------------------------------
@@ -205,7 +205,19 @@ for(aggregate_district in c(F, T)){
   
   world_sp@data <- world_sp@data %>%
     dplyr::select(name, continent) %>%
-    dplyr::rename(country_name = name)
+    dplyr::rename(country_name = name) %>%
+    dplyr::mutate(country_name = case_when(
+      country_name %in% "Dem. Rep. Congo" ~ "Congo - Kinshasa",
+      country_name %in% "Côte d'Ivoire" ~ "Côte d’Ivoire",
+      country_name %in% "Dominican Rep." ~ "Dominican Republic",
+      country_name %in% "Swaziland" ~ "Eswatini",
+      country_name %in% "Myanmar" ~ "Myanmar (Burma)",
+      TRUE ~ country_name
+    ))
+  
+  #cn <- survey_df$country_name %>% unique()
+  #cn[!(cn %in% world_sp$country_name)]
+  #world_sp$country_name %>% unique()
   
   world_sp <- merge(world_sp, cor_df, by = "country_name", all.x = T, all.y = F)
   
@@ -283,69 +295,69 @@ for(aggregate_district in c(F, T)){
             legend.position = c(0.05,0.18)) 
     
   } else{
-  
-  p_list[[p_list_i]] <- ggplot() +
-    geom_polygon(data = world_sp_tidy[is.na(world_sp_tidy$cor),],
-                 aes(x = long, y = lat, group = group),
-                 fill = "gray50",
-                 color = "white") +
-    #geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
-    #             aes(x = long, y = lat, group = group),
-    #             color = "black",
-    #             fill = "black",
-    #             size = 1) +
-    geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
-                 aes(x = long, y = lat, group = group,
-                     fill = r2),
-                 color = "black") +
-    geom_richtext(aes(label = paste0("All - Avg r<sup>2</sup>: ", round(cor_mean_all,2)),
-                      x = TEXT_X_MAP,
-                      y = TEXT_Y_TOP_MAP),
-                  color = "black",
-                  hjust = 0,
-                  fill = NA, 
-                  label.color = NA,
-                  size = FONT_SIZE) +
-    geom_richtext(aes(label = paste0("Africa - Avg r<sup>2</sup>: ", round(cor_mean_africa,2)),
-                      x = TEXT_X_MAP,
-                      y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
-                  color = "black",
-                  hjust = 0,
-                  fill = NA, 
-                  label.color = NA,
-                  size = FONT_SIZE) +
-    geom_richtext(aes(label = paste0("Americas - Avg r<sup>2</sup>: ", round(cor_mean_americas,2)),
-                      x = TEXT_X_MAP,
-                      y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
-                  color = "black",
-                  hjust = 0,
-                  fill = NA, 
-                  label.color = NA,
-                  size = FONT_SIZE) +
-    geom_richtext(aes(label = paste0("Eurasia - Avg r<sup>2</sup>: ", round(cor_mean_eurasia,2)),
-                      x = TEXT_X_MAP,
-                      y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
-                  color = "black",
-                  hjust = 0,
-                  fill = NA, 
-                  label.color = NA,
-                  size = FONT_SIZE) +
-    scale_fill_distiller(palette = "Spectral",
-                         direction = 0,
-                         limits = c(0.3, 0.949),
-                         #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
-                         labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
-    labs(fill = expression(r^2),
-         title = ifelse(aggregate_district,
-                        "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
-                        "B. r2 of Estimated vs True Wealth Score Within Countries"), 
-         caption = "") +
-    theme_void() +
-    coord_quickmap() +
-    coord_cartesian(xlim=c(-85,135),
-                    ylim=c(-34, 45)) +
-    theme(plot.title = element_text(face = "bold", size = 16),
-          legend.position = c(0.05,0.18)) 
+    
+    p_list[[p_list_i]] <- ggplot() +
+      geom_polygon(data = world_sp_tidy[is.na(world_sp_tidy$cor),],
+                   aes(x = long, y = lat, group = group),
+                   fill = "gray50",
+                   color = "white") +
+      #geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
+      #             aes(x = long, y = lat, group = group),
+      #             color = "black",
+      #             fill = "black",
+      #             size = 1) +
+      geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
+                   aes(x = long, y = lat, group = group,
+                       fill = r2),
+                   color = "black") +
+      geom_richtext(aes(label = paste0("All - Avg r<sup>2</sup>: ", round(cor_mean_all,2)),
+                        x = TEXT_X_MAP,
+                        y = TEXT_Y_TOP_MAP),
+                    color = "black",
+                    hjust = 0,
+                    fill = NA, 
+                    label.color = NA,
+                    size = FONT_SIZE) +
+      geom_richtext(aes(label = paste0("Africa - Avg r<sup>2</sup>: ", round(cor_mean_africa,2)),
+                        x = TEXT_X_MAP,
+                        y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
+                    color = "black",
+                    hjust = 0,
+                    fill = NA, 
+                    label.color = NA,
+                    size = FONT_SIZE) +
+      geom_richtext(aes(label = paste0("Americas - Avg r<sup>2</sup>: ", round(cor_mean_americas,2)),
+                        x = TEXT_X_MAP,
+                        y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
+                    color = "black",
+                    hjust = 0,
+                    fill = NA, 
+                    label.color = NA,
+                    size = FONT_SIZE) +
+      geom_richtext(aes(label = paste0("Eurasia - Avg r<sup>2</sup>: ", round(cor_mean_eurasia,2)),
+                        x = TEXT_X_MAP,
+                        y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
+                    color = "black",
+                    hjust = 0,
+                    fill = NA, 
+                    label.color = NA,
+                    size = FONT_SIZE) +
+      scale_fill_distiller(palette = "Spectral",
+                           direction = 0,
+                           limits = c(0.3, 0.949),
+                           #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
+                           labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
+      labs(fill = expression(r^2),
+           title = ifelse(aggregate_district,
+                          "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
+                          "B. r2 of Estimated vs True Wealth Score Within Countries"), 
+           caption = "") +
+      theme_void() +
+      coord_quickmap() +
+      coord_cartesian(xlim=c(-85,135),
+                      ylim=c(-34, 45)) +
+      theme(plot.title = element_text(face = "bold", size = 16),
+            legend.position = c(0.05,0.18)) 
   }
   
   p_list_i <- p_list_i + 1
@@ -424,8 +436,8 @@ for(aggregate_district in c(F, T)){
 # Arrange/Export ---------------------------------------------------------------
 p1 <- ggarrange(p_list[[1]] + theme(legend.position = "none"),
                 p_list[[2]],
-               ncol = 2,
-               widths = c(0.4, 0.6))
+                ncol = 2,
+                widths = c(0.4, 0.6))
 
 p2 <- ggarrange(p_list[[3]] + theme(legend.position = "none"),
                 p_list[[4]],

@@ -43,6 +43,7 @@ acc_df <- acc_df %>%
   )) %>%
   dplyr::mutate(feature_type_clean = case_when(
     feature_type == "all" ~ "All Features",
+    feature_type == "all_changes" ~ "All Features",
     feature_type == "cnn_s2_bu" ~ "CNN: Built-Up Index",
     feature_type == "cnn_s2_ndvi" ~ "CNN: NDVI",
     feature_type == "cnn_s2_rgb" ~ "CNN: RGB",
@@ -50,12 +51,16 @@ acc_df <- acc_df %>%
     feature_type == "fb" ~ "Facebook",
     feature_type == "satellites" ~ "Satellites",
     feature_type == "viirs" ~ "Nighttime Lights",
+    feature_type == "ntlharmon" ~ "Nighttime Lights",
     feature_type == "landcover" ~ "Landcover",
     feature_type == "weatherclimate" ~ "Weather/Climate",
+    feature_type == "weather" ~ "Weather",
     feature_type == "gc" ~ "Landcover - GlobCover",
     feature_type == "l8" ~ "Daytime Imagery - Average",
+    feature_type == "l7" ~ "Daytime Imagery - Average",
     feature_type == "osm" ~ "OpenStreetMap",
     feature_type == "pollution" ~ "Pollution",
+    feature_type == "pollution_aod" ~ "Pollution",
     #feature_type == "" ~ "",
     TRUE ~ feature_type
   )) %>%
@@ -90,6 +95,7 @@ acc_df <- acc_df %>%
 
 acc_all_df <- acc_df %>%
   group_by(level_change,
+           n,
            estimation_type, estimation_type_clean,
            feature_type, feature_type_clean,
            target_var, target_var_clean, 

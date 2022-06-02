@@ -272,7 +272,7 @@ run_model <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("changes", "levels")){
+for(level_change in c("changes")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% "levels"){
@@ -372,11 +372,11 @@ for(level_change in c("changes", "levels")){
         for(country_i in countries_vec){
           
           ## XG Boost Parameters
-          for(xg_max.depth  in c(5, 10)){
+          for(xg_max.depth  in c(2, 3, 5, 10)){
             for(xg_eta in c(0.1)){
-              for(xg_nthread in c(4)){
-                for(xg_nrounds in c(50)){
-                  for(xg_subsample in c(0.3)){
+              for(xg_nthread in c(4, 8)){
+                for(xg_nrounds in c(50, 100)){
+                  for(xg_subsample in c(0.1, 0.3, 0.5, 0.7)){
                     for(xg_objective in c("reg:squarederror")){
                       
                       # Skip -----------------------------------------------------------------

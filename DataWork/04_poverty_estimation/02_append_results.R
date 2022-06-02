@@ -102,6 +102,7 @@ acc_all_df <- acc_df %>%
 # Add rows for best estimation type WITHIN each set of parameters --------------
 acc_all_best_df <- acc_all_df %>%
   group_by(country, 
+           n,
            level_change,
            target_var, target_var_clean, 
            feature_type, feature_type_clean,
@@ -121,6 +122,7 @@ acc_all_df <- bind_rows(
 # and country
 acc_all_best_param_df <- acc_all_df %>%
   group_by(country, 
+           n,
            level_change,
            estimation_type, estimation_type_clean,
            target_var, target_var_clean, 

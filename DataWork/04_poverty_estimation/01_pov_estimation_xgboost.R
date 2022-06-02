@@ -313,9 +313,10 @@ for(level_change in c("changes", "levels")){
                              "continent_eurasia_country_pred", 
                              "continent") # "continent" means "other continents"
     
-    target_vars_vec <- c("pca_allvars", 
-                         "pca_physicalvars",
-                         "pca_nonphysicalvars",
+    target_vars_vec <- c("pca_allvars",
+                         "pca_allvars_mr", 
+                         "pca_physicalvars_mr",
+                         "pca_nonphysicalvars_mr",
                          "wealth_index_score")
     
     countries_vec <- c("all", unique(df$country_code))
@@ -535,7 +536,8 @@ for(level_change in c("changes", "levels")){
                                         xg_nthread = xg_nthread,
                                         xg_nrounds = xg_nrounds,
                                         xg_subsample = xg_subsample,
-                                        xg_objective = xg_objective)
+                                        xg_objective = xg_objective,
+                                        n = nrow(df_traintest))
                         
                         # Export Results -----------------------------------------------------
                         saveRDS(xg_results_list$feat_imp_df, FI_OUT)

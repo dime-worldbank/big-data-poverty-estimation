@@ -30,7 +30,7 @@ max_lag <- df_agg %>%
   pull(n) %>%
   max()
 
-lag_x <- function(x, n){
+diff_x <- function(x, n){
   # x ~ Value
   # n ~ Lag amount (1 lag, 2 lag, etc)
   x - lag(x, n)
@@ -42,7 +42,7 @@ df_agg_diff <- map_df(1:max_lag, function(i){
     dplyr::mutate(year_str = year %>% as.character()) %>%
     arrange(year) %>%
     group_by(country_code, gadm_uid, within_country_fold, continent_adj, iso2) %>%
-    mutate_if(is.numeric, ~lag_x(., i)) %>%
+    mutate_if(is.numeric, ~diff_x(., i)) %>%
     ungroup() %>%
     dplyr::rename(year_diff = year,
                   year      = year_str) %>%

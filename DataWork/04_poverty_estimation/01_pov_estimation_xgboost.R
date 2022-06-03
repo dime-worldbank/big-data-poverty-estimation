@@ -272,7 +272,7 @@ run_model <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("changes")){ # "changes", "levels"
+for(level_change in c("changes_clusters")){ # "changes", "levels", changes_clusters
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% "levels"){
@@ -312,6 +312,7 @@ for(level_change in c("changes")){ # "changes", "levels"
                              "continent_americas_country_pred",
                              "continent_eurasia_country_pred", 
                              "continent") # "continent" means "other continents"
+    
     
     target_vars_vec <- c("pca_allvars",
                          "pca_allvars_mr", 
@@ -366,6 +367,46 @@ for(level_change in c("changes")){ # "changes", "levels"
     countries_vec <- c("all", unique(df$country_code))
   } 
   
+  # Changes - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  if(level_change %in% "changes_clusters"){
+    
+    #### Load data
+    df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+                            "survey_alldata_clean_changes_cluster.Rds"))
+    
+    #### Define parameters
+    feature_types_indiv <- c("ntlharmon",
+                             #"cnn_s2_rgb", 
+                             #"cnn_s2_ndvi", 
+                             #"cnn_s2_bu", 
+                             #"cnn_s2",
+                             "l7",
+                             "gc",
+                             "weather",
+                             "pollution_aod") 
+    
+    feature_types_all_but_indiv <- paste0("all_not_", 
+                                          c(feature_types_indiv)) 
+    
+    feature_types <- c(feature_types_indiv,
+                       #feature_types_all_but_indiv,
+                       "all_changes")
+    
+    estimation_type_vec <- c("within_country_cv",
+                             "global_country_pred",
+                             "continent_africa_country_pred",
+                             "continent_americas_country_pred",
+                             "continent_eurasia_country_pred", 
+                             "continent") # "continent" means "other continents"
+    
+    target_vars_vec <- c("pca_allvars", 
+                         #"pca_physicalvars",
+                         #"pca_nonphysicalvars",
+                         "wealth_index_score")
+    
+    countries_vec <- c("all", unique(df$country_code))
+  } 
+  
   for(estimation_type_i in estimation_type_vec){
     for(target_var_i in target_vars_vec){
       for(feature_type_i in feature_types){
@@ -376,7 +417,7 @@ for(level_change in c("changes")){ # "changes", "levels"
             for(xg_eta in c(0.1)){
               for(xg_nthread in c(4, 8)){
                 for(xg_nrounds in c(50, 100)){
-                  for(xg_subsample in c(0.1, 0.3, 0.5, 0.7)){
+                  for(xg_subsample in c(0.1, 0.3)){
                     for(xg_objective in c("reg:squarederror")){
                       
                       # Skip -----------------------------------------------------------------

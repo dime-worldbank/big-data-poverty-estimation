@@ -13,12 +13,24 @@ p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                         "accuracy_appended.Rds"))
 
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_predictions.Rds"))
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
+
+survey_df <- survey_df %>%
+  group_by(gadm_uid, country_code) %>%
+  summarise_if(is.numeric, mean)
+
+survey_df %>%
+  ggplot() +
+  geom_point(aes(x = pca_allvars,
+                 y = predict_pca_allvars_within_country_cv_all_changes))
+
+cor.test(survey_df$pca_allvars,
+         survey_df$predict_pca_allvars_within_country_cv_all_changes)
 
 # Prep data --------------------------------------------------------------------
 ## Filter
 xg_param_set_best_df <- df %>%
-  dplyr::filter(level_change %in% "changes",
+  dplyr::filter(level_change %in% "changes_clusters",
                 feature_type %in% "all_changes",
                 target_var %in% "pca_allvars",
                 estimation_type %in% "within_country_cv") %>%
@@ -26,7 +38,7 @@ xg_param_set_best_df <- df %>%
   dplyr::summarise(r2_mean = mean(r2),
                    r2_median = median(r2),
                    r2_max = max(r2)) %>%
-  arrange(-r2_mean)
+  arrange(-r2_median)
 
 xg_param_set_best <- xg_param_set_best_df %>%
   head(1) %>%
@@ -195,7 +207,7 @@ p_boxplot_tsample <- df %>%
   labs(x = NULL,
        y = expression(r^2),
        title = "C. Performance by training sample type") +
-  scale_y_continuous(limits = c(0,0.6)) +
+  #scale_y_continuous(limits = c(0,0.6)) +
   theme_classic() +
   theme(legend.position = "none",
         axis.text.y = element_text(face = "bold"),
@@ -221,7 +233,7 @@ p_boxplot_feature <- df %>%
   labs(x = NULL,
        y = expression(r^2),
        title = "D. Performance using different features") +
-  scale_y_continuous(limits = c(0,0.6)) +
+  #scale_y_continuous(limits = c(0,0.6)) +
   theme_classic() +
   theme(legend.position = "none",
         axis.text.y = element_text(face = "bold"),

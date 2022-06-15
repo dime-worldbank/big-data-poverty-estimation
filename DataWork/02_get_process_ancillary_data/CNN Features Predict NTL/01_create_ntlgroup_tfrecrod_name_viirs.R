@@ -3,7 +3,7 @@
 # For CNN: Data after 2000, as landsat 7, but still predict beforehand
 
 set.seed(4242)
-N_BINS <- 3
+N_BINS <- 5
 N_OBS_IN_TFR <- 250
 TEST_PROP <- 0.2
 INDIA_UNDER_SAMPLE <- T
@@ -16,11 +16,12 @@ for(INDIA_UNDER_SAMPLE in c(T, F)){
                                      "survey_socioeconomic.Rds"))
   
   ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
-                              "ntl_harmonized.Rds"))
+                              "satellite_data_from_gee", 
+                              "viirs_1120_ubuff1120_rbuff1120.Rds"))
   
   survey_all_df <- survey_all_df %>%
     left_join(ntl_df, by = c("uid", "year")) %>%
-    dplyr::filter(!is.na(ntlharmon_avg)) %>%
+    dplyr::filter(!is.na(avg_rad)) %>%
     arrange(runif(n()))
   
   if(SURVEY_NAME %in% "DHS"){
@@ -39,17 +40,8 @@ for(INDIA_UNDER_SAMPLE in c(T, F)){
     }
     
     # Create bins ----------------------------------------------------------------
-    #mclust_fit = Mclust(survey_df$ntlharmon_avg, G=N_BINS) # , model="V"
-    #survey_df$ntl_group <- predict(mclust_fit, survey_df$ntlharmon_avg)$classification
-    #table(survey_df$ntl_group)
-    
-    # Use same bins from Jean et al
-    survey_df <- survey_df %>%
-      dplyr::mutate(ntl_group = case_when(
-        ntlharmon_avg <= 3 ~ 1,
-        ntlharmon_avg > 3 & ntlharmon_avg <= 34 ~ 2,
-        ntlharmon_avg > 34 ~ 3
-      ))
+    mclust_fit = Mclust(survey_df$avg_rad, G=N_BINS, model="V")
+    survey_df$ntl_group <- predict(mclust_fit, survey_df$avg_rad)$classification
     
     # Create balanced groups -------------------------------------------------------
     survey_df <- survey_df %>%
@@ -63,14 +55,14 @@ for(INDIA_UNDER_SAMPLE in c(T, F)){
         x = c(0,1),
         size = length(survey_df$keep[survey_df$country_code %in% "IA"]),
         replace = T,
-        prob = c(0.8, 0.2)
+        prob = c(0.9, 0.1)
       )
-    }
+    }  
     
     survey_df_recent <- survey_df %>%
-      dplyr::filter(year >= 2000,
-                    most_recent_survey %in% T,
-                    keep %in% 1)
+      dplyr::filter(year >= 2012,
+                    keep %in% T,
+                    most_recent_survey %in% T)
     
     min_group_size <- survey_df_recent$ntl_group %>%
       table() %>%
@@ -155,17 +147,18 @@ for(INDIA_UNDER_SAMPLE in c(T, F)){
   
   write.csv(survey_df_clean_append, file.path(data_dir, SURVEY_NAME, "FinalData",
                                               "Individual Datasets",
-                                              paste0("data_for_cnn_ntlharmon_iaunder",INDIA_UNDER_SAMPLE,".csv")),
+                                              paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,".csv")),
             row.names = F)
   
   
   write.csv(survey_df_clean_append, file.path(gdrive_dir,
                                               "Data", SURVEY_NAME, "FinalData",
                                               "Individual Datasets",
-                                              paste0("data_for_cnn_ntlharmon_iaunder",INDIA_UNDER_SAMPLE,".csv")),
+                                              paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,".csv")),
             row.names = F)
   
 }
+
 
 survey_df_clean_append$c <- survey_df_clean_append$uid %>% substring(1,2)
 cnn_df <- survey_df_clean_append[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn"),]

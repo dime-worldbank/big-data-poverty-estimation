@@ -3,21 +3,29 @@
 
 set.seed(42)
 
-# Load Data --------------------------------------------------------------------
+# Load data --------------------------------------------------------------------
 dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", 
                                 "survey_socioeconomic_hhlevel.Rds"))
 
+# Subset data ------------------------------------------------------------------
 ## Subset - needs coordinates
 dhs_all_df <- dhs_all_df %>%
-  dplyr::filter(!is.na(latitude))
+  dplyr::filter(!is.na(latitude),
+                year >= 2000)
 
-# Add most recent survey variable ----------------------------------------------
+# Add (a) most recent and (b) oldest survey variables --------------------------
 dhs_all_df <- dhs_all_df %>%
   dplyr::group_by(country_code) %>%
-  dplyr::mutate(latest_survey_country = max(year)) %>%
+  dplyr::mutate(survey_year_max = max(year),
+                survey_year_min = min(year)) %>%
   dplyr::ungroup() %>%
-  dplyr::mutate(most_recent_survey = latest_survey_country == year) %>%
-  dplyr::select(-latest_survey_country)
+  dplyr::mutate(most_recent_survey = survey_year_max == year,
+                oldest_survey = survey_year_min == year) %>%
+  dplyr::select(-c(survey_year_min, survey_year_max))
+
+## Subset to recent + oldest survey
+dhs_all_df <- dhs_all_df %>%
+  dplyr::filter(most_recent_survey | oldest_survey)
 
 # Cleanup wealth index ---------------------------------------------------------
 dhs_all_df <- dhs_all_df %>%
@@ -354,7 +362,7 @@ dhs_all_df <- dhs_all_df %>%
   ))
 
 dhs_all_df_coll <- dhs_all_df %>%
-  group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey) %>%
+  group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey, oldest_survey) %>%
   summarise_if(is.numeric, mean, na.rm=T) %>%
   ungroup()
 
@@ -371,14 +379,7 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
   dplyr::mutate(uid = uid %>% as.character())
 
 # Export -----------------------------------------------------------------------
-## All
 saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.Rds"))
-#write.csv(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.csv"), row.names = F)
-
-#saveRDS(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.Rds"))
-#write.csv(dhs_all_df_coll, file.path(gdrive_dir, "Data", "DHS", "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.csv"), row.names = F)
-
-
 
 
 

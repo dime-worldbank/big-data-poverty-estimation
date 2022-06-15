@@ -302,7 +302,7 @@ def prep_cnn_np(survey_df,
         BANDS.append(swir_b)
         
         # Year
-        # landsat 8 starts in May 1999; if year is less than
+        # landsat 7 starts in May 1999; if year is less than
         # 2000, use 2000 as year (to ensure have year before and after)
         if year < 2000:
             year_use = 2000

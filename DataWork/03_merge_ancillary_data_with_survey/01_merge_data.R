@@ -5,10 +5,6 @@ INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datase
 # [Load] Survey data -----------------------------------------------------------
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
-#survey_df <- survey_df[survey_df$most_recent_survey %in% T,]
-#a <- survey_df[!(survey_df$uid %in% osm_poi_df$uid),]
-#a$country_code %>% unique()
-
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
 
@@ -51,7 +47,7 @@ ntlharmon_df <- readRDS(file.path(INV_DATA_DIR, "ntl_harmonized.Rds"))
 # [Load] Satellite data from GEE -----------------------------------------------
 #file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
 
-##### ** VIIRS, Median #####
+##### ** VIIRS, Mean #####
 viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                               paste0("viirs_",
                                      BUFFER_SATELLITE,
@@ -63,17 +59,29 @@ viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
 viirs_df <- viirs_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
 
-##### ** VIIRS, Std. Dev #####
-viirs_sd_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
-                                 paste0("viirs_sd_",
-                                        BUFFER_SATELLITE,
-                                        "_ubuff",
-                                        BUFFER_SATELLITE,
-                                        "_rbuff",
-                                        BUFFER_SATELLITE,".Rds")))
+##### ** VIIRS, SD Time #####
+viirs_sdtime_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                     paste0("viirs_sdtime_",
+                                            BUFFER_SATELLITE,
+                                            "_ubuff",
+                                            BUFFER_SATELLITE,
+                                            "_rbuff",
+                                            BUFFER_SATELLITE,".Rds")))
 
-viirs_sd_df <- viirs_sd_df %>%
-  rename_at(vars(-uid, -year), ~ paste0("viirs_", .) %>% tolower())
+viirs_sdtime_df <- viirs_sdtime_df %>%
+  dplyr::rename(viirs_avg_rad_sdtime = avg_rad_stdDev)
+
+##### ** VIIRS, SD Space #####
+viirs_sdspace_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                      paste0("viirs_sdspace_",
+                                             BUFFER_SATELLITE,
+                                             "_ubuff",
+                                             BUFFER_SATELLITE,
+                                             "_rbuff",
+                                             BUFFER_SATELLITE,".Rds")))
+
+viirs_sdspace_df <- viirs_sdspace_df %>%
+  dplyr::rename(viirs_avg_rad_sdspace = avg_rad)
 
 ##### ** Landsat 8 #####
 l8_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
@@ -88,6 +96,20 @@ l7_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
 
 l7_df <- l7_df %>%
   rename_at(vars(-uid, -year), ~ paste0("l7_", .))
+
+##### ** Landsat 7 SD Time #####
+l7_sdtime_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                  paste0("l7_sdtime_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
+
+l7_sdtime_df <- l7_sdtime_df %>%
+  rename_at(vars(-uid, -year), ~ paste0("l7_", .) %>% str_replace_all("stdDev", "sdtime") %>% tolower())
+
+##### ** Landsat 7 SD Space #####
+l7_sdspace_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                   paste0("l7_sdspace_ubuff",BUFFER_SATELLITE,"_rbuff",BUFFER_SATELLITE,".Rds")))
+
+l7_sdspace_df <- l7_sdspace_df %>%
+  rename_at(vars(-uid, -year), ~ paste0("l7_", ., "_sdspace") %>% tolower())
 
 ##### ** World pop #####
 ## Year of survey
@@ -236,10 +258,13 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           gc_df, 
                           wc_df, 
                           viirs_df, 
-                          viirs_sd_df,
+                          viirs_sdtime_df,
+                          viirs_sdspace_df,
                           ntlharmon_df,
                           l8_df, 
                           l7_df,
+                          l7_sdtime_df,
+                          l7_sdspace_df,
                           weather,
                           wp_df, 
                           elevslope, 

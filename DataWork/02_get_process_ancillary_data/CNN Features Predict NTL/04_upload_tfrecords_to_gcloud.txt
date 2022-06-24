@@ -3,8 +3,11 @@
 # Install gsutil
 # sudo pip install gsutil
 
-gsutil config 
+# gsutil config 
+sudo gcloud auth login
+
+gcloud config set project prob
 
 # -m flag: parallel processing (I think)?
 # -n flag: skip if already exists
-gsutil -m cp -n ~/Google\ Drive/World\ Bank/IEs/Pakistan\ Poverty\ Estimation/Data/DHS/FinalData/Individual\ Datasets/cnn_s2/tfrecords/*.tfrecord gs://ieconnectpovest/cnn_s2/tfrecords
+sudo gsutil -m cp -n ~/Google\ Drive/World\ Bank/IEs/Pakistan\ Poverty\ Estimation/Data/DHS/FinalData/Individual\ Datasets/cnn_landsat_viirs_underiaFalse/tfrecords/*.tfrecord gs://ieconnectpovest/cnn_landsat_viirs_underiaFalse/tfrecords

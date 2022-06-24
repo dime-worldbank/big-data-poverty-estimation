@@ -27,13 +27,13 @@ names(osm_road_df) <- names(osm_road_df) %>%
 
 # [Load] CNN Features ----------------------------------------------------------
 cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                "cnn_features_s2_rgb_pca.Rds"))
+                                "cnn_features_landsat_viirs_underiaFalse_rgb_pca.Rds"))
 
-cnn_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                 "cnn_features_s2_ndvi_pca.Rds"))
+#cnn_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+#                                 "cnn_features_landsat_viirs_underiaFalse_ndvi_pca.Rds"))
 
-cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                               "cnn_features_s2_bu_pca.Rds"))
+#cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+#                               "cnn_features_landsat_viirs_underiaFalse_bu_pca.Rds"))
 
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))

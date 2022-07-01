@@ -15,24 +15,12 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_resu
 
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-survey_df <- survey_df %>%
-  group_by(gadm_uid, country_code) %>%
-  summarise_if(is.numeric, mean)
-
-survey_df %>%
-  ggplot() +
-  geom_point(aes(x = pca_allvars,
-                 y = predict_pca_allvars_within_country_cv_all_changes))
-
-cor.test(survey_df$pca_allvars,
-         survey_df$predict_pca_allvars_within_country_cv_all_changes)
-
 # Prep data --------------------------------------------------------------------
 ## Filter
 xg_param_set_best_df <- df %>%
-  dplyr::filter(level_change %in% "changes_clusters",
+  dplyr::filter(level_change %in% "changes",
                 feature_type %in% "all_changes",
-                target_var %in% "pca_allvars",
+                target_var %in% "pca_allvars", # "pca_allvars",
                 estimation_type %in% "within_country_cv") %>%
   group_by(xg_param_set) %>%
   dplyr::summarise(r2_mean = mean(r2),
@@ -47,9 +35,6 @@ xg_param_set_best <- xg_param_set_best_df %>%
 df <- df %>%
   dplyr::filter(level_change %in% "changes",
                 xg_param_set %in% xg_param_set_best) # 10_0_1_4_50_0_3_reg_squarederror, 5_0_1_4_50_0_3_reg_squarederror
-
-survey_df <- survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_within_country_cv_all_changes))
 
 ## Add variables to results data
 survey_sum_df <- survey_df %>%
@@ -92,6 +77,44 @@ p_scatter <- survey_df %>%
         axis.title = element_text(face = "bold"),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) 
+
+# Precision/recall -------------------------------------------------------------
+# Precision and recall at the cluster level
+
+survey_df <- survey_df %>%
+  dplyr::mutate(pca_allvars_pos = pca_allvars > 0,
+                predict_pca_allvars_within_country_cv_all_changes_pos = predict_pca_allvars_within_country_cv_all_changes > 0)
+
+
+r2_all_d <- cor(survey_df$pca_allvars,   
+                survey_df$predict_pca_allvars_within_country_cv_all_changes)^2
+
+
+# Scatterplot: district --------------------------------------------------------
+survey_district_df <- survey_df %>%
+  group_by(gadm_uid, country_code, continent_adj) %>%
+  summarise_if(is.numeric, mean)
+
+survey_district_df %>%
+  ggplot() +
+  geom_point(aes(x = pca_allvars,
+                 y = predict_pca_allvars_within_country_cv_all_changes),
+             size = 0.5) +
+  facet_wrap(~continent_adj)
+
+a <- survey_district_df[survey_district_df$continent_adj %in% "Eurasia",]
+cor(a$pca_allvars, a$predict_pca_allvars_within_country_cv_all_changes)^2
+
+survey_df %>%
+  ggplot() +
+  geom_point(aes(x = pca_allvars,
+                 y = predict_pca_allvars_within_country_cv_all_changes),
+             size = 0.5) +
+  facet_wrap(~continent_adj)
+
+a <- survey_district_df[survey_district_df$continent_adj %in% "Africa",]
+cor(a$pca_allvars, a$predict_pca_allvars_within_country_cv_all_changes)^2
+
 
 # Figure: Map ------------------------------------------------------------------
 ## Stats

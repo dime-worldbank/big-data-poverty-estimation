@@ -398,7 +398,7 @@ def prep_cnn_np(survey_df,
         BANDS.append(swir_b)
         
         # Year
-        # sentinel starts in March 2017; juse use 2018
+        # sentinel starts in March 2017; just use 2018
         year_use = 2019
                     
         year_plus = year_use + 1

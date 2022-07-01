@@ -1,6 +1,6 @@
 # Correlations: Changes
 
-# TODO: Add CNN variables
+# TODO: Rank cor?
 
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
@@ -16,8 +16,16 @@ df_cor <- df %>%
                    n_obs = n()) %>%
   dplyr::rename(variable = name) %>%
   clean_varnames() %>%
-  dplyr::filter(!is.na(cor)) 
-
+  dplyr::filter(!is.na(cor)) %>%
+  
+  # Count number of countries. For example, if variable has no variation in 
+  # variable, then correlation will be NA. Only keep variables if all countries
+  # have variation in data.
+  group_by(variable) %>%
+  dplyr::mutate(n_country = n()) %>%
+  ungroup() %>%
+  dplyr::filter(n_country == max(n_country))
+  
 ## Take top 2 in each category
 vars_to_use <- df_cor %>%
   group_by(variable,

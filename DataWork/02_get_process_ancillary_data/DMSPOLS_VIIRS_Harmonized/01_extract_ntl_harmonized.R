@@ -51,7 +51,7 @@ extract_ntl_harmon <- function(df_country,
 }
 
 # Implement Function and Export ------------------------------------------------
-for(buffer_i in BUFFER_SATELLITE){
+for(buffer_i in c(BUFFER_SATELLITE, 1120, 3360)){
   for(country_i in unique(df$country_code)){
     
     df_country <- df[df$country_code %in% country_i,]

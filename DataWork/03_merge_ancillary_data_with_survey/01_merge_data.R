@@ -27,13 +27,13 @@ names(osm_road_df) <- names(osm_road_df) %>%
 
 # [Load] CNN Features ----------------------------------------------------------
 cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                "cnn_features_landsat_viirs_underiaFalse_rgb_pca.Rds"))
+                                "cnn_features_landsat_viirs_underiaFalse_b_rgb_pca.Rds"))
 
-#cnn_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-#                                 "cnn_features_landsat_viirs_underiaFalse_ndvi_pca.Rds"))
+cnn_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                 "cnn_features_landsat_viirs_underiaFalse_b_ndvi_pca.Rds"))
 
-#cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-#                               "cnn_features_landsat_viirs_underiaFalse_bu_pca.Rds"))
+cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                               "cnn_features_landsat_viirs_underiaFalse_b_bu_pca.Rds"))
 
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
@@ -42,7 +42,7 @@ gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
 wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
 # [Load] Harmonized NTL --------------------------------------------------------
-ntlharmon_df <- readRDS(file.path(INV_DATA_DIR, "ntl_harmonized.Rds"))
+ntlharmon_df <- readRDS(file.path(INV_DATA_DIR, paste0("ntl_harmonized_",BUFFER_SATELLITE,".Rds")))
 
 # [Load] Satellite data from GEE -----------------------------------------------
 #file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
@@ -252,7 +252,11 @@ survey_ancdata_df <- list(survey_df,
                           cnn_bu_df,
                           osm_poi_df, 
                           osm_road_df) %>%
-  reduce(full_join, by = "uid")
+  reduce(full_join, by = "uid") %>%
+  dplyr::filter(!is.na(country_code))
+
+dff <- pollution_df #???
+paste(dff$uid, dff$year) %>% table %>% table
 
 survey_ancdata_df <- list(survey_ancdata_df,
                           gc_df, 
@@ -262,7 +266,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           viirs_sdspace_df,
                           ntlharmon_df,
                           l8_df, 
-                          l7_df,
+                          l7_df, ## FIX
                           l7_sdtime_df,
                           l7_sdspace_df,
                           weather,
@@ -271,7 +275,8 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           #gbmod_df, 
                           aod_df,
                           pollution_df) %>%
-  reduce(full_join, by = c("uid", "year"))
+  reduce(full_join, by = c("uid", "year")) %>%
+  dplyr::filter(!is.na(country_code))
 
 #### LATER DELETE
 if(SURVEY_NAME %in% "PAK_CITY_POINTS"){

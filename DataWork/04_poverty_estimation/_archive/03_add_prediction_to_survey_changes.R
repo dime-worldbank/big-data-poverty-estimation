@@ -1,7 +1,10 @@
 # Add select predictions to survey
 
 # Load Data --------------------------------------------------------------------
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes.Rds"))
+
+survey_df <- survey_df %>%
+  dplyr::filter(year_diff_max %in% T)
 
 # Load accuracy stats; either load best or specific param
 #file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results") %>%
@@ -10,13 +13,12 @@ survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datas
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                             "accuracy_appended_bestparam.Rds"))
 acc_df <- acc_df %>%
-  dplyr::filter(level_change %in% "changes_clusters")
+  dplyr::filter(level_change %in% "changes")
 
 pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "predictions") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
-  str_subset("changes_clusters") %>%
-  str_subset("all_changes|ntlharmon") %>%
+  str_subset("changes") %>%
   map_df(readRDS) 
 
 # Restrict to best xg_parameters -----------------------------------------------
@@ -91,6 +93,6 @@ survey_df <- survey_df %>%
 
 # Export -----------------------------------------------------------------------
 saveRDS(survey_df,
-        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
+        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_predictions.Rds"))
 
 

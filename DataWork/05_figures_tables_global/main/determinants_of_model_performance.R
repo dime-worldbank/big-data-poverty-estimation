@@ -15,44 +15,44 @@ results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimat
 results_df <- results_df %>%
   dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
 
-wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
-
-fb_wide_df <- readRDS(file.path(fb_marketing_dir,  "FinalData", "country_level_mau", 
-                                "Individual Datasets",
-                                "country_level_mau.Rds"))
-
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
-                               "survey_alldata_clean.Rds"))
-
-# Merge data -------------------------------------------------------------------
-#### Prep data for merging
-wdi_df <- wdi_df %>%
-  dplyr::select(-c(iso3c, country, year, capital, longitude, latitude))
-
-fb_wide_df <- fb_wide_df %>%
-  dplyr::rename(iso2 = country_iso2)
-
-survey_sum_df <- survey_df %>%
-  group_by(iso2) %>%
-  dplyr::summarise(pca_allvars_sd = sd(pca_allvars),
-                   pca_allvars_mean = mean(pca_allvars),
-                   prop_urban = mean(urban_rural %in% "U"),
-                   survey_year = year[1],
-                   N_dhs_obs = n()) %>%
-  ungroup()
-
-#### Merge
-results_df <- results_df %>%
-  left_join(wdi_df, by = "iso2") %>%
-  left_join(fb_wide_df, by = "iso2") %>%
-  left_join(survey_sum_df, by = "iso2")
-
-# Construct variables ----------------------------------------------------------
-results_df <- results_df %>%
-  ungroup() %>%
-  dplyr::mutate(prop_pop_on_fb = estimate_mau_1 / wdi_population,
-                income = income %>% as.character() %>% as.factor() %>%
-                  relevel(ref = "Low income"))
+# wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
+# 
+# fb_wide_df <- readRDS(file.path(fb_marketing_dir,  "FinalData", "country_level_mau", 
+#                                 "Individual Datasets",
+#                                 "country_level_mau.Rds"))
+# 
+# survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+#                                "survey_alldata_clean.Rds"))
+# 
+# # Merge data -------------------------------------------------------------------
+# #### Prep data for merging
+# wdi_df <- wdi_df %>%
+#   dplyr::select(-c(iso3c, country, year, capital, longitude, latitude))
+# 
+# fb_wide_df <- fb_wide_df %>%
+#   dplyr::rename(iso2 = country_iso2)
+# 
+# survey_sum_df <- survey_df %>%
+#   group_by(iso2) %>%
+#   dplyr::summarise(pca_allvars_sd = sd(pca_allvars),
+#                    pca_allvars_mean = mean(pca_allvars),
+#                    prop_urban = mean(urban_rural %in% "U"),
+#                    survey_year = year[1],
+#                    N_dhs_obs = n()) %>%
+#   ungroup()
+# 
+# #### Merge
+# results_df <- results_df %>%
+#   left_join(wdi_df, by = "iso2") %>%
+#   left_join(fb_wide_df, by = "iso2") %>%
+#   left_join(survey_sum_df, by = "iso2")
+# 
+# # Construct variables ----------------------------------------------------------
+# results_df <- results_df %>%
+#   ungroup() %>%
+#   dplyr::mutate(prop_pop_on_fb = estimate_mau_1 / wdi_population,
+#                 income = income %>% as.character() %>% as.factor() %>%
+#                   relevel(ref = "Low income"))
 
 # Analysis ---------------------------------------------------------------------
 #### Dataset subsets for analysis

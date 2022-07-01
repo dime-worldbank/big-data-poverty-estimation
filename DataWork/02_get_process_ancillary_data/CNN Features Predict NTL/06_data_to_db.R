@@ -8,7 +8,7 @@ for(SATELLITE in c("viirs")){
   for(UNDER_IA in c("False")){
     for(BANDS in c("rgb", "ndvi", "bu")){
       
-      PATH_NAME <- paste0("landsat_",SATELLITE,"_underia",UNDER_IA,"_",BANDS)
+      PATH_NAME <- paste0("landsat_",SATELLITE,"_underia",UNDER_IA,"_b_",BANDS)
       
       print(paste(PATH_NAME, "-------------------------------------------------------"))
       
@@ -21,10 +21,14 @@ for(SATELLITE in c("viirs")){
                                    "FinalData",
                                    "cnn_features") %>%
         list.files(full.names = T) %>%
-        str_subset(paste0("features", PATH_NAME, "_")) %>%
+        str_subset(paste0("features_", PATH_NAME, "_")) %>%
         map_df(fread)
       
       cnn_features_df <- cnn_features_df %>% as.data.frame()
+      cnn_features_df$uid <- cnn_features_df$uid %>%  str_replace_all("b'", "") %>% str_replace_all("'", "")
+      
+      cnn_features_df <- cnn_features_df %>%
+        distinct(uid, .keep_all = T)
       
       saveRDS(cnn_features_df,
               file.path(data_dir,
@@ -44,6 +48,9 @@ for(SATELLITE in c("viirs")){
       
       cnn_predictions_df$uid <- cnn_predictions_df$uid %>%  str_replace_all("b'", "") %>% str_replace_all("'", "")
       
+      cnn_predictions_df <- cnn_predictions_df %>%
+        distinct(uid, .keep_all = T)
+      
       saveRDS(cnn_predictions_df %>% as.data.frame(),
               file.path(data_dir,
                         SURVEY_NAME,
@@ -55,3 +62,7 @@ for(SATELLITE in c("viirs")){
     }
   }
 }
+
+
+
+

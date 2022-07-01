@@ -118,12 +118,26 @@ survey_adm2_df %>%
         panel.grid.minor = element_blank(),
         strip.background = element_blank()) 
 
-# ADM2 Scatterplot: By Continent -----------------------------------------------
+# By feature type --------------------------------------------------------------
+# Continent & feature type
 
 # By country characteristic? -----------------------------------------------
 # Instead of splitting by continents, split by N years diff -- or split generally
 # by different characteristics. So don't do at country level. Just split EVERYTHING!!!!!
 
+survey_df %>%
+  dplyr::mutate(year_diff_bin = case_when(
+    year_diff %in% 4:5 ~ 5,
+    year_diff %in% 6:10 ~ 10,
+    year_diff %in% 11:15 ~ 15,
+    year_diff %in% 16:20 ~ 20
+  )) %>%
+  group_by(year_diff_bin) %>%
+  dplyr::summarise(r2 = cor(pca_allvars, predict_pca_allvars_within_country_cv_all_changes)^2) %>%
+  ungroup() 
+
+survey_df$year_diff %>%
+  table()
 
 # OLD ==========================================================================
 # OLD ==========================================================================

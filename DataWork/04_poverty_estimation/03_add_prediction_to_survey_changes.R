@@ -28,7 +28,7 @@ pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("changes") %>%
-  str_subset("all_changes|ntlharmon") %>%
+  #str_subset("all_changes|ntlharmon") %>%
   map_df(readRDS) 
 
 # Restrict to best xg_parameters -----------------------------------------------

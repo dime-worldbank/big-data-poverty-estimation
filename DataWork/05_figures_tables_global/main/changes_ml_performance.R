@@ -13,41 +13,29 @@ p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                         "accuracy_appended.Rds"))
 
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+                               "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
 # Prep data --------------------------------------------------------------------
-## Filter
-xg_param_set_best_df <- df %>%
+## Grab best parameters
+xg_param_set_best <- df %>%
   dplyr::filter(level_change %in% "changes",
                 feature_type %in% "all_changes",
-                target_var %in% "pca_allvars", # "pca_allvars",
+                target_var %in% "pca_allvars",
                 estimation_type %in% "within_country_cv") %>%
   group_by(xg_param_set) %>%
   dplyr::summarise(r2_mean = mean(r2),
                    r2_median = median(r2),
                    r2_max = max(r2)) %>%
-  arrange(-r2_median)
-
-xg_param_set_best <- xg_param_set_best_df %>%
+  arrange(-r2_median) %>%
   head(1) %>%
   pull(xg_param_set)
 
+## Filter dataframe
 df <- df %>%
   dplyr::filter(level_change %in% "changes",
-                xg_param_set %in% xg_param_set_best) # 10_0_1_4_50_0_3_reg_squarederror, 5_0_1_4_50_0_3_reg_squarederror
-
-## Add variables to results data
-survey_sum_df <- survey_df %>%
-  group_by(iso2, year_diff) %>%
-  dplyr::summarise(pca_allvars_sd = sd(pca_allvars),
-                   ntlharmon_avg_sd = sd(ntlharmon_avg)) %>%
-  ungroup()
-
-df <- df %>%
-  left_join(survey_sum_df, by = "iso2")
-
-df_best <- df %>%
-  dplyr::filter(feature_type %in% "all_changes",
+                xg_param_set %in% xg_param_set_best,
+                feature_type %in% "all_changes",
                 target_var %in% "pca_allvars",
                 estimation_type %in% "within_country_cv") 
 
@@ -78,43 +66,71 @@ p_scatter <- survey_df %>%
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) 
 
-# Precision/recall -------------------------------------------------------------
-# Precision and recall at the cluster level
-
+# Cluster Scatterplot: By Continent --------------------------------------------
 survey_df <- survey_df %>%
-  dplyr::mutate(pca_allvars_pos = pca_allvars > 0,
-                predict_pca_allvars_within_country_cv_all_changes_pos = predict_pca_allvars_within_country_cv_all_changes > 0)
+  group_by(continent_adj) %>%
+  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_within_country_cv_all_changes)^2) %>%
+  ungroup() %>%
+  dplyr::mutate(panel_name = paste0(continent_adj, "\nr2 = ", round(r2,2)))
 
+survey_df %>%
+  ggplot(aes(x = pca_allvars,
+             y = predict_pca_allvars_within_country_cv_all_changes)) +
+  geom_point(size = 0.5) +
+  #geom_rug(col=rgb(.5,0,0,alpha=.2)) +
+  facet_wrap(~panel_name) +
+  labs(x = "True Asset Index",
+       y = "Predicted Asset Index") +
+  theme_classic() +
+  theme(legend.position = c(0.9, 0.1),
+        legend.box.background = element_rect(colour = "black"),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank()) 
 
-r2_all_d <- cor(survey_df$pca_allvars,   
-                survey_df$predict_pca_allvars_within_country_cv_all_changes)^2
-
-
-# Scatterplot: district --------------------------------------------------------
-survey_district_df <- survey_df %>%
+# ADM2 Scatterplot: By Continent -----------------------------------------------
+survey_adm2_df <- survey_df %>%
   group_by(gadm_uid, country_code, continent_adj) %>%
   summarise_if(is.numeric, mean)
 
-survey_district_df %>%
-  ggplot() +
-  geom_point(aes(x = pca_allvars,
-                 y = predict_pca_allvars_within_country_cv_all_changes),
-             size = 0.5) +
-  facet_wrap(~continent_adj)
+survey_adm2_df <- survey_adm2_df %>%
+  group_by(continent_adj) %>%
+  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_within_country_cv_all_changes)^2) %>%
+  ungroup() %>%
+  dplyr::mutate(panel_name = paste0(continent_adj, "\nr2 = ", round(r2,2)))
 
-a <- survey_district_df[survey_district_df$continent_adj %in% "Eurasia",]
-cor(a$pca_allvars, a$predict_pca_allvars_within_country_cv_all_changes)^2
+survey_adm2_df %>%
+  ggplot(aes(x = pca_allvars,
+             y = predict_pca_allvars_within_country_cv_all_changes)) +
+  geom_point(size = 0.5) +
+  #geom_rug(col=rgb(.5,0,0,alpha=.2)) +
+  facet_wrap(~panel_name) +
+  labs(x = "True Asset Index",
+       y = "Predicted Asset Index") +
+  theme_classic() +
+  theme(legend.position = c(0.9, 0.1),
+        legend.box.background = element_rect(colour = "black"),
+        plot.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank()) 
 
-survey_df %>%
-  ggplot() +
-  geom_point(aes(x = pca_allvars,
-                 y = predict_pca_allvars_within_country_cv_all_changes),
-             size = 0.5) +
-  facet_wrap(~continent_adj)
+# ADM2 Scatterplot: By Continent -----------------------------------------------
 
-a <- survey_district_df[survey_district_df$continent_adj %in% "Africa",]
-cor(a$pca_allvars, a$predict_pca_allvars_within_country_cv_all_changes)^2
+# By country characteristic? -----------------------------------------------
+# Instead of splitting by continents, split by N years diff -- or split generally
+# by different characteristics. So don't do at country level. Just split EVERYTHING!!!!!
 
+
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
 
 # Figure: Map ------------------------------------------------------------------
 ## Stats

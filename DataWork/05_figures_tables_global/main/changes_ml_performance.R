@@ -118,8 +118,24 @@ survey_adm2_df %>%
         panel.grid.minor = element_blank(),
         strip.background = element_blank()) 
 
-# By feature type --------------------------------------------------------------
-# Continent & feature type
+# By type --------------------------------------------------------------
+# Continent and
+# --Feature type
+# --Estimation type (within_cv, global)
+
+survey_sum_df <- survey_df %>%
+  dplyr::select(continent_adj,
+                pca_allvars,
+                contains("predict_pca_allvars_within_country_cv")) %>%
+  pivot_longer(cols = -c(pca_allvars, continent_adj)) %>%
+  group_by(name, continent_adj) %>%
+  dplyr::summarise(r2 = cor(pca_allvars, value)^2) 
+
+survey_sum_df %>%
+  ggplot() +
+  geom_col(aes(y = name,
+               x = r2)) +
+  facet_wrap(~continent_adj)
 
 # By country characteristic? -----------------------------------------------
 # Instead of splitting by continents, split by N years diff -- or split generally

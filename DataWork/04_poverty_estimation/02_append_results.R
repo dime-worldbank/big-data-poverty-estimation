@@ -145,6 +145,9 @@ fb_wide_df <- readRDS(file.path(fb_marketing_dir,  "FinalData", "country_level_m
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
                                "survey_alldata_clean.Rds"))
 
+survey_changes_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+                                       "survey_alldata_clean_changes.Rds"))
+
 #### Prep data for merging
 wdi_df <- wdi_df %>%
   dplyr::select(-c(iso3c, country, year, capital, longitude, latitude))
@@ -162,10 +165,17 @@ survey_sum_df <- survey_df %>%
   ungroup() %>%
   dplyr::rename(country = country_code)
 
+survey_changes_sum_df <- survey_changes_df %>%
+  group_by(iso2, year_diff) %>%
+  dplyr::summarise(pca_allvars_sd_change = sd(pca_allvars),
+                   ntlharmon_avg_sd_change = sd(ntlharmon_avg)) %>%
+  ungroup()
+
 #### Merge
 otherdata_df <- survey_sum_df %>%
   left_join(wdi_df, by = "iso2") %>%
-  left_join(fb_wide_df, by = "iso2") 
+  left_join(fb_wide_df, by = "iso2") %>%
+  left_join(survey_changes_sum_df, by = "iso2")  
 
 #### Construct variables 
 otherdata_df <- otherdata_df %>%
@@ -176,10 +186,10 @@ otherdata_df <- otherdata_df %>%
 
 #### Merge
 acc_all_df <- acc_all_df %>%
-  left_join(acc_all_df, by = "country")
+  left_join(otherdata_df, by = "country")
 
 acc_all_best_param_df <- acc_all_best_param_df %>%
-  left_join(acc_all_best_param_df, by = "country")
+  left_join(otherdata_df, by = "country")
 
 # Export data ------------------------------------------------------------------
 #### All data

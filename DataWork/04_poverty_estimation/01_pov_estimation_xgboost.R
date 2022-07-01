@@ -41,9 +41,7 @@ grab_x_features <- function(df,
     
     X <- df %>%
       dplyr::select_at(vars(starts_with("viirs_"),
-                            starts_with("cnn_s2_rgb_"),
-                            starts_with("cnn_s2_ndvi_"),
-                            starts_with("cnn_s2_bu_"),
+                            starts_with("cnn_viirs_landsat_"),
                             starts_with("fb_prop_"),
                             starts_with("fb_wp_prop"),
                             starts_with("osm_"),
@@ -70,7 +68,7 @@ grab_x_features <- function(df,
     
     X <- df %>%
       dplyr::select_at(vars(starts_with("ntlharmon_"),
-                            #starts_with("cnn_l7_"),
+                            starts_with("cnn_viirs_landsat_"),
                             starts_with("l7_"),
                             starts_with("gc_"),
                             starts_with("weather_"),
@@ -78,8 +76,8 @@ grab_x_features <- function(df,
       as.matrix()
   } else if(feature_type_i %in% "satellites"){
     X <- df %>%
-      dplyr::select_at(vars(starts_with("l8_"),
-                            starts_with("cnn_"),
+      dplyr::select_at(vars(starts_with("l7_"),
+                            starts_with("cnn_viirs_landsat_"),
                             starts_with("viirs_"))) %>%
       as.matrix()
   } else if(feature_type_i %in% "landcover"){
@@ -107,7 +105,6 @@ feature_type_i <- "all"
 target_var_i <- "wealth_index_score"
 country_i <- "PK"
 grid_search <- T
-# within_country_fold
 
 run_model <- function(df,
                       level_change,
@@ -272,7 +269,7 @@ run_model <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("changes_clusters")){ # "changes", "levels", changes_clusters
+for(level_change in c("changes")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% "levels"){
@@ -286,17 +283,16 @@ for(level_change in c("changes_clusters")){ # "changes", "levels", changes_clust
     
     #### Define parameters
     feature_types_indiv <- c("viirs",
-                             "cnn_s2_rgb", 
-                             "cnn_s2_ndvi", 
-                             "cnn_s2_bu", 
-                             "l8",
+                             "cnn_viirs_landsat_rgb", 
+                             "cnn_viirs_landsat_ndvi", 
+                             "cnn_viirs_landsat_bu", 
+                             "cnn_viirs_landsat",
+                             "l7",
                              "fb",
                              "osm",
                              "landcover",
                              "weatherclimate",
                              "pollution",
-                             
-                             "cnn_s2",
                              "satellites") 
     
     feature_types_all_but_indiv <- paste0("all_not_", 
@@ -313,7 +309,6 @@ for(level_change in c("changes_clusters")){ # "changes", "levels", changes_clust
                              "continent_eurasia_country_pred", 
                              "continent") # "continent" means "other continents"
     
-    
     target_vars_vec <- c("pca_allvars",
                          "pca_allvars_mr", 
                          "pca_physicalvars_mr",
@@ -328,58 +323,14 @@ for(level_change in c("changes_clusters")){ # "changes", "levels", changes_clust
     
     #### Load data
     df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
-                            "survey_alldata_clean_changes.Rds"))
-    
-    df <- df %>%
-      dplyr::filter(year_diff_max %in% T,
-                    n_obs >= 30) 
-    
-    #### Define parameters
-    feature_types_indiv <- c("ntlharmon",
-                             #"cnn_s2_rgb", 
-                             #"cnn_s2_ndvi", 
-                             #"cnn_s2_bu", 
-                             #"cnn_s2",
-                             "l7",
-                             "gc",
-                             "weather",
-                             "pollution_aod") 
-    
-    feature_types_all_but_indiv <- paste0("all_not_", 
-                                          c(feature_types_indiv)) 
-    
-    feature_types <- c(feature_types_indiv,
-                       #feature_types_all_but_indiv,
-                       "all_changes")
-    
-    estimation_type_vec <- c("within_country_cv",
-                             "global_country_pred",
-                             "continent_africa_country_pred",
-                             "continent_americas_country_pred",
-                             "continent_eurasia_country_pred", 
-                             "continent") # "continent" means "other continents"
-    
-    target_vars_vec <- c("pca_allvars", 
-                         #"pca_physicalvars",
-                         #"pca_nonphysicalvars",
-                         "wealth_index_score")
-    
-    countries_vec <- c("all", unique(df$country_code))
-  } 
-  
-  # Changes - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  if(level_change %in% "changes_clusters"){
-    
-    #### Load data
-    df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
                             "survey_alldata_clean_changes_cluster.Rds"))
     
     #### Define parameters
     feature_types_indiv <- c("ntlharmon",
-                             #"cnn_s2_rgb", 
-                             #"cnn_s2_ndvi", 
-                             #"cnn_s2_bu", 
-                             #"cnn_s2",
+                             "cnn_viirs_landsat_rgb", 
+                             "cnn_viirs_landsat_ndvi", 
+                             "cnn_viirs_landsat_bu", 
+                             "cnn_viirs_landsat",
                              "l7",
                              "gc",
                              "weather",
@@ -413,11 +364,11 @@ for(level_change in c("changes_clusters")){ # "changes", "levels", changes_clust
         for(country_i in countries_vec){
           
           ## XG Boost Parameters
-          for(xg_max.depth  in c(2, 3, 5, 10)){
+          for(xg_max.depth  in c(5, 10)){
             for(xg_eta in c(0.1)){
-              for(xg_nthread in c(4, 8)){
-                for(xg_nrounds in c(50, 100)){
-                  for(xg_subsample in c(0.1, 0.3)){
+              for(xg_nthread in c(4)){
+                for(xg_nrounds in c(50)){
+                  for(xg_subsample in c(0.3)){
                     for(xg_objective in c("reg:squarederror")){
                       
                       # Skip -----------------------------------------------------------------

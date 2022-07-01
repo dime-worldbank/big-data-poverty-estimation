@@ -118,9 +118,10 @@ df <- df %>%
     
     starts_with("ntlharmon_"),
     
-    starts_with("cnn_s2_rgb_"),
-    starts_with("cnn_s2_ndvi_"),
-    starts_with("cnn_s2_bu_"),
+    #starts_with("cnn_s2_rgb_"),
+    #starts_with("cnn_s2_ndvi_"),
+    #starts_with("cnn_s2_bu_"),
+    starts_with("cnn_"),
     
     starts_with("l8_"),
     starts_with("l7_"),
@@ -165,3 +166,9 @@ if(F){
 
 # Export Data ------------------------------------------------------------------
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+
+
+
+
+
+

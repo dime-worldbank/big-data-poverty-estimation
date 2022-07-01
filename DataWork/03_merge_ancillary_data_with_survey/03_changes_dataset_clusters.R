@@ -14,23 +14,21 @@ df <- df %>%
   dplyr::select(uid, country_code, gadm_uid, iso2, year, within_country_fold, continent_adj, 
                 latitude, longitude,
                 pca_allvars, wealth_index_score,
-                contains("l7_"),
-                contains("gc_"),
-                contains("ntlharmon_"),
-                contains("weather_"),
-                contains("pollution_aod_")) 
+                starts_with("l7_"),
+                starts_with("gc_"),
+                starts_with("ntlharmon_"),
+                starts_with("cnn_viirs_"),
+                starts_with("weather_"),
+                starts_with("pollution_aod_")) 
 
 ## Make complete dataset 
 df <- df %>%
-  dplyr::filter(!is.na(ntlharmon_avg),
-                !is.na(l7_B1),
-                !is.na(gc_190),
-                !is.na(weather_all_maximum_2m_air_temperature),
+  dplyr::filter(!is.na(l7_B1),
                 !is.na(pollution_aod_047))
 
 # Choose surveys with largest year difference ----------------------------------
 # 1. Only keep countries with at least two surveys
-# 2. If >2 surveys, select the two that have the largest year difference
+# 2. If >2 surveys, select the two that have the largest year difference [not needed now]
 
 df <- df %>%
   dplyr::mutate(cc_year = paste(country_code, year))
@@ -70,7 +68,8 @@ df_pairs <- map_df(unique(df$country_code), function(country_code_i){
     df_c_yr2_i <- df_c_yr2[which.min(dist),]
     
     df_append_i <- bind_rows(df_c_yr1_i, df_c_yr2_i)
-    df_append_i$uid_panel <- df_c_yr1_i$uid
+    df_append_i$uid_panel <- df_c_yr1_i$uid # Unique ID for panel
+    df_append_i$uid_t2    <- df_c_yr2_i$uid # ID from second time period (to check for repeats)
     
     ## For some variables, use data from data_yr1 for both
     for(var in c("country_code", "gadm_uid", "within_country_fold", "continent_adj", "iso2")){
@@ -89,9 +88,15 @@ df_pairs <- map_df(unique(df$country_code), function(country_code_i){
   
 })
 
-# Restrict pairs to within distance --------------------------------------------
+# Subset -----------------------------------------------------------------------
+#### Restrict pairs to within distance 
 df_pairs <- df_pairs %>%
   dplyr::filter(dist_uids_m <= 10000)
+
+#### If uid matched with multiple, keep closest
+df_pairs <- df_pairs %>%
+  arrange(dist_uids_m) %>%
+  distinct(uid_t2, year, .keep_all = T)
 
 # Difference -------------------------------------------------------------------
 df_change <- df_pairs %>%
@@ -103,9 +108,9 @@ df_change <- df_pairs %>%
   ungroup() %>%
   dplyr::rename(year_diff = year) %>%
   dplyr::rename(uid = uid_panel)
-  #dplyr::rename(year_diff = year,
-  #              year      = year_str) %>%
-  #dplyr::filter(!is.na(year_diff))
+#dplyr::rename(year_diff = year,
+#              year      = year_str) %>%
+#dplyr::filter(!is.na(year_diff))
 
 # Export -----------------------------------------------------------------------
 saveRDS(df_change, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))

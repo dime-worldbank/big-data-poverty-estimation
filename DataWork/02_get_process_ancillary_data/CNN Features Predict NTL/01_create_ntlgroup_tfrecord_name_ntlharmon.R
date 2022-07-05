@@ -7,8 +7,9 @@ N_BINS <- 3
 N_OBS_IN_TFR <- 250
 TEST_PROP <- 0.2
 INDIA_UNDER_SAMPLE <- T
+DTL_SATELLITE <- "landsat"
 
-for(DTL_SATELLITE in c("landsat", "s2")){
+for(DTL_SATELLITE in c("landsat")){ # , "s2"
   for(INDIA_UNDER_SAMPLE in c(T, F)){
     
     # Load data --------------------------------------------------------------------
@@ -18,10 +19,10 @@ for(DTL_SATELLITE in c("landsat", "s2")){
     
     if(DTL_SATELLITE %in% "landsat"){
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
-                                  "ntl_harmonized.Rds")) # TODO: no buffer? // 1120 vs 3360
+                                  "ntl_harmonized_3360.Rds")) # TODO: no buffer? // 1120 vs 3360
     } else if(DTL_SATELLITE %in% "s2"){
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
-                                  "ntl_harmonized.Rds")) # TODO: no buffer? // 1120 vs 3360
+                                  "ntl_harmonized_1120.Rds")) # TODO: no buffer? // 1120 vs 3360
     }
     
     survey_all_df <- survey_all_df %>%
@@ -48,7 +49,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       #mclust_fit = Mclust(survey_df$ntlharmon_avg, G=N_BINS) # , model="V"
       #survey_df$ntl_group <- predict(mclust_fit, survey_df$ntlharmon_avg)$classification
       #table(survey_df$ntl_group)
-      
+
       # Use same bins from Jean et al
       survey_df <- survey_df %>%
         dplyr::mutate(ntl_group = case_when(
@@ -74,7 +75,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       }
       
       survey_df_recent <- survey_df %>%
-        dplyr::filter(year >= 2000,
+        dplyr::filter(year >= 1992,
                       most_recent_survey %in% T,
                       keep %in% 1)
       

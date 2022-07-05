@@ -7,6 +7,7 @@ N_BINS <- 5
 N_OBS_IN_TFR <- 250
 TEST_PROP <- 0.2
 INDIA_UNDER_SAMPLE <- T
+DTL_SATELLITE <- "s2"
 
 for(DTL_SATELLITE in c("landsat", "s2")){
   for(INDIA_UNDER_SAMPLE in c(T, F)){

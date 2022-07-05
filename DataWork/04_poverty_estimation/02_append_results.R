@@ -146,7 +146,7 @@ survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datas
                                "survey_alldata_clean.Rds"))
 
 survey_changes_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
-                                       "survey_alldata_clean_changes.Rds"))
+                                       "survey_alldata_clean_changes_cluster.Rds"))
 
 #### Prep data for merging
 wdi_df <- wdi_df %>%
@@ -156,9 +156,11 @@ fb_wide_df <- fb_wide_df %>%
   dplyr::rename(iso2 = country_iso2)
 
 survey_sum_df <- survey_df %>%
+  dplyr::filter(most_recent_survey %in% T) %>%
   group_by(country_code, country_name, continent_adj, iso2) %>%
   dplyr::summarise(pca_allvars_sd = sd(pca_allvars),
                    pca_allvars_mean = mean(pca_allvars),
+                   ntlharmon_avg = mean(ntlharmon_avg),
                    prop_urban = mean(urban_rural %in% "U"),
                    survey_year = year[1],
                    N_dhs_obs = n()) %>%

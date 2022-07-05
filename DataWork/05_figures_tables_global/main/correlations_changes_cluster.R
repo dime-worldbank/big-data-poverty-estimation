@@ -25,7 +25,7 @@ df_cor <- df %>%
   dplyr::mutate(n_country = n()) %>%
   ungroup() %>%
   dplyr::filter(n_country == max(n_country))
-  
+
 ## Take top 2 in each category
 vars_to_use <- df_cor %>%
   group_by(variable,
@@ -64,4 +64,24 @@ df_cor %>%
 ggsave(filename = file.path(figures_global_dir, "cor_changes.png"),
        height = 3,
        width = 9.5)
+
+
+
+
+## Across all countries
+cor_all_df <- df %>%
+  dplyr::select(-c(latitude, longitude)) %>%
+  pivot_longer(cols = -c(uid, within_country_fold, continent_adj, country_code, gadm_uid, iso2, year_diff, 
+                         pca_allvars, wealth_index_score)) %>%
+  dplyr::filter(!is.na(value)) %>%
+  group_by(name, continent_adj) %>%
+  dplyr::summarise(cor = cor(pca_allvars, value))
+
+df %>%
+  ggplot() +
+  geom_point(aes(x = log(ntlharmon_avg+1),
+                 y = pca_allvars)) +
+  facet_wrap(~continent_adj)
+
+
 

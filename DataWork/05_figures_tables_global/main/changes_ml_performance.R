@@ -1,7 +1,10 @@
 # ML Performance: Predicting Changes
 
 # TODO: Include N // by N
-# TODO: By year_diff (merge in)
+# TODO: By year_diff (merge in)\
+
+library(gghalves)
+
 
 # For boxplots
 FILL_COLOR <- "gray80" 
@@ -11,33 +14,309 @@ p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                        "accuracy_appended.Rds"))
+                        "accuracy_appended_bestparam.Rds"))
 
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
 # Prep data --------------------------------------------------------------------
-## Grab best parameters
-xg_param_set_best <- df %>%
-  dplyr::filter(level_change %in% "changes",
-                feature_type %in% "all_changes",
-                target_var %in% "pca_allvars",
-                estimation_type %in% "within_country_cv") %>%
-  group_by(xg_param_set) %>%
-  dplyr::summarise(r2_mean = mean(r2),
-                   r2_median = median(r2),
-                   r2_max = max(r2)) %>%
-  arrange(-r2_median) %>%
-  head(1) %>%
-  pull(xg_param_set)
+# ## Grab best parameters
+# xg_param_set_best <- df %>%
+#   dplyr::filter(level_change %in% "changes",
+#                 feature_type %in% "all_changes",
+#                 target_var %in% "pca_allvars",
+#                 estimation_type %in% "within_country_cv") %>%
+#   group_by(xg_param_set) %>%
+#   dplyr::summarise(r2_mean = mean(r2),
+#                    r2_median = median(r2),
+#                    r2_max = max(r2)) %>%
+#   arrange(-r2_median) %>%
+#   head(1) %>%
+#   pull(xg_param_set)
+# 
+# ## Filter dataframe
+# df <- df %>%
+#   dplyr::filter(level_change %in% "changes",
+#                 xg_param_set %in% xg_param_set_best,
+#                 feature_type %in% "all_changes",
+#                 target_var %in% "pca_allvars",
+#                 estimation_type %in% "within_country_cv")
 
-## Filter dataframe
 df <- df %>%
-  dplyr::filter(level_change %in% "changes",
-                xg_param_set %in% xg_param_set_best,
-                feature_type %in% "all_changes",
+  dplyr::filter(level_change %in% "changes")
+
+# Boxplots: By Training Sample -------------------------------------------------
+p_boxplot_tsample <- df %>%
+  dplyr::filter(feature_type %in% "all_changes",
                 target_var %in% "pca_allvars",
-                estimation_type %in% "within_country_cv") 
+                estimation_type != "best") %>%
+  ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = mean, .desc =TRUE),
+             y = r2)) +
+  geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
+                    fill = FILL_COLOR) +
+  #geom_half_point(transformation = position_jitter(width = 0.05, height = 0.1)) +
+  stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = 0.5, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = p75, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = -0.05, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = max, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  labs(x = NULL,
+       y = expression(r^2),
+       title = "C. Performance by training sample type") +
+  #scale_y_continuous(limits = c(0,0.6)) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(face = "bold"),
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +  
+  coord_flip() 
+
+# Boxplots: By Feature Set -----------------------------------------------------
+p_boxplot_feature <- df %>%
+  dplyr::filter(estimation_type %in% "within_country_cv",
+                target_var %in% "pca_allvars") %>%
+  ggplot(aes(x = reorder(feature_type_clean, r2, FUN = mean, .desc =TRUE),
+             y = r2)) +
+  geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
+                    fill = FILL_COLOR) +
+  #geom_half_point(transformation = position_jitter(width = 0.05, height = 0.1)) +
+  stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = 0.5, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = p75, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = -0.01, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = max, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  labs(x = NULL,
+       y = expression(r^2),
+       title = "D. Performance using different features") +
+  #scale_y_continuous(limits = c(0,0.6)) +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(face = "bold"),
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +  
+  coord_flip() 
+
+# Boxplots: By Target Variable -------------------------------------------------
+p_boxplot_tvar <- df %>%
+  dplyr::filter(feature_type %in% "all_changes",
+                estimation_type %in% "within_country_cv") %>%
+  ggplot(aes(x = reorder(target_var_clean, r2, FUN = mean, .desc =TRUE),
+             y = r2)) +
+  geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
+                    fill = FILL_COLOR) +
+  geom_half_point(transformation = position_jitter(width = 0.05, height = 0.005)) +
+  stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = 0.5, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = p75, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = -0.05, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = max, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  labs(x = NULL,
+       y = expression(r^2),
+       title = "C. Performance by training sample type") +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(face = "bold"),
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +  
+  coord_flip() 
+
+# Boxplots: By District --------------------------------------------------------
+dist_df <- bind_rows(
+  survey_df %>%
+    dplyr::select(country_code,
+                  gadm_uid,
+                  pca_allvars,
+                  predict_pca_allvars_within_country_cv_all_changes) %>%
+    dplyr::rename(truth = pca_allvars,
+                  prediction = predict_pca_allvars_within_country_cv_all_changes) %>%
+    dplyr::mutate(target_var_clean = "Asset Index"),
+  
+  survey_df %>%
+    dplyr::select(country_code,
+                  gadm_uid,
+                  wealth_index_score,
+                  predict_wealth_index_score_within_country_cv_all_changes) %>%
+    dplyr::rename(truth = wealth_index_score,
+                  prediction = predict_wealth_index_score_within_country_cv_all_changes) %>%
+    dplyr::mutate(target_var_clean = "DHS Wealth Index") 
+)
+
+p_boxplot_tvar_district <- dist_df %>%
+  ungroup() %>%
+  group_by(country_code, gadm_uid, target_var_clean) %>%
+  dplyr::summarise(truth = mean(truth),
+                   prediction = mean(prediction)) %>%
+  ungroup() %>%
+  group_by(country_code, target_var_clean) %>%
+  dplyr::summarise(r2 = cor(truth, prediction)^2) %>%
+  
+  # Make figure
+  ggplot(aes(x = reorder(target_var_clean, r2, FUN = mean, .desc =TRUE),
+             y = r2)) +
+  geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
+                    fill = FILL_COLOR) +
+  geom_half_point(transformation = position_jitter(width = 0.05, height = 0.005)) +
+  stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = 0.5, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = p75, geom = "text", col = "black",     # Add text to plot
+               vjust = -0.2, hjust = -0.05, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = max, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  labs(x = NULL,
+       y = expression(r^2),
+       title = "C. Performance by training sample type") +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(face = "bold"),
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +  
+  coord_flip() 
+
+# Explain variation ------------------------------------------------------------
+line_color <- "darkorange"
+df_sum <- df %>%
+  ungroup() %>%
+  dplyr::filter(feature_type %in% "all_changes",
+                estimation_type %in% "within_country_cv",
+                target_var %in% "pca_allvars")
+
+df_sum %>%
+  dplyr::mutate(wdi_population = log(wdi_population)) %>%
+  dplyr::select(r2, 
+                year_diff,
+                pca_allvars_sd_change,
+                ntlharmon_avg_sd_change,
+                wdi_population) %>%
+  pivot_longer(cols = -r2) %>%
+  dplyr::mutate(name = case_when(
+    name == "pca_allvars_sd_change" ~ "A. Std. Dev. of Asset Index Change",
+    name == "ntlharmon_avg_sd_change" ~ "B. Std. Dev. of NTL Change",
+    name == "year_diff" ~ "C. Year Difference",
+    name == "wdi_population" ~ "D. Population, logged",
+    TRUE ~ name,
+  )) %>%
+  ggplot(aes(x = value,
+             y = r2)) +
+  geom_smooth(method='lm',
+              se = F,
+              color = line_color) +
+  geom_point() +
+  stat_poly_eq() +
+  labs(x = NULL,
+       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+  theme_classic() +
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = 0.5),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold",
+                                  color = "black",
+                                  hjust = 0,
+                                  size = 12)) +
+  facet_wrap(~name,
+             scales = "free_x")
+
+
+df_sum %>%
+  ggplot(aes(x = year_diff,
+             y = r2)) +
+  geom_smooth(method='lm',
+              se = F,
+              color = line_color) +
+  geom_point() +
+  stat_poly_eq() +
+  labs(x = "Year Difference",
+       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+  theme_classic() +
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = 0.5))
+
+df_sum %>%
+  ggplot(aes(x = pca_allvars_sd_change,
+             y = r2)) +
+  geom_smooth(method='lm',
+              se = F,
+              color = line_color) +
+  geom_point() +
+  stat_poly_eq() +
+  labs(x = "Std. Dev. of Change in Asset Index",
+       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+  theme_classic() +
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = 0.5))
+
+df_sum %>%
+  ggplot(aes(x = log(wdi_population),
+             y = r2)) +
+  geom_smooth(method='lm',
+              se = F,
+              color = line_color) +
+  geom_point() +
+  stat_poly_eq() +
+  labs(x = "Population, logged",
+       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+  theme_classic() +
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = 0.5))
+
+df_sum %>%
+  ggplot(aes(x = n,
+             y = r2)) +
+  geom_smooth(method='lm',
+              se = F,
+              color = line_color) +
+  geom_point() +
+  stat_poly_eq() +
+  labs(x = "N DHS Clusters in Country",
+       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+  theme_classic() +
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = 0.5))
+
+
+df_sum %>%
+  ggplot(aes(x = log(ntlharmon_avg_sd_change+1),
+             y = r2)) +
+  geom_smooth(method='lm',
+              se = F,
+              color = "firebrick3") +
+  geom_point() +
+  stat_poly_eq() +
+  labs(x = "N DHS Clusters in Country",
+       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+  theme_classic() +
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = 0.5))
+
+
+
+
+
+
+
+
+# By Country -------------------------------------------------------------------
+country_r2_df <- survey_df %>%
+  dplyr::select(country_code, pca_allvars, wealth_index_score, 
+                
+                predict_pca_allvars_within_country_cv_all_changes,
+                predict_pca_allvars_global_country_pred_all_changes,
+                predict_pca_allvars_same_continent_all_changes,
+                predict_pca_allvars_other_continents_all_changes,
+                
+                predict_wealth_index_score_within_country_cv_all_changes) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_wealth_index_score_within_country_cv_all_changes, wealth_index_score)^2,
+                   n = n()) %>%
+  ungroup()
+
+country_r2_df$r2 %>% hist()
+
+survey_df$predict_pca_allvars_other_continents_all_changes
+
+
 
 # Figure: Scatterplot ----------------------------------------------------------
 r2_all_d <- cor(survey_df$pca_allvars,   

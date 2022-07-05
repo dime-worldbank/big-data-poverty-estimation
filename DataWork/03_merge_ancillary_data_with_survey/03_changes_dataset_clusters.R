@@ -94,7 +94,7 @@ df_pairs <- df_pairs %>%
   dplyr::filter(dist_uids_m <= 10000)
 
 #### If uid matched with multiple, keep closest
-df_pairs <- df_pairs %>%
+df_pairsa <- df_pairs %>%
   arrange(dist_uids_m) %>%
   distinct(uid_t2, year, .keep_all = T)
 

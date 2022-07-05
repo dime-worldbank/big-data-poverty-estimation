@@ -3,7 +3,7 @@
 SATELLITE <- 'viirs'
 BANDS <- "rgb"
 UNDER_IA <- "False"
-PER_VAR_EXPLAIN <- 0.9
+PER_VAR_EXPLAIN <- 0.99
 
 for(DTL_SATELLITE in c("landsat")){
   for(SATELLITE in c("viirs")){

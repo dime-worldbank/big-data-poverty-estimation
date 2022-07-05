@@ -56,7 +56,7 @@ p_scatter_cluster <- survey_rep_cluster_df %>%
         strip.text = element_text(face = "bold",size = 12),
         plot.title = element_text(face = "bold"),
         legend.position = "top") +
-  guides(color = guide_legend(override.aes = list(size=1))) +
+  guides(color = guide_legend(override.aes = list(size=2))) +
   facet_wrap(~continent_adj,
              nrow = 1) 
 

@@ -17,7 +17,8 @@ df_sum <- df %>%
                 target_var %in% "pca_allvars")
 
 p <- df_sum %>%
-  dplyr::mutate(wdi_population = log(wdi_population)) %>%
+  dplyr::mutate(wdi_population = log(wdi_population),
+                wdi_gdp_pc     = log(wdi_gdp_pc)) %>%
   dplyr::select(r2, 
                 year_diff,
                 pca_allvars_sd_change,
@@ -30,7 +31,7 @@ p <- df_sum %>%
     name == "ntlharmon_avg_sd_change" ~ "B. Std. Dev. of NTL Change",
     name == "year_diff" ~ "C. Year Difference",
     name == "wdi_population" ~ "D. Population, logged",
-    name == "wdi_gdp_pc" ~ "E. GDP Per Capita",
+    name == "wdi_gdp_pc" ~ "E. GDP Per Capita, logged",
     TRUE ~ name
   )) %>%
   ggplot(aes(x = value,

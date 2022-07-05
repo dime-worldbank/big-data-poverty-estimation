@@ -200,6 +200,7 @@ library(ggrepel)
 library(ggcorrplot)
 library(scales)
 library(ggExtra)
+library(gghalves)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
@@ -391,7 +392,7 @@ if(F){
   source(file.path(figures_tables_global_dir, "main", "avg_performance_by_type.R"))
   source(file.path(figures_tables_global_dir, "main", "determinants_of_model_performance.R"))
   source(file.path(figures_tables_global_dir, "main", "compare_with_rwi.R"))
-
+  
   ## SI
   source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2.R"))

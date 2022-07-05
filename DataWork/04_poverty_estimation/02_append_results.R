@@ -47,6 +47,11 @@ acc_df <- acc_df %>%
     feature_type == "cnn_s2_bu" ~ "CNN: Built-Up Index",
     feature_type == "cnn_s2_ndvi" ~ "CNN: NDVI",
     feature_type == "cnn_s2_rgb" ~ "CNN: RGB",
+    
+    feature_type == "cnn_viirs_landsat_bu" ~ "CNN: Built-Up Index",
+    feature_type == "cnn_viirs_landsat_ndvi" ~ "CNN: NDVI",
+    feature_type == "cnn_viirs_landsat_rgb" ~ "CNN: RGB",
+    
     feature_type == "fb_prop" ~ "Facebook: Proportion",
     feature_type == "fb" ~ "Facebook",
     feature_type == "satellites" ~ "Satellites",

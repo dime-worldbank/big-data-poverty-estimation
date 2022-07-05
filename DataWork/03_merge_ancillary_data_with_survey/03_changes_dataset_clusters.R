@@ -11,7 +11,8 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 
 df <- df %>%
   dplyr::filter(year >= 2000) %>%
-  dplyr::select(uid, country_code, gadm_uid, iso2, year, within_country_fold, continent_adj, 
+  dplyr::select(uid, country_code, gadm_uid, iso2, year, within_country_fold, continent_adj,
+                urban_rural,
                 latitude, longitude,
                 pca_allvars, wealth_index_score,
                 starts_with("l7_"),
@@ -71,6 +72,9 @@ df_pairs <- map_df(unique(df$country_code), function(country_code_i){
     df_append_i$uid_panel <- df_c_yr1_i$uid # Unique ID for panel
     df_append_i$uid_t2    <- df_c_yr2_i$uid # ID from second time period (to check for repeats)
     
+    df_append_i$urban_rural_yr1 <- df_c_yr1_i$urban_rural 
+    df_append_i$urban_rural_yr2 <- df_c_yr2_i$urban_rural 
+    
     ## For some variables, use data from data_yr1 for both
     for(var in c("country_code", "gadm_uid", "within_country_fold", "continent_adj", "iso2")){
       df_append_i[[var]] <- df_c_yr1_i[[var]]
@@ -94,7 +98,7 @@ df_pairs <- df_pairs %>%
   dplyr::filter(dist_uids_m <= 10000)
 
 #### If uid matched with multiple, keep closest
-df_pairsa <- df_pairs %>%
+df_pairs <- df_pairs %>%
   arrange(dist_uids_m) %>%
   distinct(uid_t2, year, .keep_all = T)
 
@@ -103,7 +107,8 @@ df_change <- df_pairs %>%
   as.data.frame() %>%
   #dplyr::mutate(year_str = year %>% as.character()) %>%
   arrange(year) %>%
-  group_by(uid_panel, country_code, gadm_uid, within_country_fold, continent_adj, iso2) %>%
+  group_by(uid_panel, country_code, gadm_uid, within_country_fold, continent_adj, iso2,
+           urban_rural_yr1, urban_rural_yr2, income) %>%
   summarise_if(is.numeric, diff) %>%
   ungroup() %>%
   dplyr::rename(year_diff = year) %>%

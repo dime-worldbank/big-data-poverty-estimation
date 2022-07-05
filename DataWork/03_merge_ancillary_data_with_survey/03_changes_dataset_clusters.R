@@ -11,7 +11,7 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 
 df <- df %>%
   dplyr::filter(year >= 2000) %>%
-  dplyr::select(uid, country_code, gadm_uid, iso2, year, within_country_fold, continent_adj,
+  dplyr::select(uid, country_code, country_name, gadm_uid, iso2, year, within_country_fold, continent_adj,
                 urban_rural,
                 latitude, longitude,
                 pca_allvars, wealth_index_score,
@@ -107,8 +107,8 @@ df_change <- df_pairs %>%
   as.data.frame() %>%
   #dplyr::mutate(year_str = year %>% as.character()) %>%
   arrange(year) %>%
-  group_by(uid_panel, country_code, gadm_uid, within_country_fold, continent_adj, iso2,
-           urban_rural_yr1, urban_rural_yr2, income) %>%
+  group_by(uid_panel, country_code, country_name, gadm_uid, within_country_fold, continent_adj, iso2,
+           urban_rural_yr1, urban_rural_yr2) %>%
   summarise_if(is.numeric, diff) %>%
   ungroup() %>%
   dplyr::rename(year_diff = year) %>%

@@ -18,7 +18,7 @@ df <- df %>%
                 starts_with("l7_"),
                 starts_with("gc_"),
                 starts_with("ntlharmon_"),
-                starts_with("cnn_viirs_"),
+                starts_with("cnn_viirs_landsat_"),
                 starts_with("weather_"),
                 starts_with("pollution_aod_")) 
 

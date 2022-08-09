@@ -160,11 +160,11 @@ for(DTL_SATELLITE in c("landsat", "s2")){
               row.names = F)
     
     
-    write.csv(survey_df_clean_append, file.path(gdrive_dir,
-                                                "Data", SURVEY_NAME, "FinalData",
-                                                "Individual Datasets",
-                                                paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
-              row.names = F)
+    # write.csv(survey_df_clean_append, file.path(gdrive_dir,
+    #                                             "Data", SURVEY_NAME, "FinalData",
+    #                                             "Individual Datasets",
+    #                                             paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
+    #           row.names = F)
     
   }
 }

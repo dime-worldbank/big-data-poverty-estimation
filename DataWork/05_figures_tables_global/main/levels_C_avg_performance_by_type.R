@@ -4,15 +4,16 @@ FILL_COLOR <- "gray80"
 
 # Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended.Rds"))
+                                "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
 
 results_df <- results_df %>%
-  dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
+  dplyr::filter(level_change %in% "levels",
+                !(target_var %in% "pca_allvars"))
 
 # 1. All features, best estimation type ----------------------------------------
 p_trainsample <- results_df %>%
   dplyr::filter(feature_type %in% "all",
-                target_var %in% "pca_allvars") %>%
+                target_var %in% "pca_allvars_mr") %>%
   ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE, 
@@ -36,7 +37,7 @@ p_trainsample <- results_df %>%
 # 2. By target variable --------------------------------------------------------
 p_targetvar <- results_df %>%
   dplyr::filter(feature_type %in% "all",
-                estimation_type %in% "best") %>%
+                estimation_type %in% "within_country_cv") %>%
   ggplot(aes(x = reorder(target_var_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
@@ -59,8 +60,8 @@ p_targetvar <- results_df %>%
 
 # 3. By feature ----------------------------------------------------------------
 p_feature <- results_df %>%
-  dplyr::filter(target_var %in% "pca_allvars",
-                estimation_type %in% "best") %>%
+  dplyr::filter(target_var %in% "pca_allvars_mr",
+                estimation_type %in% "within_country_cv") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,

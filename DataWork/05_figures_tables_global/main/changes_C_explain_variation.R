@@ -13,7 +13,7 @@ line_color <- "darkorange"
 df_sum <- df %>%
   ungroup() %>%
   dplyr::filter(feature_type %in% "all_changes",
-                estimation_type %in% "within_country_cv", # "within_country_cv",
+                estimation_type %in% "best", # "within_country_cv",
                 target_var %in% "pca_allvars")
 
 p <- df_sum %>%

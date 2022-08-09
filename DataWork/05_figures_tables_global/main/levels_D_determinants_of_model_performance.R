@@ -11,9 +11,7 @@ R2_SCATTER_TEXT_SIZE <- 3
 
 # Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended.Rds"))
-results_df <- results_df %>%
-  dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
+                                "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
 
 # wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 # 
@@ -58,13 +56,13 @@ results_df <- results_df %>%
 #### Dataset subsets for analysis
 results_fb_sum_df <- results_df %>%
   dplyr::filter(feature_type %in% "fb",
-                estimation_type %in% "best",
-                target_var %in% "pca_allvars")
+                estimation_type %in% "within_country_cv",
+                target_var %in% "pca_allvars_mr")
 
 results_all_sum_df <- results_df %>%
   dplyr::filter(feature_type %in% "all",
-                estimation_type %in% "best",
-                target_var %in% "pca_allvars")
+                estimation_type %in% "within_country_cv",
+                target_var %in% "pca_allvars_mr")
 
 #### Income & Std Dev Wealth
 p_wealthsd_income <- results_all_sum_df %>%
@@ -73,7 +71,7 @@ p_wealthsd_income <- results_all_sum_df %>%
     income %in% "Lower middle income" ~ "Lower middle\nincome",
     income %in% "Upper middle income" ~ "Upper middle\nincome"
   )) %>%
-  ggplot(aes(y = pca_allvars_sd,
+  ggplot(aes(y = pca_allvars_mr_sd,
              x = income,
              fill = income)) +
   geom_half_boxplot(center = T) +
@@ -112,6 +110,7 @@ p_all_income_box <- results_all_sum_df %>%
 
 #### Scatterplots
 p_all_gdp_scatter <- results_all_sum_df %>%
+  dplyr::filter(!is.na(wdi_gdp_pc)) %>%
   dplyr::mutate(wdi_gdp_pc_ln = log(wdi_gdp_pc)) %>%
   ggplot(aes(y = r2,
              x = wdi_gdp_pc_ln)) +
@@ -129,20 +128,21 @@ p_all_gdp_scatter <- results_all_sum_df %>%
 
 p_all_wealthsd_scatter <- results_all_sum_df %>%
   ggplot(aes(y = r2,
-             x = pca_allvars_sd)) +
+             x = pca_allvars_mr_sd)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, pca_allvars_sd),2)),
+  geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, pca_allvars_mr_sd),2)),
                     x = 0.6,
                     y = 0.8),
                 size = R2_SCATTER_TEXT_SIZE) +
   theme_classic() +
-  labs(x = "Global Wealth Score: Standard Deviation",
-       title = expression(bold(B.~Model~r^2~vs.~Wealth~Score~Std.~Dev)),
+  labs(x = "Global Asset Index: Standard Deviation",
+       title = expression(bold(B.~Model~r^2~vs.~Global~Asset~Index~Std.~Dev)),
        subtitle = "Performance using all features",
        y = expression(r^2))
 
 p_fb_propfb_scatter <- results_fb_sum_df %>%
+  dplyr::filter(!is.na(prop_pop_on_fb)) %>%
   ggplot(aes(y = r2,
              x = prop_pop_on_fb)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
@@ -158,8 +158,8 @@ p_fb_propfb_scatter <- results_fb_sum_df %>%
        y = expression(r^2))
 
 p_weather_aggdp_scatter <- results_df %>%
-  dplyr::filter(estimation_type %in% "best",
-                target_var %in% "pca_allvars",
+  dplyr::filter(estimation_type %in% "within_country_cv",
+                target_var %in% "pca_allvars_mr",
                 feature_type %in% "weatherclimate") %>%
   ggplot(aes(y = r2,
              x = wdi_agric_per_gdp)) +
@@ -180,8 +180,8 @@ p_weather_aggdp_scatter <- results_df %>%
 
 # Boxplots across all feature types --------------------------------------------
 results_best_df <- results_df %>%
-  dplyr::filter(estimation_type %in% "best",
-                target_var %in% "pca_allvars") %>%
+  dplyr::filter(estimation_type %in% "within_country_cv",
+                target_var %in% "pca_allvars_mr") %>%
   dplyr::mutate(feature_type_clean = feature_type_clean %>% fct_rev()) 
 
 ## Income GDP Boxplot
@@ -193,7 +193,7 @@ p_boxplot_income <- results_best_df %>%
     income %in% "Upper middle income" ~ "Upper middle\nincome"
   )) %>%
   ggplot(aes(x = r2,
-             y = feature_type_clean,
+             y = feature_type_clean %>% fct_rev(),
              fill = income)) +
   geom_boxplot() +
   theme_classic() +
@@ -329,16 +329,16 @@ if(F){
   
   # TESTING =========
   results_df %>%
-    dplyr::filter(estimation_type %in% "best",
-                  target_var %in% "pca_allvars",
+    dplyr::filter(estimation_type %in% "within_country_cv",
+                  target_var %in% "pca_allvars_mr",
                   feature_type %in% "weather") %>%
     ggplot() +
     geom_point(aes(x = wdi_agric_per_gdp,
                    y = r2))
   
   results_df %>%
-    dplyr::filter(estimation_type %in% "best",
-                  target_var %in% "pca_allvars",
+    dplyr::filter(estimation_type %in% "within_country_cv",
+                  target_var %in% "pca_allvars_mr",
                   feature_type %in% "all") %>%
     #dplyr::mutate(cat = wdi_agric_per_gdp >= median(wdi_agric_per_gdp)) %>%
     dplyr::mutate(cat = wdi_agric_per_gdp >= 30) %>%

@@ -5,7 +5,7 @@ UNDER_IA  <- "False"
 BANDS     <- "rgb"
 
 for(SATELLITE in c("viirs")){
-  for(UNDER_IA in c("False")){
+  for(UNDER_IA in c("True")){
     for(BANDS in c("rgb", "ndvi", "bu")){
       
       PATH_NAME <- paste0("landsat_",SATELLITE,"_underia",UNDER_IA,"_b_",BANDS)

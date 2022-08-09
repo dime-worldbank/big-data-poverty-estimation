@@ -17,8 +17,7 @@ df <- df %>%
 # Boxplots: By Training Sample -------------------------------------------------
 p_boxplot_tsample <- df %>%
   dplyr::filter(feature_type %in% "all_changes",
-                target_var %in% "pca_allvars",
-                estimation_type != "best") %>%
+                target_var %in% "pca_allvars") %>%
   ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
@@ -44,7 +43,7 @@ p_boxplot_tsample <- df %>%
 # Boxplots: By Target Variable -------------------------------------------------
 p_boxplot_tvar <- df %>%
   dplyr::filter(feature_type %in% "all_changes",
-                estimation_type %in% "within_country_cv") %>%
+                estimation_type %in% "best") %>%
   ggplot(aes(x = reorder(target_var_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
@@ -106,7 +105,7 @@ p_hist_tvar <- df %>%
 
 # Boxplots: By Feature Set -----------------------------------------------------
 p_boxplot_feature <- df %>%
-  dplyr::filter(estimation_type %in% "within_country_cv",
+  dplyr::filter(estimation_type %in% "best",
                 target_var %in% "pca_allvars") %>%
   dplyr::filter(feature_type_clean != "cnn_viirs_landsat") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = mean, .desc =TRUE),

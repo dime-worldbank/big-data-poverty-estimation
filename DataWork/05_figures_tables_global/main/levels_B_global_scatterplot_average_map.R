@@ -12,29 +12,56 @@ p_list <- list()
 for(aggregate_district in c(F, T)){
   
   # Load Data --------------------------------------------------------------------
+  ## Grab best parameters
+  acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                              "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
+  
+  xg_param_set_use <- acc_df %>%
+    head(1) %>%
+    dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
+                  xg_subsample = xg_subsample %>% str_replace_all("[:punct:]", "")) %>%
+    dplyr::mutate(xg_param_set = paste(xg_max.depth,
+                                       xg_eta,
+                                       xg_nthread,
+                                       xg_nrounds,
+                                       xg_subsample,
+                                       xg_objective,
+                                       xg_min_child_weight,
+                                       sep = "_")) %>%
+    pull(xg_param_set) %>%
+    str_replace_all(":", "") %>%
+    str_replace_all("error_", "error")
+  
+  ## Load predictions
   pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
     #list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
     #           full.names = T) %>%
     list.files(pattern = "*.Rds",
                full.names = T) %>%
-    str_subset("pca_allvars_all") %>%
-    str_subset("10_01_4_50_03") %>% # Parameter type
+    str_subset("_levels_") %>%
+    str_subset("pca_allvars_mr") %>%
+    str_subset(xg_param_set_use) %>% # Parameter type
     map_df(readRDS)
   
-  # Select best estimation type for each country ---------------------------------
   pred_df <- pred_df %>%
-    mutate(country_est_id = paste(estimation_type, country_code))
+    dplyr::filter(feature_type %in% "all")
   
-  cor_df <- pred_df %>%
-    group_by(country_est_id, estimation_type, country_code) %>%
-    dplyr::summarise(cor = cor(truth, prediction)) %>%
-    
-    group_by(country_code) %>% 
-    slice_max(order_by = cor, n = 1) %>%
-    
-    mutate(r2 = cor^2)
+  # Select best estimation type for each country ---------------------------------
+  # pred_df <- pred_df %>%
+  #   mutate(country_est_id = paste(estimation_type, country_code))
+  # 
+  # cor_df <- pred_df %>%
+  #   group_by(country_est_id, estimation_type, country_code) %>%
+  #   dplyr::summarise(cor = cor(truth, prediction)) %>%
+  #   
+  #   group_by(country_code) %>% 
+  #   slice_max(order_by = cor, n = 1) %>%
+  #   
+  #   mutate(r2 = cor^2)
+  # 
+  # pred_df <- pred_df[pred_df$country_est_id %in% cor_df$country_est_id,]
   
-  pred_df <- pred_df[pred_df$country_est_id %in% cor_df$country_est_id,]
+  #pred_df <- pred_df[pred_df$estimation_type %in% "continent",]
   
   # Merge with select survey variables -------------------------------------------
   survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
@@ -57,15 +84,22 @@ for(aggregate_district in c(F, T)){
   if(aggregate_district){
     pred_df <- pred_df %>%
       dplyr::mutate(gadm_uid = paste(gadm_uid, country_code)) %>%
-      group_by(gadm_uid, country_code, country_name, continent_adj) %>%
+      group_by(gadm_uid, country_code, country_name, continent_adj, estimation_type) %>%
       dplyr::summarise(truth = mean(truth),
                        prediction = mean(prediction))
   }
   
+  # One dataset per estimation type --------------------------------------------
+  pred_wthn_cntry_cv_df = pred_df %>%
+    dplyr::filter(estimation_type %in% "within_country_cv")
+  
+  pred_global_df = pred_df %>%
+    dplyr::filter(estimation_type %in% "global_country_pred") 
+  
   # Scatterplot ------------------------------------------------------------------
   if(aggregate_district){
     
-    r2_all_d   <- cor(pred_df$truth,   pred_df$prediction)^2
+    r2_all_d   <- cor(pred_global_df$truth,   pred_global_df$prediction)^2
     
     TEXT_X <- -4
     TEXT_Y_TOP <- 4
@@ -73,9 +107,9 @@ for(aggregate_district in c(F, T)){
     FONT_SIZE <- 4.5
     
     p_list[[p_list_i]] <- ggplot() +
-      geom_point(aes(x = truth,
+      geom_point(data = pred_global_df,
+                 aes(x = truth,
                      y = prediction),
-                 data = pred_df,
                  color = "black",
                  size = 0.3,
                  alpha = 0.8) +
@@ -105,10 +139,10 @@ for(aggregate_district in c(F, T)){
              alpha = guide_legend(override.aes = list(alpha = 1)))
     
   } else{
-    pred_df_u <- pred_df[pred_df$urban_rural %in% "Urban",]
-    pred_df_r <- pred_df[pred_df$urban_rural %in% "Rural",]
+    pred_df_u <- pred_global_df[pred_global_df$urban_rural %in% "Urban",]
+    pred_df_r <- pred_global_df[pred_global_df$urban_rural %in% "Rural",]
     
-    r2_all   <- cor(pred_df$truth,   pred_df$prediction)^2
+    r2_all   <- cor(pred_global_df$truth,   pred_global_df$prediction)^2
     r2_urban <- cor(pred_df_u$truth, pred_df_u$prediction)^2
     r2_rural <- cor(pred_df_r$truth, pred_df_r$prediction)^2
     
@@ -121,7 +155,7 @@ for(aggregate_district in c(F, T)){
       geom_point(aes(color = urban_rural,
                      x = truth,
                      y = prediction),
-                 data = pred_df,
+                 data = pred_global_df,
                  size = 0.25,
                  alpha = 0.3) +
       geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(r2_all,2)),
@@ -168,7 +202,7 @@ for(aggregate_district in c(F, T)){
   p_list_i <- p_list_i + 1
   
   # To Long (for map) ------------------------------------------------------------
-  cor_df <- pred_df %>%
+  cor_df <- pred_wthn_cntry_cv_df %>%
     group_by(country_code, country_name, continent_adj) %>%
     dplyr::summarise(cor = cor(truth, prediction)) %>%
     
@@ -365,13 +399,14 @@ for(aggregate_district in c(F, T)){
   # Country Scatterplot ----------------------------------------------------------
   if(aggregate_district){
     
-    p_scatter_country <- pred_df %>%
+    p_scatter_country <- pred_wthn_cntry_cv_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
       dplyr::mutate(country_name = paste0(country_name, "\nR2: ", 
                                           round(cor_val, 2))) %>%
       ungroup() %>%
-      dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T)) %>%
+      dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
+                      fct_rev()) %>%
       ggplot(aes(x = truth,
                  y = prediction),
              color = "black") +
@@ -397,14 +432,16 @@ for(aggregate_district in c(F, T)){
            height = 10*SCALE, 
            width = 8*SCALE)
     
+    
   } else{
-    p_scatter_country <- pred_df %>%
+    p_scatter_country <- pred_wthn_cntry_cv_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
       dplyr::mutate(country_name = paste0(country_name, "\nR2: ", 
                                           round(cor_val, 2))) %>%
       ungroup() %>%
-      dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T)) %>%
+      dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
+                      fct_rev()) %>%
       ggplot(aes(x = truth,
                  y = prediction,
                  color = urban_rural)) +

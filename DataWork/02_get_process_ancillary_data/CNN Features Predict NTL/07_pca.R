@@ -1,13 +1,15 @@
 # PCA on CNN Features
 
+DTL_SATELLITE <- "landsat"
 SATELLITE <- 'viirs'
+UNDER_IA <- "True"
 BANDS <- "rgb"
-UNDER_IA <- "False"
+
 PER_VAR_EXPLAIN <- 0.99
 
-for(DTL_SATELLITE in c("landsat")){
+for(DTL_SATELLITE in c("landsat", "s2")){
   for(SATELLITE in c("viirs")){
-    for(UNDER_IA in c("False")){
+    for(UNDER_IA in c("True")){
       for(BANDS in c("rgb", "ndvi", "bu")){
         
         PATH_NAME <- paste0(DTL_SATELLITE, "_",SATELLITE,"_underia",UNDER_IA,"_b_",BANDS)
@@ -15,15 +17,18 @@ for(DTL_SATELLITE in c("landsat")){
         print(PATH_NAME)
         
         # Load data --------------------------------------------------------------------
-        cnn_feat_rgb <- readRDS(file.path(data_dir,
-                                          SURVEY_NAME,
-                                          "FinalData",
-                                          "Individual Datasets",
-                                          "cnn_features",
-                                          paste0("cnn_features_", PATH_NAME, ".Rds")))
+        cnn_features_df <- file.path(data_dir,
+                                     SURVEY_NAME,
+                                     "FinalData",
+                                     "Individual Datasets",
+                                     "cnn_features",
+                                     "split_into_data_subsets") %>%
+          list.files(full.names = T) %>%
+          str_subset(paste0("features_", PATH_NAME, "_")) %>%
+          map_df(fread)
         
         ## Grab features (remove ID)
-        cnn_feat_noid <- cnn_feat_rgb %>%
+        cnn_feat_noid <- cnn_features_df %>%
           dplyr::select(-uid) %>%
           as.data.frame()
         
@@ -34,7 +39,7 @@ for(DTL_SATELLITE in c("landsat")){
         
         cnn_feat_noid <- cnn_feat_noid[,cnn_feat_sd > 0]
         
-        ## PCA and grab features that explain 90% of variation
+        ## PCA and grab features that explain X% of variation
         pca_obj <- cnn_feat_noid %>%
           prcomp(scale = T)
         
@@ -49,7 +54,7 @@ for(DTL_SATELLITE in c("landsat")){
           rename_all(~tolower(paste0(name_prefix, .)))
         
         ## Add UID back in
-        pca_df$uid <- cnn_feat_rgb$uid %>% str_replace_all("b'", "") %>% str_replace_all("'", "")
+        pca_df$uid <- cnn_features_df$uid %>% str_replace_all("b'", "") %>% str_replace_all("'", "")
         
         # Export -----------------------------------------------------------------------
         saveRDS(pca_df,

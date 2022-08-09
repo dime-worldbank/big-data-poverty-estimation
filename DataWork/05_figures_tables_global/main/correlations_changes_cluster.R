@@ -8,8 +8,9 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 # Calc Correlations ------------------------------------------------------------
 df_cor <- df %>%
   dplyr::select(-c(latitude, longitude)) %>%
-  pivot_longer(cols = -c(uid, within_country_fold, continent_adj, country_code, gadm_uid, iso2, year_diff, 
-                         pca_allvars, wealth_index_score)) %>%
+  pivot_longer(cols = -c(uid, within_country_fold, continent_adj, country_code, country_name, gadm_uid, iso2, year_diff, 
+                         pca_allvars, wealth_index_score, 
+                         urban_rural_yr1, urban_rural_yr2)) %>%
   dplyr::filter(!is.na(value)) %>%
   group_by(name, country_code, year_diff) %>%
   dplyr::summarise(cor = cor(pca_allvars, value),
@@ -64,24 +65,6 @@ df_cor %>%
 ggsave(filename = file.path(figures_global_dir, "cor_changes.png"),
        height = 3,
        width = 9.5)
-
-
-
-
-## Across all countries
-cor_all_df <- df %>%
-  dplyr::select(-c(latitude, longitude)) %>%
-  pivot_longer(cols = -c(uid, within_country_fold, continent_adj, country_code, gadm_uid, iso2, year_diff, 
-                         pca_allvars, wealth_index_score)) %>%
-  dplyr::filter(!is.na(value)) %>%
-  group_by(name, continent_adj) %>%
-  dplyr::summarise(cor = cor(pca_allvars, value))
-
-df %>%
-  ggplot() +
-  geom_point(aes(x = log(ntlharmon_avg+1),
-                 y = pca_allvars)) +
-  facet_wrap(~continent_adj)
 
 
 

@@ -83,8 +83,9 @@ log_p1 <- function(x){
 df <- df %>%
   dplyr::mutate_at(vars(contains("osm_dist")), log_p1)
 
-df$viirs_avg_rad <- log(df$viirs_avg_rad + 1)
-df$viirs_avg_rad_stddev <- log(df$viirs_avg_rad_stddev + 1)
+df$viirs_avg_rad         <- log(df$viirs_avg_rad + 1)
+df$viirs_avg_rad_sdspace <- log(df$viirs_avg_rad_sdspace + 1)
+df$viirs_avg_rad_sdtime  <- log(df$viirs_avg_rad_sdtime + 1)
 
 # Remove Variables -------------------------------------------------------------
 df <- df %>%
@@ -118,9 +119,6 @@ df <- df %>%
     
     starts_with("ntlharmon_"),
     
-    #starts_with("cnn_s2_rgb_"),
-    #starts_with("cnn_s2_ndvi_"),
-    #starts_with("cnn_s2_bu_"),
     starts_with("cnn_"),
     
     starts_with("l8_"),

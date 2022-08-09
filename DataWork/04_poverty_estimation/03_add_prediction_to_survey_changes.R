@@ -25,9 +25,8 @@ continent_df <- survey_df %>%
 pred_df <- pred_df %>%
   left_join(continent_df, by = "country_code")
 
-# Restrict to best xg_parameters -----------------------------------------------
 pred_df <- pred_df %>%
-  dplyr::mutate(model_param = paste(continent_adj,
+  dplyr::mutate(model_param = paste(country_code,
                                     estimation_type,
                                     target_var,
                                     feature_type,
@@ -37,14 +36,23 @@ pred_df <- pred_df %>%
                                     xg_nrounds,
                                     xg_subsample,
                                     xg_objective,
+                                    xg_min_child_weight,
                                     sep = "_")) 
 
+# Restrict to best xg_parameters -----------------------------------------------
 best_param_df <- pred_df %>%
-  group_by(model_param, continent_adj, estimation_type, target_var, feature_type) %>%
-  dplyr::summarise(r2 = cor(truth, prediction)^2) %>%
+  group_by(model_param,
+           country_code,
+           estimation_type,
+           target_var,
+           feature_type) %>%
+  dplyr::summarise(cor = cor(truth, prediction)) %>%
   ungroup() %>%
-  arrange(-r2) %>%
-  distinct(estimation_type, continent_adj, target_var, feature_type, .keep_all = T)
+  arrange(-cor) %>%
+  distinct(country_code,
+           estimation_type,
+           target_var,
+           feature_type, .keep_all = T)
 
 pred_df <- pred_df[pred_df$model_param %in% best_param_df$model_param,]
 
@@ -57,6 +65,7 @@ pred_long_df <- pred_long_df %>%
   mutate(country_est_id = paste(pred_var, country_code))
 
 cor_df <- pred_long_df %>%
+  dplyr::filter(feature_type == "all_changes") %>%
   group_by(country_est_id, pred_var, target_var, country_code) %>%
   dplyr::summarise(cor = cor(truth, prediction)) %>%
   

@@ -26,14 +26,25 @@ names(osm_road_df) <- names(osm_road_df) %>%
   str_replace_all("dist", "distmeters_road")
 
 # [Load] CNN Features ----------------------------------------------------------
-cnn_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                "cnn_features_landsat_viirs_underiaFalse_b_rgb_pca.Rds"))
+## Landsat
+cnn_landsat_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                        "cnn_features_landsat_viirs_underiaTrue_b_rgb_pca.Rds"))
 
-cnn_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                 "cnn_features_landsat_viirs_underiaFalse_b_ndvi_pca.Rds"))
+cnn_landsat_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                         "cnn_features_landsat_viirs_underiaTrue_b_ndvi_pca.Rds"))
 
-cnn_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                               "cnn_features_landsat_viirs_underiaFalse_b_bu_pca.Rds"))
+cnn_landsat_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                       "cnn_features_landsat_viirs_underiaTrue_b_bu_pca.Rds"))
+
+## Sentinel
+cnn_sentinel_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                         "cnn_features_s2_viirs_underiaTrue_b_rgb_pca.Rds"))
+
+cnn_sentinel_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                          "cnn_features_s2_viirs_underiaTrue_b_ndvi_pca.Rds"))
+
+cnn_sentinel_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
+                                        "cnn_features_s2_viirs_underiaTrue_b_bu_pca.Rds"))
 
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
@@ -247,16 +258,19 @@ survey_ancdata_df <- list(survey_df,
                           fb_df, 
                           #fb_prop_df, 
                           fb_rwi_df,
-                          cnn_rgb_df,
-                          cnn_ndvi_df,
-                          cnn_bu_df,
+                          cnn_landsat_rgb_df,
+                          cnn_landsat_ndvi_df,
+                          cnn_landsat_bu_df,
+                          cnn_sentinel_rgb_df,
+                          cnn_sentinel_ndvi_df,
+                          cnn_sentinel_bu_df,
                           osm_poi_df, 
                           osm_road_df) %>%
   reduce(full_join, by = "uid") %>%
   dplyr::filter(!is.na(country_code))
 
-dff <- pollution_df #???
-paste(dff$uid, dff$year) %>% table %>% table
+# dff <- pollution_df #???
+# paste(dff$uid, dff$year) %>% table %>% table
 
 survey_ancdata_df <- list(survey_ancdata_df,
                           gc_df, 

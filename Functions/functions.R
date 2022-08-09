@@ -17,13 +17,14 @@ clean_varnames <- function(df){
       variable %>% str_detect("osm_") ~ "OpenStreetMap",
       variable %>% str_detect("l8_") ~ "Daytime Imagery, Average",
       variable %>% str_detect("l7_") ~ "Daytime Imagery, Average",
-      # variable %>% str_detect("cnn_s2_rgb_") ~ "Daytime Imagery, CNN: RGB",
-      # variable %>% str_detect("cnn_s2_ndvi_") ~ "Daytime Imagery, CNN: NDVI",
-      # variable %>% str_detect("cnn_s2_bu_") ~ "Daytime Imagery, CNN: BU",
+      variable %>% str_detect("cnn_") ~ "Daytime Imagergy, CNN",
+      #variable %>% str_detect("cnn_s2_rgb_") ~ "Daytime Imagery, CNN: RGB",
+      #variable %>% str_detect("cnn_s2_ndvi_") ~ "Daytime Imagery, CNN: NDVI",
+      #variable %>% str_detect("cnn_s2_bu_") ~ "Daytime Imagery, CNN: BU",
       
-      variable %>% str_detect("cnn_viirs_landsat_rgb_") ~ "Daytime Imagery, CNN",
-      variable %>% str_detect("cnn_viirs_landsat_ndvi_") ~ "Daytime Imagery, CNN",
-      variable %>% str_detect("cnn_viirs_landsat_bu_") ~ "Daytime Imagery, CNN",
+      #variable %>% str_detect("cnn_viirs_landsat_rgb_") ~ "Daytime Imagery, CNN",
+      #variable %>% str_detect("cnn_viirs_landsat_ndvi_") ~ "Daytime Imagery, CNN",
+      #variable %>% str_detect("cnn_viirs_landsat_bu_") ~ "Daytime Imagery, CNN",
       
       variable %>% str_detect("fb_prop") ~ "Facebook Marketing",
       variable %>% str_detect("worldclim") ~ "WorldClim",
@@ -64,7 +65,9 @@ clean_varnames <- function(df){
   #### Manual variable clean
   df <- df %>%
     dplyr::mutate(variable_clean = case_when(
-      variable_clean == "viirs_avg_rad" ~ "Nighttime Lights",
+      variable_clean == "viirs_avg_rad" ~ "Nighttime Lights: Average",
+      variable_clean == "viirs_avg_rad_sdtime" ~ "Nighttime Lights: Std. Across Time",
+      variable_clean == "viirs_avg_rad_sdspace" ~ "Nighttime Lights: Std. Across Space",
       
       variable %>% str_detect("osm_") ~ variable %>%
         str_replace_all("osm_distmeters_poi_", "Distance: ") %>%
@@ -153,6 +156,18 @@ clean_varnames <- function(df){
                                                                                 "cnn_viirs_landsat_ndvi_pc",
                                                                                 "NDVI CNN Feature "),
       
+      variable_clean %>% str_detect("cnn_viirs_s2_bu") ~ str_replace_all(variable_clean, 
+                                                                         "cnn_viirs_s2_bu_pc",
+                                                                         "BU CNN Feature "),
+      
+      variable_clean %>% str_detect("cnn_viirs_s2_rgb") ~ str_replace_all(variable_clean, 
+                                                                          "cnn_viirs_s2_rgb_pc",
+                                                                          "RGB CNN Feature "),
+      
+      variable_clean %>% str_detect("cnn_viirs_s2_ndvi") ~ str_replace_all(variable_clean, 
+                                                                           "cnn_viirs_s2_ndvi_pc",
+                                                                           "NDVI CNN Feature "),
+      
       variable_clean %>% str_detect("weather") ~ variable_clean %>%
         str_replace_all("_",
                         " ") %>%
@@ -163,6 +178,21 @@ clean_varnames <- function(df){
       
       TRUE ~ variable_clean
     ))
+  
+  # df <- df %>%
+  #   mutate(variable_clean = case_when(
+  #     variable %>% str_detect("osm_") & 
+  #       variable %>% str_detect("_poi_") ~ paste0(variable_clean, " POI"),
+  #     
+  #     variable %>% str_detect("osm_") & 
+  #       variable %>% str_detect("_road_") ~ paste0(variable_clean, " Road"),
+  #     
+  #     TRUE ~ variable_clean
+  #   ))
+  
+  df <- df %>%
+    mutate(variable_clean = variable_clean %>%
+             str_replace_all("\\bany\\b", "Any"))
   
   df <- df %>%
     dplyr::mutate(variable_clean = case_when(

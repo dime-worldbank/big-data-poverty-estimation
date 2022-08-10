@@ -11,40 +11,40 @@ p_list_i <- 1
 p_list <- list()
 for(aggregate_district in c(F, T)){
   
-  # Load Data --------------------------------------------------------------------
-  ## Grab best parameters
-  acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                              "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
-  
-  xg_param_set_use <- acc_df %>%
-    head(1) %>%
-    dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
-                  xg_subsample = xg_subsample %>% str_replace_all("[:punct:]", "")) %>%
-    dplyr::mutate(xg_param_set = paste(xg_max.depth,
-                                       xg_eta,
-                                       xg_nthread,
-                                       xg_nrounds,
-                                       xg_subsample,
-                                       xg_objective,
-                                       xg_min_child_weight,
-                                       sep = "_")) %>%
-    pull(xg_param_set) %>%
-    str_replace_all(":", "") %>%
-    str_replace_all("error_", "error")
-  
-  ## Load predictions
-  pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
-    #list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
-    #           full.names = T) %>%
-    list.files(pattern = "*.Rds",
-               full.names = T) %>%
-    str_subset("_levels_") %>%
-    str_subset("pca_allvars_mr") %>%
-    str_subset(xg_param_set_use) %>% # Parameter type
-    map_df(readRDS)
-  
-  pred_df <- pred_df %>%
-    dplyr::filter(feature_type %in% "all")
+  # # Load Data --------------------------------------------------------------------
+  # ## Grab best parameters
+  # acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+  #                             "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
+  # 
+  # xg_param_set_use <- acc_df %>%
+  #   head(1) %>%
+  #   dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
+  #                 xg_subsample = xg_subsample %>% str_replace_all("[:punct:]", "")) %>%
+  #   dplyr::mutate(xg_param_set = paste(xg_max.depth,
+  #                                      xg_eta,
+  #                                      xg_nthread,
+  #                                      xg_nrounds,
+  #                                      xg_subsample,
+  #                                      xg_objective,
+  #                                      xg_min_child_weight,
+  #                                      sep = "_")) %>%
+  #   pull(xg_param_set) %>%
+  #   str_replace_all(":", "") %>%
+  #   str_replace_all("error_", "error")
+  # 
+  # ## Load predictions
+  # pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
+  #   #list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
+  #   #           full.names = T) %>%
+  #   list.files(pattern = "*.Rds",
+  #              full.names = T) %>%
+  #   str_subset("_levels_") %>%
+  #   str_subset("pca_allvars_mr") %>%
+  #   str_subset(xg_param_set_use) %>% # Parameter type
+  #   map_df(readRDS)
+  # 
+  # pred_df <- pred_df %>%
+  #   dplyr::filter(feature_type %in% "all")
   
   # Select best estimation type for each country ---------------------------------
   # pred_df <- pred_df %>%
@@ -65,36 +65,51 @@ for(aggregate_district in c(F, T)){
   
   # Merge with select survey variables -------------------------------------------
   survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-                                 "survey_alldata_clean.Rds"))
+                                 "survey_alldata_clean_predictions.Rds"))
   
   survey_df <- survey_df %>%
-    dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
-                  country_name, gadm_uid)
+    filter(most_recent_survey %in% T)
   
-  pred_df <- pred_df %>%
-    dplyr::left_join(survey_df, by = "uid")
-  
-  pred_df <- pred_df %>%
-    dplyr::mutate(urban_rural = case_when(
-      urban_rural == "U" ~ "Urban",
-      urban_rural == "R" ~ "Rural"
-    ))
+  # survey_df <- survey_df %>%
+  #   dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
+  #                 country_name, gadm_uid)
+  # 
+  # pred_df <- pred_df %>%
+  #   dplyr::left_join(survey_df, by = "uid")
+  # 
+  # pred_df <- pred_df %>%
+  #   dplyr::mutate(urban_rural = case_when(
+  #     urban_rural == "U" ~ "Urban",
+  #     urban_rural == "R" ~ "Rural"
+  #   ))
   
   # Aggregate --------------------------------------------------------------------
   if(aggregate_district){
-    pred_df <- pred_df %>%
+    survey_df <- survey_df %>%
       dplyr::mutate(gadm_uid = paste(gadm_uid, country_code)) %>%
-      group_by(gadm_uid, country_code, country_name, continent_adj, estimation_type) %>%
-      dplyr::summarise(truth = mean(truth),
-                       prediction = mean(prediction))
+      group_by(gadm_uid, country_code, country_name, continent_adj) %>%
+      dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
+                       predict_pca_allvars_mr_best = mean(predict_pca_allvars_mr_best),
+                       predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all))
   }
   
   # One dataset per estimation type --------------------------------------------
-  pred_wthn_cntry_cv_df = pred_df %>%
-    dplyr::filter(estimation_type %in% "within_country_cv")
+  # pred_wthn_cntry_cv_df = pred_df %>%
+  #   dplyr::filter(estimation_type %in% "within_country_cv")
   
-  pred_global_df = pred_df %>%
-    dplyr::filter(estimation_type %in% "global_country_pred") 
+  # pred_best_df = pred_df %>%
+  #   dplyr::filter(estimation_type %in% "best")
+  # 
+  # pred_global_df = pred_df %>%
+  #   dplyr::filter(estimation_type %in% "global_country_pred") 
+  
+  pred_best_df <- survey_df %>%
+    dplyr::rename(truth = pca_allvars_mr,
+                  prediction = predict_pca_allvars_mr_best)
+  
+  pred_global_df <- survey_df %>%
+    dplyr::rename(truth = pca_allvars_mr,
+                  prediction = predict_pca_allvars_mr_global_country_pred_all)
   
   # Scatterplot ------------------------------------------------------------------
   if(aggregate_district){
@@ -139,8 +154,8 @@ for(aggregate_district in c(F, T)){
              alpha = guide_legend(override.aes = list(alpha = 1)))
     
   } else{
-    pred_df_u <- pred_global_df[pred_global_df$urban_rural %in% "Urban",]
-    pred_df_r <- pred_global_df[pred_global_df$urban_rural %in% "Rural",]
+    pred_df_u <- pred_global_df[pred_global_df$urban_rural %in% "U",]
+    pred_df_r <- pred_global_df[pred_global_df$urban_rural %in% "R",]
     
     r2_all   <- cor(pred_global_df$truth,   pred_global_df$prediction)^2
     r2_urban <- cor(pred_df_u$truth, pred_df_u$prediction)^2
@@ -202,7 +217,7 @@ for(aggregate_district in c(F, T)){
   p_list_i <- p_list_i + 1
   
   # To Long (for map) ------------------------------------------------------------
-  cor_df <- pred_wthn_cntry_cv_df %>%
+  cor_df <- pred_best_df %>%
     group_by(country_code, country_name, continent_adj) %>%
     dplyr::summarise(cor = cor(truth, prediction)) %>%
     
@@ -318,7 +333,7 @@ for(aggregate_district in c(F, T)){
                            labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
-                          "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
+                          "D. r2 of Estimated vs True Wealth Score Within Countries [ADM2]",
                           "B. r2 of Estimated vs True Wealth Score Within Countries"), 
            caption = "") +
       theme_void() +
@@ -399,10 +414,10 @@ for(aggregate_district in c(F, T)){
   # Country Scatterplot ----------------------------------------------------------
   if(aggregate_district){
     
-    p_scatter_country <- pred_wthn_cntry_cv_df %>%
+    p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
-      dplyr::mutate(country_name = paste0(country_name, "\nR2: ", 
+      dplyr::mutate(country_name = paste0(country_name, "\nr2: ", 
                                           round(cor_val, 2))) %>%
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
@@ -415,8 +430,8 @@ for(aggregate_district in c(F, T)){
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +
       labs(color = NULL,
            title = "Predicted vs. True Wealth Scores",
-           x = "True Poverty Level",
-           y = "Predicted Poverty Level") +
+           x = "True Asset Index",
+           y = "Predicted Asset Index") +
       theme_minimal() +
       theme(legend.position = "top",
             legend.box.background = element_rect(colour = "black"),
@@ -434,10 +449,10 @@ for(aggregate_district in c(F, T)){
     
     
   } else{
-    p_scatter_country <- pred_wthn_cntry_cv_df %>%
+    p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
-      dplyr::mutate(country_name = paste0(country_name, "\nR2: ", 
+      dplyr::mutate(country_name = paste0(country_name, "\nr2: ", 
                                           round(cor_val, 2))) %>%
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
@@ -450,8 +465,8 @@ for(aggregate_district in c(F, T)){
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +
       labs(color = NULL,
            title = "Predicted vs. True Wealth Scores",
-           x = "True Poverty Level",
-           y = "Predicted Poverty Level") +
+           x = "True Asset Index",
+           y = "Predicted Asset Index") +
       theme_minimal() +
       theme(legend.position = "top",
             legend.box.background = element_rect(colour = "black"),

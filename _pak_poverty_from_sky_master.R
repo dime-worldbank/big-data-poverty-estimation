@@ -377,8 +377,9 @@ if(F){
   # --
   
   source(file.path(datawork_dir, "04_poverty_estimation", "01_pov_estimation_xgboost.R"))
-  source(file.path(datawork_dir, "04_poverty_estimation", "02_add_prediction_to_survey.R"))
   source(file.path(datawork_dir, "04_poverty_estimation", "02_append_results.R"))
+  source(file.path(datawork_dir, "04_poverty_estimation", "03_add_prediction_to_survey_changes.R"))
+  source(file.path(datawork_dir, "04_poverty_estimation", "03_add_prediction_to_survey_levels.R"))
   
   # 5. Tables/Figures: Global analysis -----------------------------------------
   # Makes tables and figures for paper
@@ -387,19 +388,33 @@ if(F){
   figures_tables_global_dir <- file.path(datawork_dir, "05_figures_tables_global")
   
   ## Main
-  source(file.path(figures_tables_global_dir, "main", "correlations.R"))
-  source(file.path(figures_tables_global_dir, "main", "global_scatterplot_average_map.R"))
-  source(file.path(figures_tables_global_dir, "main", "avg_performance_by_type.R"))
-  source(file.path(figures_tables_global_dir, "main", "determinants_of_model_performance.R"))
-  source(file.path(figures_tables_global_dir, "main", "compare_with_rwi.R"))
+  source(file.path(figures_tables_global_dir, "main", "levels_1_correlations.R"))
+  source(file.path(figures_tables_global_dir, "main", "levels_2_global_scatterplot_average_map.R"))
+  source(file.path(figures_tables_global_dir, "main", "levels_3_avg_performance_by_type.R"))
+  source(file.path(figures_tables_global_dir, "main", "levels_4_determinants_of_model_performance.R"))
+  source(file.path(figures_tables_global_dir, "main", "levels_5_feature_importance.R"))
+  
+  source(file.path(figures_tables_global_dir, "main", "changes_1_correlations.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_2_main_results.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_3_scatter_countries.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_4_explain_variation.R"))
+  
+  # source(file.path(figures_tables_global_dir, "main", "correlations.R"))
+  # source(file.path(figures_tables_global_dir, "main", "global_scatterplot_average_map.R"))
+  # source(file.path(figures_tables_global_dir, "main", "avg_performance_by_type.R"))
+  # source(file.path(figures_tables_global_dir, "main", "determinants_of_model_performance.R"))
+  # source(file.path(figures_tables_global_dir, "main", "compare_with_rwi.R"))
   
   ## SI
-  source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
-  source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2.R"))
-  source(file.path(figures_tables_global_dir, "si", "figure_educ_fb_dhs.R"))
+  source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_both_years.R"))
+  source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_most_recent.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_levels_cor.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_changes_cor.R")) # CHECK? VALID TO DO CHANGES???
   source(file.path(figures_tables_global_dir, "si", "figure_fb_features_cor_each_country.R"))
-  source(file.path(figures_tables_global_dir, "si", "table_dhs_summary.R"))
-  
+  source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2_levels.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_educ_fb_dhs.R"))
+
 }
 
 

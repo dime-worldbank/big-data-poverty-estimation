@@ -9,20 +9,18 @@ df <- df %>%
 # Make title -------------------------------------------------------------------
 # Title: "[iso2]; Cor = [cor]"
 df <- df %>%
-  #dplyr::mutate(wealth_index_score = wealth_index_score / 1000000) %>%
   group_by(iso2) %>%
-  #dplyr::mutate(wealth_index_score = rescale(wealth_index_score, to = c(1,5))) %>%
   dplyr::mutate(cor = cor(wealth_index_score,
                           pca_allvars)) %>%
   ungroup() %>% 
-  dplyr::mutate(title = paste0(iso2, "; Cor = ", round(cor, 2)))
+  dplyr::mutate(title = country_name)
+#dplyr::mutate(title = paste0(iso2, "; Cor = ", round(cor, 2)))
 
 # Figure: Scatterplots ---------------------------------------------------------
 p <- df %>%
-  ggplot() +
-  geom_point(aes(x = wealth_index_score,
-                 y = pca_allvars),
-             size = 0.1) +
+  ggplot(aes(x = wealth_index_score,
+             y = pca_allvars)) +
+  geom_point(size = 0.1) +
   labs(x = "Changes in DHS Wealth Index",
        y = "Change in Global Asset Index") +
   theme_classic() +

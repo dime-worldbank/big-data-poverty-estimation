@@ -61,6 +61,7 @@ pred_long_df <- pred_long_df %>%
   mutate(country_est_id = paste(pred_var, country_code))
 
 cor_df <- pred_long_df %>%
+  dplyr::filter(feature_type %in% "all") %>%
   group_by(country_est_id, pred_var, target_var, country_code) %>%
   dplyr::summarise(cor = cor(truth, prediction)) %>%
   

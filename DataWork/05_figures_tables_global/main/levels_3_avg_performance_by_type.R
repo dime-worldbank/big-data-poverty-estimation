@@ -61,7 +61,7 @@ p_targetvar <- results_df %>%
 # 3. By feature ----------------------------------------------------------------
 p_feature <- results_df %>%
   dplyr::filter(target_var %in% "pca_allvars_mr",
-                estimation_type %in% "within_country_cv") %>%
+                estimation_type %in% "best") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,

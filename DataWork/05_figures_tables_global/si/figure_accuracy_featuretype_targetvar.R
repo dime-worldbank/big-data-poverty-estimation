@@ -3,15 +3,31 @@
 FILL_COLOR <- "gray80"
 
 # Load data --------------------------------------------------------------------
+# results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+#                                 "accuracy_appended.Rds"))
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended.Rds"))
+                                "accuracy_appended_bestparam.Rds"))
 
 results_df <- results_df %>%
-  dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
+  dplyr::filter(level_change %in% "levels",
+                estimation_type %in% "best",
+                target_var != "pca_allvars") %>%
+  mutate(target_var_clean = target_var_clean %>% as.character()) %>%
+  mutate(target_var_clean = case_when(
+    target_var_clean == "Asset Index - All Periods" ~ "Asset Index",
+    TRUE ~ target_var_clean
+  )) %>%
+  mutate(target_var_clean = target_var_clean %>%
+           factor(levels = c("DHS Wealth Index",
+                             "Asset Index",
+                             "Asset Index: Non-Physical Assets",
+                             "Asset Index: Physical Assets")))
+
+# results_df <- results_df %>%
+#   dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
 
 # Arrange ----------------------------------------------------------------------
 p <- results_df %>%
-  dplyr::filter(estimation_type %in% "best") %>%
   dplyr::mutate(target_var_clean = fct_rev(target_var_clean)) %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2,
@@ -34,8 +50,8 @@ p <- results_df %>%
                     guide = guide_legend(reverse = TRUE) ) +
   theme_classic() +
   theme(axis.text.y = element_text(face = "bold"),
-    plot.title = element_text(face = "bold"),
-    plot.title.position = "plot") +  
+        plot.title = element_text(face = "bold"),
+        plot.title.position = "plot") +  
   coord_flip() 
 
 # Export -----------------------------------------------------------------------

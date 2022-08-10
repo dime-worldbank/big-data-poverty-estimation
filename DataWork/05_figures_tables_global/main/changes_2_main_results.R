@@ -38,18 +38,13 @@ acc_df <- acc_df %>%
                            "Daytime Imagery:\nAvg. & Std. Dev."))
 
 # Boxplots: By Training Sample -------------------------------------------------
-
 p_boxplot_tsample <- acc_df %>%
-  #dplyr::filter(target_var %in% "pca_allvars") %>%
   dplyr::filter(feature_type %in% "all_changes",
                 target_var %in% "pca_allvars") %>%
-  #group_by(country_name) %>%
-  #slice_max(cor, n = 1) %>%
   ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
                     fill = FILL_COLOR) +
-  #geom_half_point(transformation = position_jitter(width = 0.05, height = 0.1)) +
   stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
                vjust = -0.2, hjust = 0.5, aes(label = paste(round(..y.., digits = 2)))) +
   stat_summary(fun = p75, geom = "text", col = "black",     # Add text to plot
@@ -59,7 +54,6 @@ p_boxplot_tsample <- acc_df %>%
   labs(x = NULL,
        y = expression(r^2),
        title = "A. Performance by training sample type") +
-  #scale_y_continuous(limits = c(0,0.6)) +
   theme_classic() +
   theme(legend.position = "none",
         axis.text.y = element_text(face = "bold"),
@@ -77,6 +71,11 @@ best_df <- bind_rows(
     distinct(country_name, .keep_all = T) %>%
     mutate(type = "ADM2")
 )
+
+# best_df %>%
+#   ggplot(aes(x = r2,
+#              y = type)) +
+#   geom_boxplot()
 
 best_df <- best_df %>%
   mutate(r2_cat = case_when(
@@ -112,66 +111,17 @@ p_cluster_adm <- best_df %>%
        y = expression(r^2),
        fill = "Unit",
        title = "B. Performance by unit") +
-  scale_fill_manual(values = c("dodgerblue2",
-                               "darkorange")) +
-  xlim(0, 33) +
+  scale_fill_manual(values = c("lightblue1",
+                               "tan1")) +
+  xlim(0, 26) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.title.y = element_text(angle = 0, vjust = 0.5),
         plot.title = element_text(face = "bold"),
-        legend.position = "top",
-        plot.title.position = "plot")
+        legend.position = c(0.75,0.75),
+        plot.title.position = "plot") 
 
-# Example countries ------------------------------------------------------------
-## Top 10 countries
-cluster_countries <- cluster_df %>%
-  distinct(country_name, .keep_all = T) %>%
-  arrange(-r2) %>%
-  head(5) %>%
-  pull(country_name)
-
-district_countries <- district_df %>%
-  distinct(country_name, .keep_all = T) %>%
-  arrange(-r2) %>%
-  head(5) %>%
-  pull(country_name)
-
-## Figures
-p_scatter_cluster <- cluster_df %>%
-  filter(country_name %in% cluster_countries) %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
-  geom_point(size = 0.5) +
-  stat_poly_eq() +
-  labs(x = "True Asset Index",
-       y = "Estimated Asset Index",
-       title = "A. Cluster Level",
-       color = NULL) +
-  theme_classic() +
-  theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold",size = 12),
-        plot.title = element_text(face = "bold")) +
-  facet_wrap(~country_name,
-             scales = "free",
-             nrow = 1) 
-
-p_scatter_district <- district_df %>%
-  filter(country_name %in% district_countries) %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
-  geom_point(size = 0.75) +
-  stat_poly_eq() +
-  labs(x = "True Asset Index",
-       y = "Estimated Asset Index",
-       title = "A. District Level",
-       color = NULL) +
-  theme_classic() +
-  theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold",size = 12),
-        plot.title = element_text(face = "bold")) +
-  facet_wrap(~country_name,
-             scales = "free",
-             nrow = 1)
+#p_cluster_adm 
 
 # Boxplots: By Feature Set -----------------------------------------------------
 p_boxplot_feature <- acc_df %>%
@@ -210,7 +160,7 @@ p <- ggarrange(p_left, p_boxplot_feature,
 
 ggsave(p,
        filename = file.path(figures_global_dir, "changes_results.png"),
-       height = 12,
-       width = 12)
+       height = 6,
+       width = 11)
 
 

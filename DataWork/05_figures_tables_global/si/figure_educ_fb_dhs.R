@@ -63,10 +63,11 @@ p_cor <- df_sum %>%
   ggplot(aes(x = fb_educ_var,
              y = dhs_educ_var)) +
   geom_point() +
-  stat_cor(aes(label = ..r.label..),
-           label.x.npc = "left",
-           label.y.npc = "top",
-           color = "red") +
+  # stat_cor(aes(label = ..r.label..),
+  #          label.x.npc = "left",
+  #          label.y.npc = "top",
+  #          color = "red") +
+  stat_poly_eq(small.r = T, color = "red") +
   labs(title = "A. Association between education variables from DHS and Facebook aggregated to different units",
        x = "Proportion More than High School Education [Facebook]",
        y = "Years of\nEducation,\nMaximum\nin Household\n[DHS]") +
@@ -148,9 +149,10 @@ p_prop_fb_cor <- df_cor %>%
   ggplot(aes(x = cor,
              y = prop_fb_cntry)) + 
   geom_point() +
-  stat_cor(aes(label = ..r.label..),
-           label.y.npc = "top",
-           color = "red") +
+  # stat_cor(aes(label = ..r.label..),
+  #          label.y.npc = "top",
+  #          color = "red") +
+  stat_poly_eq(small.r = T, color = "red") +
   theme_classic() +
   theme(strip.text = element_text(face = "bold"),
         plot.title = element_text(face = "bold", hjust = 0),

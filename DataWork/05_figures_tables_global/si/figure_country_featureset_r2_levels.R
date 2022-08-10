@@ -4,12 +4,12 @@ pad0 <- function(x) ifelse(x <= 9, paste0("0", x), paste0(x))
 
 # Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended.Rds"))
+                                "accuracy_appended_bestparam.Rds"))
 
 # Prep data --------------------------------------------------------------------
 results_sub_df <- results_df %>%
   dplyr::filter(estimation_type %in% "best",
-                target_var %in% "pca_allvars") %>%
+                target_var %in% "pca_allvars_mr") %>%
   dplyr::filter(!(feature_type %in% c("all")))
 
 results_sub_df <- results_sub_df %>%
@@ -35,11 +35,12 @@ p <- results_sub_df %>%
        x = "Feature Set",
        fill = expression(r^2)) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.2))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.2, color = "black"),
+        axis.text.y = element_text(color = "black"))
 
 ggsave(p, filename = file.path(figures_global_dir, "country_featureset_r2.png"),
-       height = 9,
-       width = 5)
+       height = 10,
+       width = 6)
 
 
 

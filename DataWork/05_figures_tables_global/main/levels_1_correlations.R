@@ -17,7 +17,7 @@ gc_param_df <- read_csv(file.path(data_dir, "Globcover", "RawData", "gc_classes.
 df_long <- df %>%
   dplyr::select(country_name, 
                 continent_adj,
-                pca_allvars,
+                pca_allvars_mr,
                 starts_with("viirs_"),
                 starts_with("gc_"),
                 starts_with("osm_"),
@@ -31,7 +31,7 @@ df_long <- df %>%
                 starts_with("pollution_aod_"),
                 starts_with("pollution_s5p_"),
                 starts_with("weather_")) %>%
-  pivot_longer(cols = -c(country_name, pca_allvars, continent_adj)) %>%
+  pivot_longer(cols = -c(country_name, pca_allvars_mr, continent_adj)) %>%
   dplyr::rename(variable = name) %>%
   dplyr::mutate(variable_cat = case_when(
     variable %>% str_detect("viirs_") ~ "Nighttime Lights",
@@ -54,10 +54,10 @@ df_long <- df %>%
 
 ### Compute Correlation
 cor_df <- df_long %>%
-  dplyr::filter(!is.na(pca_allvars),
+  dplyr::filter(!is.na(pca_allvars_mr),
                 !is.na(value)) %>%
   group_by(variable, variable_cat, country_name, continent_adj) %>%
-  dplyr::summarise(cor = cor(pca_allvars, value)) %>%
+  dplyr::summarise(cor = cor(pca_allvars_mr, value)) %>%
   ungroup() %>%
   
   # TODO: CHECK WHY THIS WOULD HAPPEN

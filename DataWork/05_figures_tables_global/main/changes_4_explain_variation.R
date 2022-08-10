@@ -24,14 +24,16 @@ p <- df_sum %>%
                 pca_allvars_sd_change,
                 ntlharmon_avg_sd_change,
                 wdi_population,
-                wdi_gdp_pc) %>%
+                wdi_gdp_pc,
+                N) %>%
   pivot_longer(cols = -r2) %>%
   dplyr::mutate(name = case_when(
     name == "pca_allvars_sd_change" ~ "A. Std. Dev. of Asset Index Change",
     name == "ntlharmon_avg_sd_change" ~ "B. Std. Dev. of NTL Change",
-    name == "year_diff" ~ "C. Year Difference",
-    name == "wdi_population" ~ "D. Population, logged",
-    name == "wdi_gdp_pc" ~ "E. GDP Per Capita, logged",
+    name == "year_diff" ~ "C. Year Difference Between Survey Years",
+    name == "N" ~ "D. Number of DHS Clusters",
+    name == "wdi_population" ~ "E. Population, logged",
+    name == "wdi_gdp_pc" ~ "F. GDP Per Capita, logged",
     TRUE ~ name
   )) %>%
   ggplot(aes(x = value,
@@ -40,7 +42,7 @@ p <- df_sum %>%
               se = F,
               color = line_color) +
   geom_point() +
-  stat_poly_eq() +
+  stat_poly_eq(small.r = T) +
   labs(x = NULL,
        y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
   theme_classic() +

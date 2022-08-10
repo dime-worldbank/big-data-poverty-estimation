@@ -18,17 +18,17 @@ df_long <- df %>%
   dplyr::select(country_name, 
                 country_code,
                 continent_adj,
-                pca_allvars,
+                pca_allvars_mr,
                 starts_with("fb_prop")) %>%
-  pivot_longer(cols = -c(country_name, country_code, pca_allvars, continent_adj)) %>%
+  pivot_longer(cols = -c(country_name, country_code, pca_allvars_mr, continent_adj)) %>%
   dplyr::rename(variable = name) 
 
 ### Compute Correlation
 cor_df <- df_long %>%
-  dplyr::filter(!is.na(pca_allvars),
+  dplyr::filter(!is.na(pca_allvars_mr),
                 !is.na(value)) %>%
   group_by(variable, country_name, country_code, continent_adj) %>%
-  dplyr::summarise(cor = cor(pca_allvars, value)) %>%
+  dplyr::summarise(cor = cor(pca_allvars_mr, value)) %>%
   ungroup() %>%
   
   # TODO: CHECK WHY THIS WOULD HAPPEN
@@ -61,9 +61,10 @@ p <- cor_df %>%
        x = NULL,
        fill = expression(r^2)) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.2),
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.2, color = "black"),
+        axis.text.y = element_text(color = "black"),
         panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank()) 
 
 ggsave(p, filename = file.path(figures_global_dir, "fb_features_cor_each_country.png"),
        height = 9,

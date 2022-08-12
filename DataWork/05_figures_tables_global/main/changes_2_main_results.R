@@ -61,7 +61,7 @@ p_boxplot_tsample <- acc_df %>%
         plot.title.position = "plot") +  
   coord_flip() 
 
-# Bar Chart using Best Training Type -------------------------------------------
+# Bar Chart using Best Training Type by Unit -----------------------------------
 best_df <- bind_rows(
   cluster_df %>%
     distinct(country_name, .keep_all = T) %>%
@@ -69,7 +69,7 @@ best_df <- bind_rows(
   
   district_df %>%
     distinct(country_name, .keep_all = T) %>%
-    mutate(type = "ADM2")
+    mutate(type = "District")
 )
 
 # best_df %>%
@@ -112,7 +112,8 @@ p_cluster_adm <- best_df %>%
        fill = "Unit",
        title = "B. Performance by unit") +
   scale_fill_manual(values = c("lightblue1",
-                               "tan1")) +
+                               "tan1"),
+                    guide = guide_legend(reverse = TRUE)) +
   xlim(0, 26) +
   theme_minimal() +
   theme(panel.grid = element_blank(),

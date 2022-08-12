@@ -10,7 +10,7 @@ results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimat
 
 results_df <- results_df %>%
   dplyr::filter(level_change %in% "levels",
-                estimation_type %in% "best",
+                estimation_type %in% "within_country_cv",
                 target_var != "pca_allvars") %>%
   mutate(target_var_clean = target_var_clean %>% as.character()) %>%
   mutate(target_var_clean = case_when(
@@ -25,6 +25,30 @@ results_df <- results_df %>%
 
 # results_df <- results_df %>%
 #   dplyr::filter(xg_param_set %in% "10_0_1_4_50_0_3_reg_squarederror")
+
+# p_targetvar <- results_df %>%
+#   dplyr::filter(feature_type %in% "all",
+#                 estimation_type %in% "within_country_cv") %>%
+#   ggplot(aes(x = reorder(target_var_clean, r2, FUN = median, .desc =TRUE),
+#              y = r2)) +
+#   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
+#                     fill = FILL_COLOR) +
+#   #geom_half_point(transformation = position_jitter(width = 0.05, height = 0.1)) +
+#   stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
+#                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+#   stat_summary(fun = max, geom = "text", col = "firebrick3",    
+#                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+#   labs(x = NULL,
+#        y = expression(r^2),
+#        title = "B. Performance by outcome variable") +
+#   scale_y_continuous(limits = c(0,1)) +
+#   theme_classic() +
+#   theme(legend.position = "none",
+#         axis.text.y = element_text(face = "bold"),
+#         plot.title = element_text(face = "bold"),
+#         plot.title.position = "plot") +
+#   coord_flip() 
+
 
 # Arrange ----------------------------------------------------------------------
 p <- results_df %>%

@@ -94,6 +94,15 @@ survey_df <- survey_df %>%
   left_join(pred_wide_best_df, by = "uid") %>%
   left_join(pred_wide_df, by = "uid")
 
+# Merge WDI Indicators ---------------------------------------------------------
+wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
+
+wdi_df <- wdi_df %>%
+  dplyr::select(-c(iso3c, country, year, capital, longitude, latitude))
+
+survey_df <- survey_df %>%
+  left_join(wdi_df, by = "iso2") 
+
 # Export -----------------------------------------------------------------------
 saveRDS(survey_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))

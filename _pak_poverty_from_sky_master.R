@@ -45,7 +45,6 @@ fb_rwi_dir       <- file.path(data_dir, "Facebook Relative Wealth Index")
 globcover_dir    <- file.path(data_dir, "Globcover")
 worldclim_dir    <- file.path(data_dir, "WorldClim")
 cntry_dtls_dir   <- file.path(data_dir, "Country Details")
-pak_points_dir   <- file.path(data_dir, "")
 
 #### Overleaf Paths
 tables_global_dir  <- file.path(overleaf_global_dir, "tables")
@@ -260,10 +259,8 @@ if(F){
   #    cluster level.
   source(file.path(datawork_dir, "01_clean_dhs", "01_clean_dhs.R"))
   source(file.path(datawork_dir, "01_clean_dhs", "02_clean_dhs_varconstruction.R"))
-  
-  # 1. Clean OPM Data ----------------------------------------------------------
-  # Cleans OPM data. Preps variables, cleans coordinates and aggregates to PSU.
-  source(file.path(datawork_dir, "01_clean_opm", "01_clean_opm.R"))
+  source(file.path(datawork_dir, "01_clean_dhs", "03_make_within_country_folds.R"))
+  source(file.path(datawork_dir, "01_clean_dhs", "04_merge_data_with_folds.R"))
   
   # 2. Get/Process Ancillary Data ----------------------------------------------
   # Extract variables to survey locations (eg, satellite data, facebook data, etc)
@@ -414,7 +411,7 @@ if(F){
   source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2_levels.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_educ_fb_dhs.R"))
-
+  
 }
 
 

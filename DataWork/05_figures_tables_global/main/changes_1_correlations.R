@@ -66,5 +66,26 @@ ggsave(filename = file.path(figures_global_dir, "cor_changes.png"),
        height = 3,
        width = 9.5)
 
+# Stats ------------------------------------------------------------------------
+head(df_cor)
+
+df_cor %>%
+  filter(variable == "ntlharmon_avg") %>%
+  pull(cor) %>%
+  summary()
+
+df_cor %>%
+  filter(variable == "ntlharmon_avg") %>%
+  arrange(-cor) %>%
+  head()
+
+df %>%
+  filter(country_code == "MZ") %>%
+  ggplot() +
+  geom_point(aes(x = pca_allvars,
+                 y = ntlharmon_avg))
+
+
+
 
 

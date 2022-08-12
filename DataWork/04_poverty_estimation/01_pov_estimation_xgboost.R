@@ -279,7 +279,7 @@ run_model <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("changes")){ # "changes", "levels"
+for(level_change in c("levels", "changes")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% "levels"){
@@ -319,11 +319,14 @@ for(level_change in c("changes")){ # "changes", "levels"
                              "continent_eurasia_country_pred", 
                              "continent") # "continent" means "other continents"
     
-    target_vars_vec <- c("pca_allvars",
-                         "pca_allvars_mr", 
-                         "pca_physicalvars_mr",
-                         "pca_nonphysicalvars_mr",
-                         "wealth_index_score") 
+    # TODO: DELETE/CHANGE
+    # target_vars_vec <- c("pca_allvars",
+    #                      "pca_allvars_mr", 
+    #                      "pca_physicalvars_mr",
+    #                      "pca_nonphysicalvars_mr",
+    #                      "wealth_index_score") 
+    
+    target_vars_vec <- c("pca_allvars_mr") 
     
     countries_vec <- c("all", unique(df$country_code)) 
   }
@@ -374,8 +377,8 @@ for(level_change in c("changes")){ # "changes", "levels"
           for(xg_max.depth  in c(2,5,6,10)){ # 2, 5, 10
             for(xg_eta in c(0.3,0.8)){
               for(xg_nthread in c(4)){
-                for(xg_nrounds in c(50,100,500) %>% rev()){ # 50, 500
-                  for(xg_subsample in c(0.3,0.6,1) %>% rev()){ # 0.3, 1
+                for(xg_nrounds in c(50,100,500)){ # 50, 500
+                  for(xg_subsample in c(0.3,0.6,1)){ # 0.3, 1
                     for(xg_objective in c("reg:squarederror")){
                       for(xg_min_child_weight in c(1)){
                         

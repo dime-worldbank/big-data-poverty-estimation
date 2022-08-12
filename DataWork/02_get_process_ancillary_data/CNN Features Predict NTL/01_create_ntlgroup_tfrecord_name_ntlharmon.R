@@ -9,7 +9,7 @@ TEST_PROP <- 0.2
 INDIA_UNDER_SAMPLE <- T
 DTL_SATELLITE <- "landsat"
 
-for(DTL_SATELLITE in c("landsat")){ # , "s2"
+for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
   for(INDIA_UNDER_SAMPLE in c(T, F)){
     
     # Load data --------------------------------------------------------------------

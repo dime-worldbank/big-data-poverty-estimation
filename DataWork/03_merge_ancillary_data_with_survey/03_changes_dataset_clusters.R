@@ -14,7 +14,7 @@ df <- df %>%
   dplyr::select(uid, country_code, country_name, gadm_uid, iso2, year, within_country_fold, continent_adj,
                 urban_rural,
                 latitude, longitude,
-                pca_allvars, wealth_index_score,
+                pca_allvars, 
                 starts_with("l7_"),
                 starts_with("gc_"),
                 starts_with("ntlharmon_"),
@@ -116,6 +116,7 @@ df_change <- df_pairs %>%
 #dplyr::rename(year_diff = year,
 #              year      = year_str) %>%
 #dplyr::filter(!is.na(year_diff))
+
 
 # Export -----------------------------------------------------------------------
 saveRDS(df_change, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))

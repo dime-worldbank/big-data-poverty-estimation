@@ -13,7 +13,5 @@ saveRDS(survey_folds_df,
         file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 write.csv(survey_folds_df,
-        file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
-        row.names = F)
-
-
+          file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
+          row.names = F)

@@ -103,9 +103,9 @@ p_all_wealthsd_scatter <- results_all_sum_df %>%
   #                   y = 0.6),
   #               size = R2_SCATTER_TEXT_SIZE) +
   theme_classic() +
-  labs(x = "Proportion of Population on Facebook",
-       title = expression(bold(C.~Model~r^2~vs.~Prop.~of~Pop.~on~Facebook)),
-       subtitle = "Performance using only Facebook features",
+  labs(x = "Wealth Index, Standard Deviation",
+       title = expression(bold(C.~Model~r^2~vs.~Wealth~Index~Standard~Deviation)),
+       subtitle = "Performance using all features",
        y = expression(Model~r^2))
 
 p_fb_propfb_scatter <- results_fb_sum_df %>%

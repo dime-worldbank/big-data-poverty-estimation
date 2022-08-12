@@ -11,7 +11,7 @@ dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets",
 ## Subset - needs coordinates
 dhs_all_df <- dhs_all_df %>%
   dplyr::filter(!is.na(latitude),
-                year >= 2000)
+                year >= 1998)
 
 # Add (a) most recent and (b) oldest survey variables --------------------------
 dhs_all_df <- dhs_all_df %>%
@@ -380,6 +380,5 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
 
 # Export -----------------------------------------------------------------------
 saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_varconstructed_tmp.Rds"))
-
 
 

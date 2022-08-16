@@ -3,7 +3,11 @@
 INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets")
 
 # [Load] Survey data -----------------------------------------------------------
+INV_DATA_DIR <- file.path(data_dir, "DHS", "FinalData", "Individual Datasets")
+
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
+
+INV_DATA_DIR <- file.path(data_dir, "DHS_OLD", "FinalData", "Individual Datasets")
 
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))

@@ -56,6 +56,26 @@ clean_hh <- function(df,
     return(x)
   }
   
+  count_0 <- function(x){
+    sum(x == 0, na.rm = T)
+  }
+  
+  count_1 <- function(x){
+    sum(x == 1, na.rm = T)
+  }
+  
+  count_2 <- function(x){
+    sum(x == 2, na.rm = T)
+  }
+  
+  count_3 <- function(x){
+    sum(x == 3, na.rm = T)
+  }
+  
+  count_3g <- function(x){
+    sum(x > 3, na.rm = T)
+  }
+  
   mean_ig_na <- function(x){
     x <- mean(x, na.rm = T)
     x[x %in% c(Inf,-Inf)] <- NA
@@ -92,7 +112,13 @@ clean_hh <- function(df,
     mutate_all(as.numeric) %>%
     mutate_all(to_na_if_4above) 
   
-  df$educ_levels_hh_max  <- apply(educ_years, 1, max_ig_na)
+  df$educ_levels_hh_max <- apply(educ_levels, 1, max_ig_na)
+  df$educ_levels_hh_n0  <- apply(educ_levels, 1, count_0)
+  df$educ_levels_hh_n1  <- apply(educ_levels, 1, count_1)
+  df$educ_levels_hh_n2  <- apply(educ_levels, 1, count_2)
+  df$educ_levels_hh_n3  <- apply(educ_levels, 1, count_3)
+  df$educ_levels_hh_n3g <- apply(educ_levels, 1, count_3g)
+  
   #df$educ_years_hh_mean <- apply(educ_years, 1, mean_ig_na)
   
   # Make sure has all variables, which is needed for renaming
@@ -125,6 +151,11 @@ clean_hh <- function(df,
     dplyr::select(hhid,
                   cluster_id, 
                   educ_levels_hh_max,
+                  educ_levels_hh_n0,
+                  educ_levels_hh_n1,
+                  educ_levels_hh_n2,
+                  educ_levels_hh_n3,
+                  educ_levels_hh_n3g,
                   educ_years_hh_max,
                   educ_years_hh_mean,
                   water_source,
@@ -282,7 +313,7 @@ process_dhs <- function(dir){
       wi_df$whhid <- wi_df$whhid %>% str_squish() 
       survey_df$hhid <- survey_df$hhid %>% str_squish() 
     }
-
+    
     survey_df <- survey_df %>%
       left_join(wi_df, c("hhid" = "whhid")) %>%
       dplyr::mutate(wi_from_diff_dataset = T)

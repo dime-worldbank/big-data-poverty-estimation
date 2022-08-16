@@ -96,8 +96,11 @@ df <- df %>%
     "latitude", "longitude", "gadm_uid", "GID_1", "GID_2",
     "most_recent_survey",
     
+    "n_hh_members", "n_hh_members_sum",
+    
     # DHS variables to compare FB data with
     "educ_years_hh_max",
+    starts_with("educ_levels"),
     
     # Target variables
     "pca_allvars",

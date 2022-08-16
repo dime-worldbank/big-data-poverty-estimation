@@ -353,6 +353,14 @@ dhs_all_df <- dhs_all_df %>%
 #### All Data
 dhs_all_df$pca_allvars <- compute_pca_impute_missing(pca_allvars_alltime, dhs_all_df)
 
+# Construct additional variables -----------------------------------------------
+dhs_all_df <- dhs_all_df %>%
+  dplyr::mutate(educ_levels_hh_max_0 = as.numeric(educ_levels_hh_max == 0),
+                educ_levels_hh_max_1 = as.numeric(educ_levels_hh_max == 1),
+                educ_levels_hh_max_2 = as.numeric(educ_levels_hh_max == 2),
+                educ_levels_hh_max_3 = as.numeric(educ_levels_hh_max == 3),
+                educ_levels_hh_max_23 = as.numeric(educ_levels_hh_max == 2 | educ_levels_hh_max == 3))
+
 # Aggregate --------------------------------------------------------------------
 # For some continuous DHS, uid repeats; adding year makes unique
 dhs_all_df <- dhs_all_df %>%
@@ -361,10 +369,26 @@ dhs_all_df <- dhs_all_df %>%
     TRUE ~ uid
   ))
 
+## Averages
 dhs_all_df_coll <- dhs_all_df %>%
   group_by(uid, country_code, country_year, urban_rural, year, most_recent_survey, oldest_survey) %>%
   summarise_if(is.numeric, mean, na.rm=T) %>%
   ungroup()
+
+## Sum
+dhs_all_df_coll_sum <- dhs_all_df %>%
+  group_by(uid) %>%
+  summarise_at(vars(n_hh_members,
+                    educ_levels_hh_n0,
+                    educ_levels_hh_n1,
+                    educ_levels_hh_n2,
+                    educ_levels_hh_n3,
+                    educ_levels_hh_n3g), sum, na.rm=T) %>%
+  ungroup() %>%
+  rename_with(~paste0(., "_sum"), -c("uid"))
+
+dhs_all_df_coll <- dhs_all_df_coll %>%
+  left_join(dhs_all_df_coll_sum, by = "uid")
 
 # Country Name -----------------------------------------------------------------
 dhs_all_df_coll$iso2 <- countrycode(dhs_all_df_coll$country_code, origin = "dhs", destination = "iso2c")

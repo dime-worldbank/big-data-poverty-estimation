@@ -4,11 +4,13 @@
 # TODO:
 # 1. Could check if this correlation works better in countries with more Facebook penetration
 
+library(DescTools)
+
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df <- readRDS(file.path(data_dir, "DHS_OLD", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
-wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
+wdi_df      <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 fb_cntry_df <- readRDS(file.path(fb_marketing_dir,  "FinalData", "country_level_mau", "country_level_mau.Rds"))
 
 ## Proportion Facebook Coverage
@@ -19,174 +21,174 @@ fb_cntry_df <- fb_cntry_df %>%
   dplyr::select(iso2, prop_fb_cntry, wdi_population)
 
 df <- df %>%
-  left_join(fb_cntry_df, by = "iso2")
+  left_join(fb_cntry_df, by = "iso2") %>%
+  dplyr::filter(most_recent_survey %in% T)
 
-# Figures ----------------------------------------------------------------------
+# Prep data --------------------------------------------------------------------
 #### Remove NAs
+# 
 df <- df %>%
+  dplyr::mutate(dhs_prop_high_hs = educ_levels_hh_n3_sum/n_hh_members_sum) %>%
   dplyr::mutate(fb_educ_var = fb_prop_estimate_mau_upper_bound_3,
-                dhs_educ_var = educ_years_hh_max) %>%
+                dhs_educ_var = dhs_prop_high_hs) %>%
   dplyr::filter(!is.na(fb_educ_var),
                 !is.na(dhs_educ_var)) 
 
-#### Global Scatterplot
+# #### Panel dataset across unit
+#df <- df %>%
+#  dplyr::filter(fb_educ_var > 0)
+
 df_sum <- bind_rows(
   df %>%
-    dplyr::select(fb_educ_var, dhs_educ_var) %>%
-    mutate(level = "Survey Cluster"),
+    dplyr::select(fb_educ_var, dhs_educ_var, country_code, country_name) %>%
+    mutate(unit = "Survey Cluster"),
   
   df %>%
-    group_by(country_code) %>%
-    dplyr::summarise_at(vars(fb_educ_var, dhs_educ_var), mean) %>%
-    ungroup() %>%
-    mutate(level = "Country"),
-  
-  df %>%
-    group_by(GID_1) %>%
-    dplyr::summarise_at(vars(fb_educ_var, dhs_educ_var), mean) %>%
-    ungroup() %>%
-    mutate(level = "ADM 1"),
-  
-  df %>%
-    group_by(GID_2) %>%
-    dplyr::summarise_at(vars(fb_educ_var, dhs_educ_var), mean) %>%
-    ungroup() %>%
-    mutate(level = "ADM 2")
-) %>%
-  mutate(level = level %>%
-           factor(levels = c("Survey Cluster",
-                             "ADM 2",
-                             "ADM 1",
-                             "Country")))
-
-p_cor <- df_sum %>%
-  ggplot(aes(x = fb_educ_var,
-             y = dhs_educ_var)) +
-  geom_point() +
-  # stat_cor(aes(label = ..r.label..),
-  #          label.x.npc = "left",
-  #          label.y.npc = "top",
-  #          color = "red") +
-  stat_poly_eq(small.r = T, color = "red") +
-  labs(title = "A. Association between education variables from DHS and Facebook aggregated to different units",
-       x = "Proportion More than High School Education [Facebook]",
-       y = "Years of\nEducation,\nMaximum\nin Household\n[DHS]") +
-  theme_classic() +
-  theme(strip.text = element_text(face = "bold"),
-        plot.title = element_text(face = "bold", hjust = 0),
-        strip.background = element_blank(),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.title.y = element_text(angle = 0, vjust = 0.5)) +
-  facet_wrap(~level,
-             scales = "free",
-             nrow = 1)
-
-#### Within Country Correlation
-df_cor <- bind_rows(
-  df %>%
-    group_by(country_code) %>%
-    dplyr::summarise(cor = cor(fb_educ_var, dhs_educ_var),
-                     prop_fb_cntry = mean(prop_fb_cntry),
-                     wdi_population = mean(wdi_population),
-                     N = n()) %>%
-    mutate(level = "Survey Cluster"),
-  
-  df %>%
-    group_by(country_code, GID_2) %>%
+    group_by(GID_2, country_code, country_name) %>%
     dplyr::summarise(fb_educ_var = mean(fb_educ_var),
-                     dhs_educ_var = mean(dhs_educ_var),
-                     prop_fb_cntry = mean(prop_fb_cntry),
-                     wdi_population = mean(wdi_population)) %>%
+                     dhs_educ_var = mean(dhs_educ_var)) %>%
     ungroup() %>%
-    group_by(country_code) %>%
-    dplyr::summarise(cor = cor(fb_educ_var, dhs_educ_var),
-                     prop_fb_cntry = mean(prop_fb_cntry),
-                     wdi_population = mean(wdi_population),
-                     N = n()) %>%
-    dplyr::filter(N >= 20) %>%
-    mutate(level = "ADM 2"),
-  
-  df %>%
-    group_by(country_code, GID_1) %>%
-    dplyr::summarise(fb_educ_var = mean(fb_educ_var),
-                     dhs_educ_var = mean(dhs_educ_var),
-                     prop_fb_cntry = mean(prop_fb_cntry),
-                     wdi_population = mean(wdi_population)) %>%
-    ungroup() %>%
-    group_by(country_code) %>%
-    dplyr::summarise(cor = cor(fb_educ_var, dhs_educ_var),
-                     prop_fb_cntry = mean(prop_fb_cntry),
-                     wdi_population = mean(wdi_population),
-                     N = n()) %>%
-    dplyr::filter(N >= 10) %>%
-    mutate(level = "ADM 1")
+    mutate(unit = "ADM 2")
 ) %>%
-  mutate(level = level %>%
+  mutate(unit = unit %>%
            factor(levels = c("Survey Cluster",
-                             "ADM 2",
-                             "ADM 1")))
+                             "ADM 2"))) %>%
+  group_by(country_code, unit) %>%
+  mutate(n = n()) %>%
+  ungroup() 
 
-## N countries
-df_cor %>%
-  group_by(level) %>%
-  dplyr::summarise(N = n())
+## Use constant set of countries where enough ADM 2 observations.
+countries_to_use <- df_sum %>%
+  dplyr::filter(unit == "ADM 2",
+                n >= 30) %>%
+  pull(country_code) %>%
+  unique()
 
-## Distribution of within country correlation
-p_dist_within_cor <- df_cor %>%
-  ggplot(aes(x = cor,
-             y = level)) +
-  geom_boxplot(fill = "gray80") +
+df_sum <- df_sum[df_sum$country_code %in% countries_to_use,]
+
+## Must have some non-0 DHS and FB observations
+countries_to_use <- df_sum %>%
+  dplyr::filter(unit == "Survey Cluster") %>%
+  group_by(country_code) %>%
+  dplyr::summarise(dhs_educ_var_sum = sum(dhs_educ_var),
+                   fb_educ_var_sum = sum(fb_educ_var)) %>%
+  ungroup() %>%
+  dplyr::filter(dhs_educ_var_sum > 0,
+                fb_educ_var_sum > 0) %>%
+  pull(country_code) %>%
+  unique()
+
+df_sum <- df_sum[df_sum$country_code %in% countries_to_use,]
+
+# Correlation Dataset ----------------------------------------------------------
+df_cor <- df_sum %>%
+  group_by(unit, country_code, country_name) %>%
+  dplyr::summarise(cor = cor(fb_educ_var, dhs_educ_var),
+                   n = n()) %>%
+  ungroup()
+
+# Figure: Boxplot --------------------------------------------------------------
+p <- df_cor %>%
+  ggplot(aes(x = unit,
+             y = cor)) +
+  geom_half_boxplot(errorbar.draw = FALSE, center = TRUE, 
+                    fill = "gray80") +
+  stat_summary(fun = median, geom = "text", col = "black",     
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = max, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  labs(x = NULL,
+       y = "Within Country Correlation Correlation") +
+  scale_y_continuous(limits = c(0,1)) +
   theme_classic() +
-  theme(plot.title = element_text(face = "bold"),
-        axis.text.y = element_text(face = "bold", color = "black")) +
-  labs(title = "B. Distribution of within\ncountry correlation\nbetween DHS and\nFacebook education\nvariables",
-       y = NULL,
-       x = "Within Country Correlation")
-
-## Assocation of within country correlation and Facebook usage
-p_prop_fb_cor <- df_cor %>%
-  ggplot(aes(x = cor,
-             y = prop_fb_cntry)) + 
-  geom_point() +
-  # stat_cor(aes(label = ..r.label..),
-  #          label.y.npc = "top",
-  #          color = "red") +
-  stat_poly_eq(small.r = T, color = "red") +
-  theme_classic() +
-  theme(strip.text = element_text(face = "bold"),
-        plot.title = element_text(face = "bold", hjust = 0),
-        strip.background = element_blank(),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.title.y = element_text(angle = 0, vjust = 0.5)) +
-  labs(title = "C. Association between (1) within country correlation of DHS and Facebook\neducation variables and (2) proportion of country that uses Facebook\nacross difference levels of aggregation",,
-       x = "Within Country Correlation",
-       y = "Proportion\nof Country\nUses\nFacebook") +
-  facet_wrap(~level,
-             scales = "free")
-
-# Arrange and export -----------------------------------------------------------
-
-p_within <- ggarrange(p_dist_within_cor,
-                      p_prop_fb_cor,
-                      widths = c(0.3, 0.7))
-
-p <- ggarrange(p_cor,
-               p_within,
-               ncol = 1)
+  theme(legend.position = "none",
+        axis.text.y = element_text(face = "bold")) +
+  coord_flip() 
 
 ggsave(p, 
-       filename = file.path(figures_global_dir, "educ_fb_dhs.png"),
-       height = 7,
-       width = 11)
+       filename = file.path(figures_global_dir, "educ_fb_dhs_boxplot.png"),
+       height = 4,
+       width = 6)
 
+# Figure: Scatter --------------------------------------------------------------
+df_sum <- df_sum %>%
+  group_by(unit, country_code, country_name) %>%
+  dplyr::mutate(cor = cor(fb_educ_var, dhs_educ_var)) %>%
+  ungroup() %>%
+  dplyr::mutate(title = paste0(country_name, "\nCor = ", round(cor, 2))) %>%
+  dplyr::mutate(title = reorder(title, cor) %>% fct_rev())
 
+## Cluster
+p <- df_sum %>%
+  dplyr::filter(unit == "Survey Cluster") %>%
+  ggplot(aes(x = fb_educ_var,
+             y = dhs_educ_var)) +
+  geom_point(size = 0.75) +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "bold")) +
+  labs(x = "Proportion Above High School Education [Facebook]",
+       y = "Proportion Above High School Education [DHS]") +
+  facet_wrap(~title,
+             scales = "free")
 
+ggsave(p, 
+       filename = file.path(figures_global_dir, "educ_fb_dhs_scatter_cluster.png"),
+       height = 12,
+       width = 12)
 
+## ADM2
+p <- df_sum %>%
+  dplyr::filter(unit == "ADM 2") %>%
+  ggplot(aes(x = fb_educ_var,
+             y = dhs_educ_var)) +
+  geom_point(size = 0.75) +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "bold")) +
+  labs(x = "Proportion Above High School Education [Facebook]",
+       y = "Proportion Above High School Education [DHS]") +
+  facet_wrap(~title,
+             scales = "free")
 
+ggsave(p, 
+       filename = file.path(figures_global_dir, "educ_fb_dhs_scatter_adm2.png"),
+       height = 12,
+       width = 12)
 
+# Explain Correlation ----------------------------------------------------------
+df_country_vars <- df %>%
+  distinct(country_code, prop_fb_cntry, wdi_population)
 
+df_cor_data <- df_cor %>%
+  left_join(df_country_vars, by = "country_code") %>%
+  mutate(wdi_population_log = log(wdi_population),
+         n = Winsorize(n)) %>%
+  pivot_longer(cols = -c(unit, country_code, country_name, cor)) %>%
+  dplyr::filter(name %in% c("prop_fb_cntry", 
+                            "wdi_population_log",
+                            "n")) %>%
+  dplyr::mutate(name = case_when(
+    name == "prop_fb_cntry" ~ "Prop. on Facebook",
+    name == "wdi_population_log" ~ "Population, Logged",
+    name == "n" ~ "N Units"
+  ))
 
+p <- df_cor_data %>%
+  ggplot(aes(x = cor,
+             y = value)) +
+  stat_poly_line(color = "darkorange",
+                 se = F) +
+  geom_point() +
+  stat_poly_eq(small.r = T, color = "firebrick2") +
+  # stat_poly_eq(aes(label = paste(after_stat(eq.label),
+  #                                after_stat(rr.label), sep = "*\", \"*"))) +
+  #theme_classic2() +
+  theme(strip.text = element_text(face = "bold")) +
+  labs(x = "Within Country Correlation",
+       y = "Value") +
+  facet_grid(name~unit,
+             scales = "free")
 
-
+ggsave(p, 
+       filename = file.path(figures_global_dir, "educ_fb_dhs_explain.png"),
+       height = 6,
+       width = 6)

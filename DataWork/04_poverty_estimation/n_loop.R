@@ -24,8 +24,6 @@ if(REPLACE_IF_EXTRACTED){
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
   
-  files_to_rm <- files_to_rm %>% str_subset("levels")
-  
   for(file_i in files_to_rm){
     file.remove(file_i)
   }
@@ -45,13 +43,11 @@ grab_x_features <- function(df,
     
     X <- df %>%
       dplyr::select_at(vars(starts_with("viirs_"),
-                            starts_with("s1_sar_"),
                             starts_with("cnn_viirs_s2_"),
                             starts_with("fb_prop_"),
                             starts_with("fb_wp_prop"),
                             starts_with("osm_"),
                             starts_with("gc_"),
-                            starts_with("l7_"),
                             starts_with("elevslope_"),
                             starts_with("weather_"),
                             starts_with("worldclim_"),
@@ -74,7 +70,7 @@ grab_x_features <- function(df,
     
     X <- df %>%
       dplyr::select_at(vars(starts_with("ntlharmon_"),
-                            starts_with("cnn_ntlharmon_landsat_"),
+                            starts_with("cnn_viirs_ntlharmon_"),
                             starts_with("l7_"),
                             starts_with("gc_"),
                             starts_with("weather_"),
@@ -84,14 +80,14 @@ grab_x_features <- function(df,
   } else if(feature_type_i %in% "satellites"){
     X <- df %>%
       dplyr::select_at(vars(starts_with("l7_"),
-                            starts_with("cnn_viirs_s2_"),
+                            starts_with("cnn_viirs_landsat_"),
                             starts_with("viirs_"))) %>%
       as.matrix()
   } else if(feature_type_i %in% "satellites_changes"){
     X <- df %>%
       dplyr::select_at(vars(starts_with("l7_"),
                             starts_with("cnn_ntlharmon_landsat_"),
-                            starts_with("ntlharmon_"))) %>%
+                            starts_with("viirs_"))) %>%
       as.matrix()
   } else if(feature_type_i %in% "landcover"){
     X <- df %>%
@@ -288,8 +284,10 @@ run_model <- function(df,
               grid_imp_df = grid_imp_df))
 }
 
+n_vec <- 1
+
 # Implement --------------------------------------------------------------------
-for(level_change in c("changes", "levels")){ # "changes", "levels"
+for(level_change in c("levels", "changes")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% "levels"){
@@ -310,12 +308,9 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
                              "l7",
                              "fb",
                              "osm",
-                             "pollution",
-                             "s1_sar",
-                             
-                             # Groupings
                              "landcover",
                              "weatherclimate",
+                             "pollution",
                              "satellites") 
     
     feature_types_all_but_indiv <- paste0("all_not_", 
@@ -360,10 +355,8 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
                              "l7",
                              "gc",
                              "weather",
-                             "pollution_aod",
-                             
-                             # Groupings
-                             "satellites_changes") 
+                             "satellites_changes",
+                             "pollution_aod") 
     
     feature_types_all_but_indiv <- paste0("all_not_", 
                                           c(feature_types_indiv)) 
@@ -385,16 +378,16 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
   } 
   
   for(estimation_type_i in rev(estimation_type_vec)){
-    for(target_var_i in rev(target_vars_vec)){
+    for(target_var_i in target_vars_vec){
       for(feature_type_i in feature_types){
         for(country_i in rev(countries_vec)){
           
           ## XG Boost Parameters
-          for(xg_max.depth in c(2,5, 6, 10)){ # 2,5,6,10
-            for(xg_eta in c(0.3)){ # 0.3,0.8
+          for(xg_max.depth  in rev(c(2,5,6,10))){ # 2,5,6,10
+            for(xg_eta in c(0.3,0.8)){ # 0.3,0.8
               for(xg_nthread in c(4)){
-                for(xg_nrounds in rev(c(50))){ # 50,100,500
-                  for(xg_subsample in rev(c(0.3,0.6, 1))){ # 0.3,0.6,1
+                for(xg_nrounds in c(50,100,500)){ # 50,100,500
+                  for(xg_subsample in rev(c(0.3,0.6,1))){ # 0.3,0.6,1
                     for(xg_objective in c("reg:squarederror")){
                       for(xg_min_child_weight in c(1)){
                         
@@ -465,122 +458,13 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
                         GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
                                                     paste0("gs_", file_name_suffix))
                         
-                        # Check if file exists/ should run -------------------------------------
-                        if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
-                          
-                          print(paste(level_change,
-                                      estimation_type_i,
-                                      target_var_i,
-                                      feature_type_i,
-                                      country_i,
-                                      sep = " - "))
-                          
-                          # Subset Data & Define Fold ------------------------------------------
-                          # For defining the fold: 
-                          # -- If "country_pred" in "estimation_type_i" name, then have only one 
-                          # fold; the function will treat country_i as train and others as test
-                          # -- If "country_pred" not in name, need to define > 1 fold; all
-                          # observations will be in train and test at some point
-                          
-                          if(estimation_type_i == "within_country_cv"){
-                            df_traintest <- df %>%
-                              dplyr::filter(country_code %in% country_i) %>%
-                              dplyr::mutate(fold = within_country_fold)
-                          }
-                          
-                          if(estimation_type_i == "global_country_pred"){
-                            df_traintest <- df %>%
-                              dplyr::mutate(fold = "fold_1")
-                          }
-                          
-                          if(estimation_type_i == "continent_africa_country_pred"){
-                            df_traintest <- df %>%
-                              dplyr::filter((country_code %in% country_i) |
-                                              (continent_adj %in% "Africa")) %>%
-                              dplyr::mutate(fold = "fold_1")
-                          }
-                          
-                          if(estimation_type_i == "continent_americas_country_pred"){
-                            df_traintest <- df %>%
-                              dplyr::filter((country_code %in% country_i) |
-                                              (continent_adj %in% "Americas")) %>%
-                              dplyr::mutate(fold = "fold_1")
-                          }
-                          
-                          if(estimation_type_i == "continent_eurasia_country_pred"){
-                            df_traintest <- df %>%
-                              dplyr::filter((country_code %in% country_i) |
-                                              (continent_adj %in% "Eurasia")) %>%
-                              dplyr::mutate(fold = "fold_1")
-                          }
-                          
-                          # Train on all countries in continent x and predict on countries in continent y
-                          if(estimation_type_i == "continent"){
-                            df_traintest <- df %>%
-                              dplyr::mutate(fold = continent_adj)
-                          }
-                          
-                          # Run Model ----------------------------------------------------------
-                          xg_results_list <- run_model(df = df_traintest,
-                                                       level_change = level_change,
-                                                       estimation_type_i = estimation_type_i,
-                                                       feature_type_i = feature_type_i,
-                                                       target_var_i = target_var_i,
-                                                       country_i = country_i,
-                                                       xg_max.depth = xg_max.depth,
-                                                       xg_eta = xg_eta,
-                                                       xg_nthread = xg_nthread,
-                                                       xg_nrounds = xg_nrounds,
-                                                       xg_subsample = xg_subsample,
-                                                       xg_objective = xg_objective,
-                                                       xg_min_child_weight = xg_min_child_weight)
-                          
-                          # Accuracy Stats -----------------------------------------------------
-                          results_df_i <- xg_results_list$results_df
-                          
-                          if(estimation_type_i == "continent"){
-                            acc_fold_df <- results_df_i %>%
-                              dplyr::group_by(country_code, fold) %>%
-                              dplyr::summarise(cor_fold = cor(truth, prediction),
-                                               N_fold = n()) %>%
-                              ungroup()
-                          } else{
-                            acc_fold_df <- results_df_i %>%
-                              dplyr::group_by(fold) %>%
-                              dplyr::summarise(cor_fold = cor(truth, prediction),
-                                               N_fold = n()) %>%
-                              ungroup()
-                          }
-                          
-                          acc_fold_df$cor_all <- cor(results_df_i$truth,
-                                                     results_df_i$prediction)
-                          
-                          acc_fold_df <- acc_fold_df %>%
-                            dplyr::mutate(level_change = level_change,
-                                          estimation_type = estimation_type_i,
-                                          feature_type = feature_type_i,
-                                          target_var = target_var_i,
-                                          country = country_i,
-                                          xg_max.depth = xg_max.depth,
-                                          xg_eta = xg_eta,
-                                          xg_nthread = xg_nthread,
-                                          xg_nrounds = xg_nrounds,
-                                          xg_subsample = xg_subsample,
-                                          xg_objective = xg_objective,
-                                          xg_min_child_weight = xg_min_child_weight,
-                                          n = nrow(df_traintest))
-                          
-                          # Export Results -----------------------------------------------------
-                          saveRDS(xg_results_list$feat_imp_df, FI_OUT)
-                          saveRDS(acc_fold_df,                 ACCURACY_OUT)
-                          saveRDS(xg_results_list$results_df,  PRED_OUT)
-                          
-                          if(grid_search){
-                            saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)
-                          }
-                          
-                          
-                        }
+                        
+                        
+                        n_vec <- c(n_vec, 1)
+                        
+                        
+                        
+                        
                       }
                     }
                   }
@@ -593,6 +477,4 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
     }
   }
 }
-
-
 

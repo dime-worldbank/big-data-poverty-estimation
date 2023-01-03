@@ -1,16 +1,32 @@
 # Add select predictions to survey
 
 # Load Data --------------------------------------------------------------------
-## Survey data
+#### Load Survey data
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
 
-## Predictions
+#### Load Accuracy Data
+acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                            "accuracy_appended_bestparam.Rds"))
+
+acc_df <- acc_df %>%
+  dplyr::filter(level_change %in% "changes")
+
+#### Load Predictions
 pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "predictions") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("changes") %>%
-  #str_subset("pca_allvars") %>%
   map_df(readRDS) 
+
+## DELETE LATER
+# pred_df <- pred_df %>%
+#   dplyr::filter(xg_max.depth %in% 5,
+#                 xg_eta %in% 0.3,
+#                 xg_nthread %in% 4,
+#                 xg_nrounds %in% c(50, 100),
+#                 xg_subsample %in% 0.3,
+#                 xg_objective %in% "reg:squarederror",
+#                 xg_min_child_weight %in% 1)
 
 pred_df <- pred_df %>%
   dplyr::mutate(estimation_type = case_when(
@@ -26,35 +42,21 @@ pred_df <- pred_df %>%
   left_join(continent_df, by = "country_code")
 
 pred_df <- pred_df %>%
-  dplyr::mutate(model_param = paste(country_code,
-                                    estimation_type,
-                                    target_var,
-                                    feature_type,
-                                    xg_max.depth,
-                                    xg_eta,
-                                    xg_nthread,
-                                    xg_nrounds,
-                                    xg_subsample,
-                                    xg_objective,
-                                    xg_min_child_weight,
-                                    sep = "_")) 
+  dplyr::mutate(country_model_param = paste(country_code,
+                                            estimation_type,
+                                            target_var,
+                                            feature_type,
+                                            xg_max.depth,
+                                            xg_eta,
+                                            xg_nthread,
+                                            xg_nrounds,
+                                            xg_subsample,
+                                            xg_objective,
+                                            xg_min_child_weight,
+                                            sep = "_")) 
 
 # Restrict to best xg_parameters -----------------------------------------------
-best_param_df <- pred_df %>%
-  group_by(model_param,
-           country_code,
-           estimation_type,
-           target_var,
-           feature_type) %>%
-  dplyr::summarise(cor = cor(truth, prediction)) %>%
-  ungroup() %>%
-  arrange(-cor) %>%
-  distinct(country_code,
-           estimation_type,
-           target_var,
-           feature_type, .keep_all = T)
-
-pred_df <- pred_df[pred_df$model_param %in% best_param_df$model_param,]
+pred_df <- pred_df[pred_df$country_model_param %in% acc_df$country_model_param,]
 
 # Cleanup prediction data ------------------------------------------------------
 pred_long_df <- pred_df %>%

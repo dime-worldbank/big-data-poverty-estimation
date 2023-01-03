@@ -9,7 +9,7 @@ df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "
 df_cor <- df %>%
   dplyr::select(-c(latitude, longitude)) %>%
   pivot_longer(cols = -c(uid, within_country_fold, continent_adj, country_code, country_name, gadm_uid, iso2, year_diff, 
-                         pca_allvars, wealth_index_score, 
+                         pca_allvars, 
                          urban_rural_yr1, urban_rural_yr2)) %>%
   dplyr::filter(!is.na(value)) %>%
   group_by(name, country_code, year_diff) %>%

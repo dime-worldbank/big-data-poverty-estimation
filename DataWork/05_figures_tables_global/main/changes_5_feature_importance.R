@@ -2,10 +2,14 @@
 
 ## Grab best parameters
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                            "accuracy_appended_bestparam_within_country_cv_changes.Rds"))
+                            "accuracy_appended_bestparam.Rds"))
 
 xg_param_set_use <- acc_df %>%
-  head(1) %>%
+  dplyr::filter(estimation_type == "within_country_cv",
+                feature_type == "all",
+                target_var == "pca_allvars_mr",
+                level_change == "changes") %>%
+  
   dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
                 xg_subsample = xg_subsample %>% str_replace_all("[:punct:]", "")) %>%
   dplyr::mutate(xg_param_set = paste(xg_max.depth,
@@ -16,6 +20,12 @@ xg_param_set_use <- acc_df %>%
                                      xg_objective,
                                      xg_min_child_weight,
                                      sep = "_")) %>%
+  
+  group_by(xg_param_set) %>%  
+  dplyr::mutate(xg_param_set_cor = mean(cor)) %>%
+  ungroup() %>%
+  arrange(-xg_param_set_cor) %>%
+  
   pull(xg_param_set) %>%
   str_replace_all(":", "") %>%
   str_replace_all("error_", "error")
@@ -67,7 +77,7 @@ feature_df %>%
   labs(x = "Gain",
        y = NULL,
        color = "Feature\nCategory") +
-  xlim(0, 0.055) +
+  xlim(0, 0.1) +
   theme_minimal() +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),

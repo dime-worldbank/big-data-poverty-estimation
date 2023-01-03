@@ -10,6 +10,19 @@ import tensorflow as tf
 cloud_mask_landsatSR = cloud_mask.landsatSR()
 cloud_mask_sentinel2 = cloud_mask.sentinel2()
 
+# https://gist.github.com/erdemarslan/3ec02009f38f8df84c8e4807e7954af3
+import urllib3
+
+def check_internet_conn():
+    http = urllib3.PoolManager(timeout=3.0)
+    r = http.request('GET', 'google.com', preload_content=False)
+    code = r.status
+    r.release_conn()
+    if code == 200:
+        return True
+    else:
+        return False
+    
 # tfrecord helper functions ----------------------------------------------------
 # https://stackoverflow.com/questions/52324515/passing-multiple-inputs-to-keras-model-from-tf-dataset-api
 # https://www.tensorflow.org/tutorials/load_data/tfrecord
@@ -94,95 +107,101 @@ def ee_to_np_daytime(daytime_f, survey_df, n_rows, b_b, g_b, r_b): # nir_b, swir
     example_proto_list = []
 
     for i in range(0, n_rows):
-        survey_uid = survey_df['uid'].iloc[i]
-        #folder_name = survey_df['tf_folder_name'].iloc[i]
-        viirs_ntl_group = int(survey_df['ntl_group'].iloc[i])
-        survey_year_i = int(survey_df['year'].iloc[i])
-        uid_i = survey_df['uid'].iloc[i].encode()
         
-        d_f_i = daytime_f[i]['properties']
-        #n_f_i = ntl_f[i]['properties']
-
-        # SAVE AS TFRECORD
-
-        # Prep Files
-        ### RGB
-        brgb_l = [np.array(d_f_i[r_b]), np.array(d_f_i[g_b]), np.array(d_f_i[b_b])]
-        brgb_np = np.stack(brgb_l, axis=-1)
-        brgb_np = brgb_np.astype(np.uint16)
-        brgb_np_tf = tf.io.encode_png(brgb_np, compression = 9)
-        #brgb_np_tf = tf.io.serialize_tensor(brgb_np)
+        if check_internet_conn() == False:
+            STOP
+        else:
+            #print("Internet")
         
-        ### NIR
-        if False:
-            bnir_np = d_f_i[nir_b]      
-            bnir_np = np.expand_dims(bnir_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
-            bnir_np = bnir_np.astype(np.uint16)
-            bnir_np_tf = tf.io.encode_png(bnir_np, compression = 9)
-            #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
+            survey_uid = survey_df['uid'].iloc[i]
+            #folder_name = survey_df['tf_folder_name'].iloc[i]
+            viirs_ntl_group = int(survey_df['ntl_group'].iloc[i])
+            survey_year_i = int(survey_df['year'].iloc[i])
+            uid_i = survey_df['uid'].iloc[i].encode()
 
-        if True:
-            # https://www.tensorflow.org/api_docs/python/tf/io/encode_png
-            ### NDVI 
-            bndvi_np = d_f_i['NDVI']      
-            bndvi_np = np.expand_dims(bndvi_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
-            # Convert from -1 to 1 to 0 to 20000
-            bndvi_np = bndvi_np + 1
-            bndvi_np = bndvi_np * 10000
-            bndvi_np = bndvi_np.astype(np.uint16)
-            bndvi_np_tf = tf.io.encode_png(bndvi_np, compression = 9)
-            #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
+            d_f_i = daytime_f[i]['properties']
+            #n_f_i = ntl_f[i]['properties']
 
-            ### BU 
-            bbu_np = d_f_i['BU']      
-            bbu_np = np.expand_dims(bbu_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
-            # Convert from -1 to 1 to 0 to 20000
-            bbu_np = bbu_np + 1
-            bbu_np = bbu_np * 10000
-            bbu_np = bbu_np.astype(np.uint16)
-            bbu_np_tf = tf.io.encode_png(bbu_np, compression = 9)
-            #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
+            # SAVE AS TFRECORD
 
-        ### NTL
-        # Not uint16, so so serialize
-        #bntl_np = np.array(n_f_i['avg_rad'])
-        #bntl_np = np.expand_dims(bntl_np, axis=2)
-        # Values to uint16
-        #bntl_np = bntl_np + 2 # Can be negative
-        #bntl_np = bntl_np * 100 # consider two decimal places before uint16 // could also to * 10 (second decimal may not matter)
-        #bntl_np[bntl_np >= 65535] = 65535 # within range of uint16
-        #bntl_np = bntl_np.astype(np.uint16)
-        #bntl_np_tf = tf.io.encode_png(bntl_np, compression = 9)
-        #bntl_np_tf = tf.io.serialize_tensor(bntl_np)
+            # Prep Files
+            ### RGB
+            brgb_l = [np.array(d_f_i[r_b]), np.array(d_f_i[g_b]), np.array(d_f_i[b_b])]
+            brgb_np = np.stack(brgb_l, axis=-1)
+            brgb_np = brgb_np.astype(np.uint16)
+            brgb_np_tf = tf.io.encode_png(brgb_np, compression = 9)
+            #brgb_np_tf = tf.io.serialize_tensor(brgb_np)
 
-        ## Create dictionary
-        feature = {
-            'uid' : _bytes_feature(uid_i),
-            'viirs_ntl_group' : _int64_feature(viirs_ntl_group),
-            'year' : _int64_feature(survey_year_i),
-            'b_rgb': _bytes_feature(brgb_np_tf),
-            #'b_nir': _bytes_feature(bnir_np_tf)
-            'b_ndvi': _bytes_feature(bndvi_np_tf),
-            'b_bu': _bytes_feature(bbu_np_tf)
-            }
+            ### NIR
+            if False:
+                bnir_np = d_f_i[nir_b]      
+                bnir_np = np.expand_dims(bnir_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+                bnir_np = bnir_np.astype(np.uint16)
+                bnir_np_tf = tf.io.encode_png(bnir_np, compression = 9)
+                #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
-        # Other MS Bands
-        #b_other_list = []
-        #for b_other_i in other_bs:
-        #    bi_np = np.array(d_f_i[b_other_i])
-        #    bi_np = np.expand_dims(bi_np, axis=2)
-        #    #bi_np_tf = tf.io.serialize_tensor(bi_np)
-        #    bi_np = bi_np.astype(np.uint16)
-        #    bi_np_tf = tf.io.encode_png(bi_np, compression = 9)
-        #    feature['b_' + b_other_i] = _bytes_feature(bi_np_tf)
-  
-        example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
+            if True:
+                # https://www.tensorflow.org/api_docs/python/tf/io/encode_png
+                ### NDVI 
+                bndvi_np = d_f_i['NDVI']      
+                bndvi_np = np.expand_dims(bndvi_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+                # Convert from -1 to 1 to 0 to 20000
+                bndvi_np = bndvi_np + 1
+                bndvi_np = bndvi_np * 10000
+                bndvi_np = bndvi_np.astype(np.uint16)
+                bndvi_np_tf = tf.io.encode_png(bndvi_np, compression = 9)
+                #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
-        example_proto_list.append(example_proto)
+                ### BU 
+                bbu_np = d_f_i['BU']      
+                bbu_np = np.expand_dims(bbu_np, axis=2) # original (224, 224), change to (224,224,1) -> so can stack
+                # Convert from -1 to 1 to 0 to 20000
+                bbu_np = bbu_np + 1
+                bbu_np = bbu_np * 10000
+                bbu_np = bbu_np.astype(np.uint16)
+                bbu_np_tf = tf.io.encode_png(bbu_np, compression = 9)
+                #bndvi_np_tf = tf.io.serialize_tensor(bndvi_np)
 
-        #out_file_name = os.path.join(out_path, folder_name, survey_uid + '.tfrecord')
-        #with tf.io.TFRecordWriter(out_file_name) as writer:
-        #  writer.write(example_proto.SerializeToString())
+            ### NTL
+            # Not uint16, so so serialize
+            #bntl_np = np.array(n_f_i['avg_rad'])
+            #bntl_np = np.expand_dims(bntl_np, axis=2)
+            # Values to uint16
+            #bntl_np = bntl_np + 2 # Can be negative
+            #bntl_np = bntl_np * 100 # consider two decimal places before uint16 // could also to * 10 (second decimal may not matter)
+            #bntl_np[bntl_np >= 65535] = 65535 # within range of uint16
+            #bntl_np = bntl_np.astype(np.uint16)
+            #bntl_np_tf = tf.io.encode_png(bntl_np, compression = 9)
+            #bntl_np_tf = tf.io.serialize_tensor(bntl_np)
+
+            ## Create dictionary
+            feature = {
+                'uid' : _bytes_feature(uid_i),
+                'viirs_ntl_group' : _int64_feature(viirs_ntl_group),
+                'year' : _int64_feature(survey_year_i),
+                'b_rgb': _bytes_feature(brgb_np_tf),
+                #'b_nir': _bytes_feature(bnir_np_tf)
+                'b_ndvi': _bytes_feature(bndvi_np_tf),
+                'b_bu': _bytes_feature(bbu_np_tf)
+                }
+
+            # Other MS Bands
+            #b_other_list = []
+            #for b_other_i in other_bs:
+            #    bi_np = np.array(d_f_i[b_other_i])
+            #    bi_np = np.expand_dims(bi_np, axis=2)
+            #    #bi_np_tf = tf.io.serialize_tensor(bi_np)
+            #    bi_np = bi_np.astype(np.uint16)
+            #    bi_np_tf = tf.io.encode_png(bi_np, compression = 9)
+            #    feature['b_' + b_other_i] = _bytes_feature(bi_np_tf)
+
+            example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
+
+            example_proto_list.append(example_proto)
+
+            #out_file_name = os.path.join(out_path, folder_name, survey_uid + '.tfrecord')
+            #with tf.io.TFRecordWriter(out_file_name) as writer:
+            #  writer.write(example_proto.SerializeToString())
         
     return example_proto_list
 

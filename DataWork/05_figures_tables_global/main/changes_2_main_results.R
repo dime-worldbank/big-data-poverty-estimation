@@ -105,12 +105,12 @@ p_cluster_adm <- best_df %>%
   geom_col(position = "dodge",
            color = "black") +
   geom_text(aes(label = text,
-                x = n + 3),
+                x = n + 2),
             position = position_dodge(width = .9)) +
   labs(x = "N Countries",
        y = expression(r^2),
        fill = "Unit",
-       title = "B. Performance by unit") +
+       title = "C. Performance by unit") +
   scale_fill_manual(values = c("lightblue1",
                                "tan1"),
                     guide = guide_legend(reverse = TRUE)) +
@@ -128,7 +128,6 @@ p_cluster_adm <- best_df %>%
 p_boxplot_feature <- acc_df %>%
   dplyr::filter(estimation_type %in% "best",
                 target_var %in% "pca_allvars") %>%
-  dplyr::filter(feature_type_clean != "cnn_viirs_landsat") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
@@ -142,7 +141,7 @@ p_boxplot_feature <- acc_df %>%
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
-       title = "C. Performance using different features") +
+       title = "B. Performance using different features") +
   #scale_y_continuous(limits = c(0,0.6)) +
   theme_classic() +
   theme(legend.position = "none",

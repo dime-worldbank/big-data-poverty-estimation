@@ -56,8 +56,8 @@ p_scatter_cluster <- cluster_df %>%
              y = predict_pca_allvars_best)) +
   geom_point(size = 0.5) +
   #stat_poly_eq(color = "red") +
-  labs(x = "True Change in Asset Index",
-       y = "Estimated Change in\nAsset Index",
+  labs(x = "True Change in Wealth Index",
+       y = "Estimated Change in\nWealth Index",
        #title = "A. Cluster Level",
        color = NULL) +
   theme_classic() +
@@ -72,8 +72,8 @@ p_scatter_district <- district_df %>%
              y = predict_pca_allvars_best)) +
   geom_point(size = 0.75) +
   #stat_poly_eq(color = "red") +
-  labs(x = "True Change in Asset Index",
-       y = "Estimated Change in\nAsset Index",
+  labs(x = "True Change in Wealth Index",
+       y = "Estimated Change in\nWealth Index",
        #title = "B. District Level",
        color = NULL) +
   theme_classic() +
@@ -114,9 +114,9 @@ p_scatter_cluster_ex <- cluster_df %>%
              y = predict_pca_allvars_best)) +
   geom_point(size = 1) +
   stat_poly_eq(color = "red", small.r=T) +
-  labs(x = "True Change in Asset Index",
-       y = "Estimated Change in\nAsset Index",
-       title = "A. Cluster Level",
+  labs(x = "True Change in Wealth Index",
+       y = "Estimated Change in\nWealth Index",
+       title = "A. Village Level",
        color = NULL) +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -132,9 +132,9 @@ p_scatter_district_ex <- district_df %>%
              y = predict_pca_allvars_best)) +
   geom_point(size = 1) +
   stat_poly_eq(color = "red", small.r=T) +
-  labs(x = "True Change in Asset Index",
-       y = "Estimated Change in\nAsset Index",
-       title = "B. ADM2 Level",
+  labs(x = "True Change in Wealth Index",
+       y = "Estimated Change in\nWealth Index",
+       title = "B. District Level",
        color = NULL) +
   theme_classic() +
   theme(strip.background = element_blank(),

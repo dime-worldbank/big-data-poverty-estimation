@@ -108,6 +108,22 @@ p_all_wealthsd_scatter <- results_all_sum_df %>%
        subtitle = "Performance using all features",
        y = expression(Model~r^2))
 
+# p_all_viirs_scatter <- results_all_sum_df %>%
+#   ggplot(aes(y = r2,
+#              x = viirs_avg_rad_sdspace)) +
+#   geom_smooth(method = lm, se = F, color = "darkorange") +
+#   geom_point() +
+#   stat_poly_eq(small.r = T) +
+#   # geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, prop_pop_on_fb),2)),
+#   #                   x = 0.4,
+#   #                   y = 0.6),
+#   #               size = R2_SCATTER_TEXT_SIZE) +
+#   theme_classic() +
+#   labs(x = "Wealth Index, Standard Deviation",
+#        title = expression(bold(C.~Model~r^2~vs.~Wealth~Index~Standard~Deviation)),
+#        subtitle = "Performance using all features",
+#        y = expression(Model~r^2))
+
 p_fb_propfb_scatter <- results_fb_sum_df %>%
   dplyr::filter(!is.na(prop_pop_on_fb)) %>%
   ggplot(aes(y = r2,

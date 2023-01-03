@@ -18,14 +18,15 @@ df <- df %>%
                 starts_with("l7_"),
                 starts_with("gc_"),
                 starts_with("ntlharmon_"),
-                starts_with("cnn_viirs_landsat_"),
+                starts_with("cnn_ntlharmon_landsat_"),
                 starts_with("weather_"),
                 starts_with("pollution_aod_")) 
 
 ## Make complete dataset 
 df <- df %>%
   dplyr::filter(!is.na(l7_B1),
-                !is.na(pollution_aod_047))
+                !is.na(pollution_aod_047),
+                !is.na(cnn_ntlharmon_landsat_rgb_pc1))
 
 # Choose surveys with largest year difference ----------------------------------
 # 1. Only keep countries with at least two surveys

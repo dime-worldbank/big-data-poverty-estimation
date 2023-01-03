@@ -9,6 +9,12 @@ clean_varnames <- function(df){
   fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
   gc_param_df <- read_csv(file.path(data_dir, "Globcover", "RawData", "gc_classes.csv"))
   
+  gc_param_df <- gc_param_df %>%
+    dplyr::mutate(label = case_when(
+      label == "Mosaic natural vegetation (tree, shrub, herbaceous cover) (>50%) / cropland (<50%)" ~ "Mosaic natural vegetation",
+      TRUE ~ label
+    ))
+  
   df <- df %>%
     dplyr::mutate(variable_cat = case_when(
       variable %>% str_detect("^viirs_") ~ "Nighttime Lights",
@@ -18,15 +24,7 @@ clean_varnames <- function(df){
       variable %>% str_detect("l8_") ~ "Daytime Imagery, Average",
       variable %>% str_detect("l7_") ~ "Daytime Imagery, Average",
       variable %>% str_detect("cnn_") ~ "Daytime Imagergy, CNN",
-      #variable %>% str_detect("cnn_s2_rgb_") ~ "Daytime Imagery, CNN: RGB",
-      #variable %>% str_detect("cnn_s2_ndvi_") ~ "Daytime Imagery, CNN: NDVI",
-      #variable %>% str_detect("cnn_s2_bu_") ~ "Daytime Imagery, CNN: BU",
-      
-      #variable %>% str_detect("cnn_viirs_landsat_rgb_") ~ "Daytime Imagery, CNN",
-      #variable %>% str_detect("cnn_viirs_landsat_ndvi_") ~ "Daytime Imagery, CNN",
-      #variable %>% str_detect("cnn_viirs_landsat_bu_") ~ "Daytime Imagery, CNN",
-      
-      variable %>% str_detect("fb_prop") ~ "Facebook Marketing",
+      variable %>% str_detect("fb_") ~ "Facebook Marketing",
       variable %>% str_detect("worldclim") ~ "WorldClim",
       variable %>% str_detect("worldpop") ~ "World Pop",
       variable %>% str_detect("elevslope") ~ "Elevation/Slope",
@@ -34,6 +32,7 @@ clean_varnames <- function(df){
       variable %>% str_detect("pollution_aod") ~ "Pollution - MODIS",
       variable %>% str_detect("pollution_s5p") ~ "Pollution - Sentinel-5P",
       variable %>% str_detect("weather") ~ "Weather",
+      variable %>% str_detect("s1_sar") ~ "SAR",
       TRUE ~ variable
     ))
   
@@ -44,6 +43,11 @@ clean_varnames <- function(df){
     dplyr::mutate(variable = paste0("fb_prop_estimate_mau_upper_bound_", param_id),
                   variable_clean_fb = paste0(param_category, ": ", param_name_simple)) %>%
     dplyr::select(variable, variable_clean_fb)
+  
+  fb_param_clean_df <- bind_rows(fb_param_clean_df,
+                                 data.frame(variable = "fb_wp_prop_estimate_mau_upper_bound_1",
+                                            variable_clean_fb = "Prop. of Population on Facebook")     
+  )
   
   ## Globcover
   gc_param_clean_df <- gc_param_df %>%
@@ -176,6 +180,27 @@ clean_varnames <- function(df){
         str_squish() %>%
         tools::toTitleCase(),
       
+      variable_clean %>% str_detect("s1_sar") ~ variable_clean %>%
+        str_replace_all("s1_", "") %>%
+        str_replace_all("_",
+                        " ") %>%
+        str_replace_all("sar", "SAR") %>%
+        str_replace_all("vv", "VV:") %>%
+        str_replace_all("vh", "VH:") %>%
+        str_replace_all("hv", "HV:") %>%
+        str_replace_all("hh", "HH:") %>%
+        str_replace_all("mean", "Mean") %>%
+        str_replace_all("stddev", "Std Dev") %>%
+        str_squish(),
+      
+      variable_clean %>% str_detect("l7_") ~ variable_clean %>%
+        str_replace_all("_",
+                        " ") %>%
+        str_replace_all("sdtime", "Std. Dev. Time") %>%
+        str_replace_all("sdspace", "Std. Dev. Space") %>%
+        str_squish() %>%
+        tools::toTitleCase(),
+      
       TRUE ~ variable_clean
     ))
   
@@ -192,7 +217,8 @@ clean_varnames <- function(df){
   
   df <- df %>%
     mutate(variable_clean = variable_clean %>%
-             str_replace_all("\\bany\\b", "Any"))
+             str_replace_all("\\bany\\b", "Any") %>%
+             str_replace_all("\\ball\\b", "All"))
   
   df <- df %>%
     dplyr::mutate(variable_clean = case_when(

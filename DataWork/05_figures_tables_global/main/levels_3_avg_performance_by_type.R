@@ -4,7 +4,7 @@ FILL_COLOR <- "gray80"
 
 # Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
+                                "accuracy_appended_bestparam.Rds"))
 
 results_df <- results_df %>%
   dplyr::filter(level_change %in% "levels",
@@ -114,7 +114,7 @@ p_feature <- results_df %>%
 best_df <- bind_rows(
   cluster_df %>%
     distinct(country_name, .keep_all = T) %>%
-    mutate(type = "Cluster"),
+    mutate(type = "Village"),
   
   district_df %>%
     distinct(country_name, .keep_all = T) %>%

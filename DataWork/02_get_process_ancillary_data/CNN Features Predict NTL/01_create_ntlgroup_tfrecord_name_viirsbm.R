@@ -3,13 +3,13 @@
 # For CNN: Data after 2000, as landsat 7, but still predict beforehand
 
 set.seed(4242)
-N_BINS <- 3
+N_BINS <- 5
 N_OBS_IN_TFR <- 250
 TEST_PROP <- 0.2
 INDIA_UNDER_SAMPLE <- T
-DTL_SATELLITE <- "landsat"
+DTL_SATELLITE <- "s2"
 
-for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
+for(DTL_SATELLITE in c("landsat", "s2")){
   for(INDIA_UNDER_SAMPLE in c(T, F)){
     
     # Load data --------------------------------------------------------------------
@@ -17,17 +17,23 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
                                        "Individual Datasets",
                                        "survey_socioeconomic.Rds"))
     
-    if(DTL_SATELLITE %in% "landsat"){
+    survey_all_df <- survey_all_df %>%
+      # Black marble, restrict just to most recent
+      dplyr::filter(most_recent_survey %in% T)
+    
+    if(DTL_SATELLITE %in% "s2"){
+      # For s2, we always just extract 2018 - 2020 data
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
-                                  "ntl_harmonized_3360.Rds")) 
-    } else if(DTL_SATELLITE %in% "s2"){
+                                  "bm181920_1120m.Rds"))
+    } else if (DTL_SATELLITE %in% "landsat"){
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
-                                  "ntl_harmonized181920_1120.Rds")) 
+                                  "bm_3360m.Rds")) %>%
+        dplyr::rename(viirs_bm = viirs_bm_mean)
     }
     
     survey_all_df <- survey_all_df %>%
       left_join(ntl_df, by = c("uid", "year")) %>%
-      dplyr::filter(!is.na(ntlharmon_avg)) %>%
+      dplyr::filter(!is.na(viirs_bm)) %>%
       dplyr::arrange(runif(n()))
     
     if(SURVEY_NAME %in% "DHS"){
@@ -46,33 +52,23 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
       }
       
       # Create bins ----------------------------------------------------------------
-      #mclust_fit = Mclust(survey_df$ntlharmon_avg, G=N_BINS) # , model="V"
-      #survey_df$ntl_group <- predict(mclust_fit, survey_df$ntlharmon_avg)$classification
-      #table(survey_df$ntl_group)
-
+      #mclust_fit = Mclust(survey_df$viirs_bm, G=N_BINS, model="V")
+      #survey_df$ntl_group <- predict(mclust_fit, survey_df$viirs_bm)$classification
+      
       # 1st cut off at 1; then for remaining values, make 4 equal size groups 
       # Uses rounded cut-offs
-      mean(survey_df$ntlharmon_avg < 1)
-      a <- survey_df$ntlharmon_avg[survey_df$ntlharmon_avg > 1]
+      a <- survey_df$viirs_bm[survey_df$viirs_bm > 1]
       quantile(a, probs = c(0.25, 0.5, 0.75))
       
-      # Use same bins from Jean et al
       survey_df <- survey_df %>%
         dplyr::mutate(ntl_group = case_when(
-          ntlharmon_avg <= 1 ~ 1,
-          ntlharmon_avg > 1 & ntlharmon_avg <= 7 ~ 2,
-          ntlharmon_avg > 7 & ntlharmon_avg <= 11 ~ 3,
-          ntlharmon_avg > 11 & ntlharmon_avg <= 37 ~ 4,
-          ntlharmon_avg > 37 ~ 5
+          viirs_bm <= 1 ~ 1,
+          viirs_bm > 1 & viirs_bm <= 7 ~ 2,
+          viirs_bm > 7 & viirs_bm <= 30 ~ 3,
+          viirs_bm > 30 & viirs_bm <= 150 ~ 4,
+          viirs_bm > 150 ~ 5
         ))
       
-      # survey_df <- survey_df %>%
-      #   dplyr::mutate(ntl_group = case_when(
-      #     ntlharmon_avg <= 3 ~ 1,
-      #     ntlharmon_avg > 3 & ntlharmon_avg <= 34 ~ 2,
-      #     ntlharmon_avg > 34 ~ 3
-      #   ))
-      # 
       # Create balanced groups -------------------------------------------------------
       survey_df <- survey_df %>%
         dplyr::arrange(runif(n()))
@@ -85,14 +81,14 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
           x = c(0,1),
           size = length(survey_df$keep[survey_df$country_code %in% "IA"]),
           replace = T,
-          prob = c(0.8, 0.2)
+          prob = c(0.9, 0.1)
         )
-      }
+      }  
       
       survey_df_recent <- survey_df %>%
-        dplyr::filter(year >= 1992,
-                      most_recent_survey %in% T,
-                      keep %in% 1)
+        dplyr::filter(year >= 2012,
+                      keep %in% T,
+                      most_recent_survey %in% T)
       
       min_group_size <- survey_df_recent$ntl_group %>%
         table() %>%
@@ -169,7 +165,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
         dplyr::select(uid, GID_2, year, most_recent_survey, ntl_group, longitude, latitude, tfrecord_name, use_for_cnn) %>%
         
         # So starts at 0; better for python
-        dplyr::mutate(ntl_group = ntl_group - 1)
+        dplyr::mutate(ntl_group = ntl_group - 1) 
       
       return(survey_df_clean)
       
@@ -177,18 +173,19 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
     
     write.csv(survey_df_clean_append, file.path(data_dir, SURVEY_NAME, "FinalData",
                                                 "Individual Datasets",
-                                                paste0("data_for_cnn_ntlharmon_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
+                                                paste0("data_for_cnn_viirsbm_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
               row.names = F)
     
     
     # write.csv(survey_df_clean_append, file.path(gdrive_dir,
     #                                             "Data", SURVEY_NAME, "FinalData",
     #                                             "Individual Datasets",
-    #                                             paste0("data_for_cnn_ntlharmon_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
+    #                                             paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
     #           row.names = F)
     
   }
 }
+
 
 survey_df_clean_append$c <- survey_df_clean_append$uid %>% substring(1,2)
 cnn_df <- survey_df_clean_append[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn"),]

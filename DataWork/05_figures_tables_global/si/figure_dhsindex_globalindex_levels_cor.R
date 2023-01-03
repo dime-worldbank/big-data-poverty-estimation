@@ -19,7 +19,7 @@ df <- df %>%
 # Figure: Scatterplots ---------------------------------------------------------
 p <- df %>%
   ggplot(aes(x = wealth_index_score,
-             y = pca_allvars)) +
+             y = pca_allvars_mr)) +
   stat_poly_eq(small.r = T, 
                size = 3,
                color = "red") +

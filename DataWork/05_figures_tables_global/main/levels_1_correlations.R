@@ -19,6 +19,7 @@ df_long <- df %>%
                 continent_adj,
                 pca_allvars_mr,
                 starts_with("viirs_"),
+                starts_with("s1_sar_"),
                 starts_with("gc_"),
                 starts_with("osm_"),
                 starts_with("l7_"),
@@ -49,6 +50,7 @@ df_long <- df %>%
     variable %>% str_detect("pollution_aod") ~ "Pollution - MODIS",
     variable %>% str_detect("pollution_s5p") ~ "Pollution - Sentinel-5P",
     variable %>% str_detect("weather") ~ "Weather",
+    variable %>% str_detect("s1_sar") ~ "SAR",
     TRUE ~ variable
   ))
 

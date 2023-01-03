@@ -1,6 +1,6 @@
 # PCA on CNN Features
 
-DTL_SATELLITE <- "landsat"
+DTL_SATELLITE <- "s2"
 SATELLITE <- 'viirs'
 UNDER_IA <- "True"
 BANDS <- "rgb"
@@ -8,13 +8,16 @@ BANDS <- "rgb"
 PER_VAR_EXPLAIN <- 0.99
 
 for(DTL_SATELLITE in c("landsat", "s2")){
-  for(SATELLITE in c("viirs")){
+  for(SATELLITE in c("viirs", "ntlharmon")){
     for(UNDER_IA in c("True")){
       for(BANDS in c("rgb", "ndvi", "bu")){
         
         PATH_NAME <- paste0(DTL_SATELLITE, "_",SATELLITE,"_underia",UNDER_IA,"_b_",BANDS)
         
         print(PATH_NAME)
+        
+        if((DTL_SATELLITE == "landsat") & (SATELLITE == "viirs"))     next
+        if((DTL_SATELLITE == "s2")      & (SATELLITE == "ntlharmon")) next
         
         # Load data --------------------------------------------------------------------
         cnn_features_df <- file.path(data_dir,
@@ -25,7 +28,8 @@ for(DTL_SATELLITE in c("landsat", "s2")){
                                      "split_into_data_subsets") %>%
           list.files(full.names = T) %>%
           str_subset(paste0("features_", PATH_NAME, "_")) %>%
-          map_df(fread)
+          map_df(fread) %>%
+          distinct(uid, .keep_all = T)
         
         ## Grab features (remove ID)
         cnn_feat_noid <- cnn_features_df %>%

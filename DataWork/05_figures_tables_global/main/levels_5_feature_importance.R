@@ -1,11 +1,16 @@
 # Feature Importance
 
-## Grab best parameters
+#### Load Accuracy Data
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                            "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
+                            "accuracy_appended.Rds"))
 
+## Best parameter set
 xg_param_set_use <- acc_df %>%
-  head(1) %>%
+  dplyr::filter(estimation_type == "within_country_cv",
+                feature_type == "all",
+                target_var == "pca_allvars_mr",
+                level_change == "levels") %>%
+  
   dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
                 xg_subsample = xg_subsample %>% str_replace_all("[:punct:]", "")) %>%
   dplyr::mutate(xg_param_set = paste(xg_max.depth,
@@ -16,6 +21,12 @@ xg_param_set_use <- acc_df %>%
                                      xg_objective,
                                      xg_min_child_weight,
                                      sep = "_")) %>%
+  
+  group_by(xg_param_set) %>%  
+  dplyr::mutate(xg_param_set_cor = mean(cor)) %>%
+  ungroup() %>%
+  arrange(-xg_param_set_cor) %>%
+  
   pull(xg_param_set) %>%
   str_replace_all(":", "") %>%
   str_replace_all("error_", "error")
@@ -35,6 +46,19 @@ fi_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "feat
   dplyr::rename(variable = Feature) 
 
 # Figure -----------------------------------------------------------------------
+
+## Additional Facebook Cleaning
+# df <- df %>%
+#   dplyr::mutate(variable_cat = case_when(
+#     variable %>% str_detect("fb_wp_prop") ~ "Facebook Marketing",
+#     TRUE ~ variable
+#   ))
+# 
+# df <- df %>%
+#   dplyr::mutate(variable_clean = case_when(
+#     variable_clean %in% "fb_wp_prop_estimate_mau_upper_bound_1" ~ "Prop. Population on Facebook",
+#     TRUE ~ variable_clean))
+
 feature_df <- fi_df %>%
   group_by(variable) %>%
   summarise(gain_avg = mean(Gain)) %>%
@@ -67,7 +91,7 @@ feature_df %>%
   labs(x = "Gain",
        y = NULL,
        color = "Feature\nCategory") +
-  xlim(0, 0.2) +
+  xlim(0, 0.11) +
   theme_minimal() +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),

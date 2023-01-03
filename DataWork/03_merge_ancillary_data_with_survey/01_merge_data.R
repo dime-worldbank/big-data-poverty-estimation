@@ -1,13 +1,13 @@
 # Merge Data with Survey Data
 
-INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets")
-
 # [Load] Survey data -----------------------------------------------------------
 INV_DATA_DIR <- file.path(data_dir, "DHS", "FinalData", "Individual Datasets")
 
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
-INV_DATA_DIR <- file.path(data_dir, "DHS_OLD", "FinalData", "Individual Datasets")
+#INV_DATA_DIR <- file.path(data_dir, "DHS_OLD", "FinalData", "Individual Datasets")
+
+survey_df$most_recent_survey %>% table()
 
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
@@ -32,13 +32,13 @@ names(osm_road_df) <- names(osm_road_df) %>%
 # [Load] CNN Features ----------------------------------------------------------
 ## Landsat
 cnn_landsat_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                        "cnn_features_landsat_viirs_underiaTrue_b_rgb_pca.Rds"))
+                                        "cnn_features_landsat_ntlharmon_underiaTrue_b_rgb_pca.Rds"))
 
 cnn_landsat_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                         "cnn_features_landsat_viirs_underiaTrue_b_ndvi_pca.Rds"))
+                                         "cnn_features_landsat_ntlharmon_underiaTrue_b_ndvi_pca.Rds"))
 
 cnn_landsat_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-                                       "cnn_features_landsat_viirs_underiaTrue_b_bu_pca.Rds"))
+                                       "cnn_features_landsat_ntlharmon_underiaTrue_b_bu_pca.Rds"))
 
 ## Sentinel
 cnn_sentinel_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
@@ -58,6 +58,59 @@ wc_df <- readRDS(file.path(INV_DATA_DIR, "worldclim.Rds"))
 
 # [Load] Harmonized NTL --------------------------------------------------------
 ntlharmon_df <- readRDS(file.path(INV_DATA_DIR, paste0("ntl_harmonized_",BUFFER_SATELLITE,".Rds")))
+
+# [Load] Sentinel 5P -----------------------------------------------------------
+s5p_df <- readRDS(file.path(INV_DATA_DIR, "sentinel5p.Rds"))
+
+s5p_df <- s5p_df %>% 
+  rename_with(~paste0("pollution_s5p_", .), -c(uid))
+
+s5p_df <- s5p_df %>%
+  dplyr::select(uid,
+                pollution_s5p_absorbing_aerosol_index,
+                pollution_s5p_CO_column_number_density,
+                #pollution_s5p_H2O_column_number_density,
+                pollution_s5p_tropospheric_HCHO_column_number_density,
+                pollution_s5p_NO2_column_number_density,
+                pollution_s5p_O3_column_number_density,
+                pollution_s5p_SO2_column_number_density)
+
+
+## OLD
+if(F){
+  poll_prefix <- c("CH4", "CO", "HCHO", "NO2", "ozone", "SO2", "uv_aer") %>%
+    paste(collapse = "|")
+  
+  pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
+    list.files(pattern = "*.Rds",
+               full.names = T) %>%
+    str_subset(poll_prefix) %>%
+    str_subset(as.character(BUFFER_SATELLITE)) %>%
+    lapply(readRDS) %>%
+    reduce(full_join, by = c("uid", "year")) %>%
+    rename_at(vars(-uid, -year), ~ paste0("pollution_s5p_", .)) %>%
+    dplyr::select(uid, year,
+                  pollution_s5p_absorbing_aerosol_index,
+                  pollution_s5p_CO_column_number_density,
+                  #pollution_s5p_H2O_column_number_density,
+                  pollution_s5p_tropospheric_HCHO_column_number_density,
+                  pollution_s5p_NO2_column_number_density,
+                  pollution_s5p_O3_column_number_density,
+                  pollution_s5p_SO2_column_number_density,
+                  pollution_s5p_CH4_column_volume_mixing_ratio_dry_air)
+  
+  ## Check for and remove NAs
+  for(var in names(pollution_df)){
+    print(var)
+    pollution_df[[var]] %>% is.na %>% table() %>% print()
+    print(" ")
+  }
+  
+  pol_na_df <- s5p_df %>%
+    pivot_longer(cols = -c(uid)) %>%
+    group_by(name) %>%
+    dplyr::summarise(N_na = sum(is.na(value)))
+}
 
 # [Load] Satellite data from GEE -----------------------------------------------
 #file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% list.files()
@@ -206,6 +259,7 @@ weather_q3 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
                                 paste0("ecmwf_weather_q3_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_q3_", .))
 
+# TODO: Don't have all data here!
 weather_q4 <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                                 paste0("ecmwf_weather_q4_ubuff10000_rbuff10000.Rds"))) %>%
   rename_at(vars(-uid, -year), ~ paste0("weather_q4_", .))
@@ -220,47 +274,46 @@ weather <- weather_annual %>%
   left_join(weather_q3, by = c("uid", "year")) %>%
   left_join(weather_q4, by = c("uid", "year"))
 
-##### ** Pollution #####
-poll_prefix <- c("CH4", "CO", "HCHO", "NO2", "ozone", "SO2", "uv_aer") %>%
-  paste(collapse = "|")
+##### ** Sentinel 1 - SAR #####
+## Grab list of s1 files
+s1_files <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>% 
+  list.files() %>%
+  str_subset("s1_sar_")
 
-pollution_df <- file.path(INV_DATA_DIR, "satellite_data_from_gee") %>%
-  list.files(pattern = "*.Rds",
-             full.names = T) %>%
-  str_subset(poll_prefix) %>%
-  str_subset(as.character(BUFFER_SATELLITE)) %>%
-  lapply(readRDS) %>%
-  reduce(full_join, by = c("uid", "year")) %>%
-  rename_at(vars(-uid, -year), ~ paste0("pollution_s5p_", .)) %>%
-  dplyr::select(uid, year,
-                pollution_s5p_absorbing_aerosol_index,
-                pollution_s5p_CO_column_number_density,
-                #pollution_s5p_H2O_column_number_density,
-                pollution_s5p_tropospheric_HCHO_column_number_density,
-                pollution_s5p_NO2_column_number_density,
-                pollution_s5p_O3_column_number_density,
-                pollution_s5p_SO2_column_number_density,
-                pollution_s5p_CH4_column_volume_mixing_ratio_dry_air)
+## Load, rename using username, then merge
+s1_df <- lapply(s1_files, function(file_i){
+  
+  s1_i_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", file_i))
+  
+  var_name <- file_i %>% str_replace_all("_ubuff.*", "")
+  
+  names(s1_i_df)[names(s1_i_df) %in% "mean"] <- var_name
+  
+  return(s1_i_df)
+}) %>%
+  reduce(left_join, by = c("uid", "year"))
 
-## Check for and remove NAs
-for(var in names(pollution_df)){
-  print(var)
-  pollution_df[[var]] %>% is.na %>% table() %>% print()
-  print(" ")
-}
-
-pol_na_df <- pollution_df %>%
-  pivot_longer(cols = -c(uid, year)) %>%
-  group_by(name) %>%
-  dplyr::summarise(N_na = sum(is.na(value)))
-
-pollution_df <- pollution_df %>%
-  dplyr::select(-c(pollution_s5p_CH4_column_volume_mixing_ratio_dry_air))
+## Take maximum across descending and ascending
+s1_df <- s1_df %>%
+  dplyr::mutate(s1_sar_vv_mean = pmax(s1_sar_vv_desc_mean, s1_sar_vv_asc_mean, na.rm = T),
+                s1_sar_vh_mean = pmax(s1_sar_vh_desc_mean, s1_sar_vh_asc_mean, na.rm = T),
+                s1_sar_hv_mean = pmax(s1_sar_hv_desc_mean, s1_sar_hv_asc_mean, na.rm = T),
+                s1_sar_hh_mean = pmax(s1_sar_hh_desc_mean, s1_sar_hh_asc_mean, na.rm = T),
+                
+                s1_sar_vv_stddev = pmax(s1_sar_vv_desc_stddev, s1_sar_vv_asc_stddev, na.rm = T),
+                s1_sar_vh_stddev = pmax(s1_sar_vh_desc_stddev, s1_sar_vh_asc_stddev, na.rm = T),
+                s1_sar_hv_stddev = pmax(s1_sar_hv_desc_stddev, s1_sar_hv_asc_stddev, na.rm = T),
+                s1_sar_hh_stddev = pmax(s1_sar_hh_desc_stddev, s1_sar_hh_asc_stddev, na.rm = T)) %>%
+  dplyr::select(uid, 
+                s1_sar_vv_mean, s1_sar_vh_mean,
+                s1_sar_vv_stddev, s1_sar_vh_stddev)
+# HH and HV have too few observations
 
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 
                           fb_df, 
                           #fb_prop_df, 
+                          s5p_df,
                           fb_rwi_df,
                           cnn_landsat_rgb_df,
                           cnn_landsat_ndvi_df,
@@ -269,7 +322,8 @@ survey_ancdata_df <- list(survey_df,
                           cnn_sentinel_ndvi_df,
                           cnn_sentinel_bu_df,
                           osm_poi_df, 
-                          osm_road_df) %>%
+                          osm_road_df,
+                          s1_df) %>%
   reduce(full_join, by = "uid") %>%
   dplyr::filter(!is.na(country_code))
 
@@ -290,9 +344,7 @@ survey_ancdata_df <- list(survey_ancdata_df,
                           weather,
                           wp_df, 
                           elevslope, 
-                          #gbmod_df, 
-                          aod_df,
-                          pollution_df) %>%
+                          aod_df) %>%
   reduce(full_join, by = c("uid", "year")) %>%
   dplyr::filter(!is.na(country_code))
 

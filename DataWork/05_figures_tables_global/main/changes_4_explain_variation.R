@@ -32,7 +32,7 @@ p_scatter <- accu_sum_df %>%
   dplyr::mutate(name = case_when(
     name == "pca_allvars_sd_change" ~ "A. Std. Dev. of Asset Index Change",
     name == "ntlharmon_avg_sd_change" ~ "B. Std. Dev. of NTL Change",
-    name == "year_diff" ~ "C. Year Difference Between Survey Years",
+    name == "year_diff" ~ "C. Year Difference Between Surveys",
     #name == "N" ~ "D. Number of DHS Clusters",
     #name == "wdi_population" ~ "E. Population, logged",
     name == "wdi_gdp_pc" ~ "D. GDP Per Capita, logged",

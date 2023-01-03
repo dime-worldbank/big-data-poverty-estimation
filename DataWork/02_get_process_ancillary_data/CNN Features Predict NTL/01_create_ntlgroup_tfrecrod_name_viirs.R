@@ -156,7 +156,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
     
     write.csv(survey_df_clean_append, file.path(data_dir, SURVEY_NAME, "FinalData",
                                                 "Individual Datasets",
-                                                paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
+                                                paste0("data_for_cnn_viirsgee_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
               row.names = F)
     
     

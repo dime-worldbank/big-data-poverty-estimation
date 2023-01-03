@@ -139,8 +139,8 @@ for(aggregate_district in c(F, T)){
       scale_color_manual(values = c("chartreuse4", "chocolate2")) +
       labs(color = NULL,
            title = ifelse(aggregate_district,
-                          "C. Estimated vs. True Wealth Asset Index [ADM 2]",
-                          "A. Estimated vs. True Wealth Asset Index"),
+                          "C. Estimated vs. True Wealth Asset Index [District]",
+                          "A. Estimated vs. True Wealth Asset Index [Village]"),
            x = "True Wealth Asset Index",
            y = "Estimated Wealth Asset Index") +
       theme_minimal() +
@@ -333,8 +333,8 @@ for(aggregate_district in c(F, T)){
                            labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
-                          "D. r2 of Estimated vs True Wealth Score Within Countries [ADM2]",
-                          "B. r2 of Estimated vs True Wealth Score Within Countries"), 
+                          "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
+                          "B. r2 of Estimated vs True Wealth Score Within Countries [Village]"), 
            caption = "") +
       theme_void() +
       coord_quickmap() +
@@ -399,7 +399,7 @@ for(aggregate_district in c(F, T)){
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
                           "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
-                          "B. r2 of Estimated vs True Wealth Score Within Countries"), 
+                          "B. r2 of Estimated vs True Wealth Score Within Countries [Village]"), 
            caption = "") +
       theme_void() +
       coord_quickmap() +

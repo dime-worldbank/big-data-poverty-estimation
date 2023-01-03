@@ -124,6 +124,8 @@ df <- df %>%
     
     starts_with("cnn_"),
     
+    starts_with("s1_sar_"),
+    
     starts_with("l8_"),
     starts_with("l7_"),
     
@@ -143,9 +145,14 @@ df <- df %>%
   dplyr::select(-c(fb_prop_radius))
 
 # Remove Observations ----------------------------------------------------------
-# TODO: Do later? Or just for most_recent?
+#TODO: Do later? Or just for most_recent?
+
+df <- df %>%
+  dplyr::filter(!is.na(s1_sar_vh_mean))
+
 # df <- df %>%
 #   dplyr::filter(!is.na(cnn_s2_bu_pc1),
+#                 !is.na(fb_prop_estimate_mau_upper_bound_2),
 #                 !is.na(fb_prop_estimate_mau_upper_bound_2),
 #                 !is.na(worldclim_bio_1))
 

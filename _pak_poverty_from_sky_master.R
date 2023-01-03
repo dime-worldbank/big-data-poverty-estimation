@@ -20,7 +20,7 @@ if(Sys.info()[["user"]] == "robmarty"){
   gdrive_dir <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
   secure_dir <- "~/Documents/World Bank/Pakistan Poverty from Sky" 
   github_dir <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
-  overleaf_global_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
+  overleaf_global_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper V2"
   overleaf_pak_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Pakistan Paper"
 }
 
@@ -40,15 +40,18 @@ osm_dir          <- file.path(data_dir, "OSM")
 dhs_dir          <- file.path(data_dir, "DHS")
 gadm_dir         <- file.path(data_dir, "GADM")
 ntl_harmon_dir   <- file.path(data_dir, "DMSPOLS_VIIRS_Harmonized")
+ntl_bm_dir       <- file.path(data_dir, "NTL Black Marble")
 fb_marketing_dir <- file.path(data_dir, "Facebook Marketing")
 fb_rwi_dir       <- file.path(data_dir, "Facebook Relative Wealth Index")
 globcover_dir    <- file.path(data_dir, "Globcover")
 worldclim_dir    <- file.path(data_dir, "WorldClim")
 cntry_dtls_dir   <- file.path(data_dir, "Country Details")
+sentinel5p_dir   <- file.path(data_dir, "Sentinel 5P Pollution")
 
 #### Overleaf Paths
 tables_global_dir  <- file.path(overleaf_global_dir, "tables")
 figures_global_dir <- file.path(overleaf_global_dir, "figures")
+stats_global_dir   <- file.path(overleaf_global_dir, "stats")
 
 tables_pak_dir  <- file.path(overleaf_pak_dir, "tables")
 figures_pak_dir <- file.path(overleaf_pak_dir, "figures")
@@ -200,7 +203,10 @@ library(ggcorrplot)
 library(scales)
 library(ggExtra)
 library(gghalves)
+library(exactextractr)
 source(file.path(github_dir, "Functions", "functions.R"))
+
+source("https://raw.githubusercontent.com/ramarty/download_blackmarble/main/R/download_blackmarble.R")
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
 source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/main.R")

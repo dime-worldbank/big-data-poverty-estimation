@@ -1,18 +1,17 @@
 # Add select predictions to survey
 
 # Load Data --------------------------------------------------------------------
+#### Load Survey Data
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
-# Load accuracy stats; either load best or specific param
-file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results") %>%
-  list.files() %>%
-  str_subset("accuracy_appended")
+#### Load Accuracy Data
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                             "accuracy_appended_bestparam.Rds"))
 
 acc_df <- acc_df %>%
   dplyr::filter(level_change %in% "levels")
 
+#### Load Predictions Data
 pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "predictions") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
@@ -23,27 +22,15 @@ pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results
 pred_df <- pred_df %>%
   dplyr::mutate(country_model_param = paste(country_code,
                                             estimation_type,
-                                            feature_type,
                                             target_var,
+                                            feature_type,
                                             xg_max.depth,
                                             xg_eta,
                                             xg_nthread,
                                             xg_nrounds,
                                             xg_subsample,
                                             xg_objective,
-                                            sep = "_"))
-
-acc_df <- acc_df %>%
-  dplyr::mutate(country_model_param = paste(country,
-                                            estimation_type,
-                                            feature_type,
-                                            target_var,
-                                            xg_max.depth,
-                                            xg_eta,
-                                            xg_nthread,
-                                            xg_nrounds,
-                                            xg_subsample,
-                                            xg_objective,
+                                            xg_min_child_weight,
                                             sep = "_"))
 
 pred_df <- pred_df[pred_df$country_model_param %in% acc_df$country_model_param,]

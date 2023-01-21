@@ -1,10 +1,10 @@
 # Figure: Correlation of Changes in PCA Wealth Index vs Wealth Score
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes.Rds"))
+df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
 
-df <- df %>%
-  dplyr::filter(year_diff_max %in% T)
+# df <- df %>%
+#   dplyr::filter(year_diff_max %in% T)
 
 # Make title -------------------------------------------------------------------
 # Title: "[iso2]; Cor = [cor]"

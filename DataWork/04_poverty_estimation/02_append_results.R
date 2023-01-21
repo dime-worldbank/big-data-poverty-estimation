@@ -82,7 +82,7 @@ acc_df <- acc_df %>%
     
     feature_type == "fb_prop" ~ "Facebook: Proportion",
     feature_type == "fb" ~ "Facebook",
-    feature_type == "satellites" ~ "Satellite: All Variables",
+    feature_type == "satellites" ~ "Day/Night Satellites",
     feature_type == "viirs" ~ "Nighttime Lights",
     feature_type == "ntlharmon" ~ "Nighttime Lights",
     feature_type == "landcover" ~ "Landcover",
@@ -94,7 +94,7 @@ acc_df <- acc_df %>%
     feature_type == "osm" ~ "OpenStreetMap",
     feature_type == "pollution" ~ "Pollution",
     feature_type == "pollution_aod" ~ "Pollution",
-    feature_type == "satellites_changes" ~ "Satellites",
+    feature_type == "satellites_changes" ~ "Day/Night Satellites",
     feature_type == "s1_sar" ~ "SAR",
     #feature_type == "" ~ "",
     TRUE ~ feature_type
@@ -189,7 +189,14 @@ survey_sum_df <- survey_df %>%
                    pca_allvars_mean = mean(pca_allvars),
                    pca_allvars_mr_sd = sd(pca_allvars_mr),
                    pca_allvars_mr_mean = mean(pca_allvars_mr),
+                   
+                   pca_allvars_mr_hh_stddev = mean(pca_allvars_mr_stddev),
+
+                   ntlharmon_avg_sd = sd(ntlharmon_avg),
+                   viirs_avg_rad_log_sd = sd(log(viirs_avg_rad+1)),
+                   
                    ntlharmon_avg = mean(ntlharmon_avg),
+                   viirs_avg_rad_sd = sd(viirs_avg_rad),
                    viirs_avg_rad = mean(viirs_avg_rad),
                    viirs_avg_rad_sdspace = mean(viirs_avg_rad_sdspace),
                    prop_urban = mean(urban_rural %in% "U"),
@@ -201,7 +208,12 @@ survey_sum_df <- survey_df %>%
 survey_changes_sum_df <- survey_changes_df %>%
   group_by(iso2, year_diff) %>%
   dplyr::summarise(pca_allvars_sd_change = sd(pca_allvars),
-                   ntlharmon_avg_sd_change = sd(ntlharmon_avg)) %>%
+                   ntlharmon_avg_sd_change = sd(ntlharmon_avg),
+                   ntlharmon_avg_change = mean(ntlharmon_avg),
+                   pca_allvars_avg_change = mean(pca_allvars),
+                   pca_allvars_p75_change = pca_allvars %>% 
+                     quantile(probs = 0.75) %>% 
+                     as.numeric()) %>%
   ungroup()
 
 #### Merge
@@ -361,3 +373,4 @@ saveRDS(acc_all_best_param_df,
 # #                     paste0("accuracy_appended_paramset_",param_set_i,".Rds")))
 # # }
 # 
+

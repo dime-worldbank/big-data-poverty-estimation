@@ -12,29 +12,24 @@ acc_df <- acc_df %>%
   dplyr::filter(level_change %in% "changes")
 
 #### Load Predictions
+read_add_file <- function(path){
+  df <- readRDS(path)
+  df$path <- path
+  return(df)
+}
 pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "predictions") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("changes") %>%
-  map_df(readRDS) 
-
-## DELETE LATER
-# pred_df <- pred_df %>%
-#   dplyr::filter(xg_max.depth %in% 5,
-#                 xg_eta %in% 0.3,
-#                 xg_nthread %in% 4,
-#                 xg_nrounds %in% c(50, 100),
-#                 xg_subsample %in% 0.3,
-#                 xg_objective %in% "reg:squarederror",
-#                 xg_min_child_weight %in% 1)
+  map_df(read_add_file) 
 
 pred_df <- pred_df %>%
   dplyr::mutate(estimation_type = case_when(
-    estimation_type %>% str_detect("continent_") ~ "other_continents",
-    estimation_type %in% "continent" ~ "same_continent",
+    estimation_type %>% str_detect("continent_") & estimation_type %>% str_detect("country_pred") ~ "same_continent",
+    estimation_type %in% "continent" ~ "other_continents",
     TRUE ~ estimation_type
-  ))
-
+  )) 
+  
 continent_df <- survey_df %>%
   distinct(continent_adj, country_code)
 
@@ -106,6 +101,17 @@ survey_df <- survey_df %>%
   left_join(wdi_df, by = "iso2") 
 
 # Export -----------------------------------------------------------------------
+# for(var in names(survey_df)){
+#   print(var)
+#   survey_df[[var]] <- survey_df[[var]] %>% unlist()
+# }
+
+## TODO: Fix / see what's going on?
+survey_df$predict_pca_allvars_best[survey_df$country_code %in% "LS"] <- 
+  survey_df$predict_pca_allvars_best[survey_df$country_code %in% "LS"] / 1000
+
+survey_df$predict_pca_allvars_best[survey_df$country_code %in% "TL"] <- 
+  survey_df$predict_pca_allvars_best[survey_df$country_code %in% "TL"] / 100
+
 saveRDS(survey_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
-

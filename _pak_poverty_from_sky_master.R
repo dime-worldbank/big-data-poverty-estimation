@@ -20,7 +20,7 @@ if(Sys.info()[["user"]] == "robmarty"){
   gdrive_dir <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
   secure_dir <- "~/Documents/World Bank/Pakistan Poverty from Sky" 
   github_dir <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
-  overleaf_global_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper V2"
+  overleaf_global_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
   overleaf_pak_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Pakistan Paper"
 }
 
@@ -383,6 +383,7 @@ if(F){
   source(file.path(datawork_dir, "04_poverty_estimation", "02_append_results.R"))
   source(file.path(datawork_dir, "04_poverty_estimation", "03_add_prediction_to_survey_changes.R"))
   source(file.path(datawork_dir, "04_poverty_estimation", "03_add_prediction_to_survey_levels.R"))
+  source(file.path(datawork_dir, "04_poverty_estimation", "03_prediction_changes_district.R"))
   
   # 5. Tables/Figures: Global analysis -----------------------------------------
   # Makes tables and figures for paper
@@ -402,6 +403,8 @@ if(F){
   source(file.path(figures_tables_global_dir, "main", "changes_3_scatter_countries.R"))
   source(file.path(figures_tables_global_dir, "main", "changes_4_explain_variation.R"))
   
+  source(file.path(figures_tables_global_dir, "main_stats.R"))
+  
   # source(file.path(figures_tables_global_dir, "main", "correlations.R"))
   # source(file.path(figures_tables_global_dir, "main", "global_scatterplot_average_map.R"))
   # source(file.path(figures_tables_global_dir, "main", "avg_performance_by_type.R"))
@@ -412,7 +415,7 @@ if(F){
   source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_both_years.R"))
   source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_most_recent.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_levels_cor.R"))
-  source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_changes_cor.R")) # CHECK? VALID TO DO CHANGES???
+  #source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_changes_cor.R")) # CHECK? VALID TO DO CHANGES???
   source(file.path(figures_tables_global_dir, "si", "figure_fb_features_cor_each_country.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2_levels.R"))

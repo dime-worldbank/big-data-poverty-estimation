@@ -11,12 +11,15 @@ accu_df <- accu_df %>%
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
+district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+                                 "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+
 # Explain variation: scatter plots ---------------------------------------------
 line_color <- "darkorange"
 accu_sum_df <- accu_df %>%
   ungroup() %>%
   dplyr::filter(feature_type %in% "all_changes",
-                estimation_type %in% "best", # "within_country_cv",
+                estimation_type %in% "best", # best "within_country_cv",
                 target_var %in% "pca_allvars")
 
 p_scatter <- accu_sum_df %>%
@@ -26,16 +29,17 @@ p_scatter <- accu_sum_df %>%
                 year_diff,
                 pca_allvars_sd_change,
                 ntlharmon_avg_sd_change,
-                #wdi_population,
-                wdi_gdp_pc) %>%
+                wdi_gdp_pc,
+                pca_allvars_avg_change,
+                ntlharmon_avg_change) %>%
   pivot_longer(cols = -r2) %>%
   dplyr::mutate(name = case_when(
-    name == "pca_allvars_sd_change" ~ "A. Std. Dev. of Asset Index Change",
-    name == "ntlharmon_avg_sd_change" ~ "B. Std. Dev. of NTL Change",
-    name == "year_diff" ~ "C. Year Difference Between Surveys",
-    #name == "N" ~ "D. Number of DHS Clusters",
-    #name == "wdi_population" ~ "E. Population, logged",
-    name == "wdi_gdp_pc" ~ "D. GDP Per Capita, logged",
+    name == "pca_allvars_avg_change" ~ "A. Average Change in\nWealth Index",
+    name == "ntlharmon_avg_change" ~ "B. Average change in\nNighttime Lights",
+    name == "pca_allvars_sd_change" ~ "C. Std. Dev. of\nWealth Index Change",
+    name == "ntlharmon_avg_sd_change" ~ "D. Std. Dev. of\nNTL Change",
+    name == "year_diff" ~ "E. Year Difference\nBetween Surveys",
+    name == "wdi_gdp_pc" ~ "F. GDP Per Capita, logged",
     TRUE ~ name
   )) %>%
   ggplot(aes(x = value,
@@ -66,18 +70,22 @@ cluster_sum_df <- cluster_df %>%
   mutate(unit = "Village") %>%
   mutate(r2 = cor^2)
 
-district_sum_df <- cluster_df %>%
-  
-  group_by(country_code, income, gadm_uid) %>%
-  dplyr::summarise(pca_allvars = mean(pca_allvars),
-                   predict_pca_allvars_best = mean(predict_pca_allvars_best)) %>%
-  
-  group_by(country_code, income) %>%
-  dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_best)) %>%
-  
-  ungroup() %>%
-  mutate(unit = "District") %>%
-  mutate(r2 = cor^2)
+# district_sum_df <- cluster_df %>%
+#   
+#   group_by(country_code, income, gadm_uid) %>%
+#   dplyr::summarise(pca_allvars = mean(pca_allvars),
+#                    predict_pca_allvars_best = mean(predict_pca_allvars_best)) %>%
+#   
+#   group_by(country_code, income) %>%
+#   dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_best)) %>%
+#   
+#   ungroup() %>%
+#   mutate(unit = "District") %>%
+#   mutate(r2 = cor^2)
+
+district_sum_df <- district_df %>%
+  distinct(country_code, income, r2) %>%
+  dplyr::mutate(unit = "District")
 
 cor_df <- bind_rows(cluster_sum_df,
                     district_sum_df)
@@ -101,10 +109,12 @@ p_bar <- cor_df %>%
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position = c(0.85, 0.85),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12),
         plot.title = element_text(face = "bold"),
         plot.title.position = "plot",
         axis.text.x = element_text(color = "black"),
-        axis.text.y = element_text(color = "black", face = "bold")) #+
+        axis.text.y = element_text(color = "black", face = "bold", size = 12)) #+
   #coord_flip()
 
 # Arrange/export ---------------------------------------------------------------

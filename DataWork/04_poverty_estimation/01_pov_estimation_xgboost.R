@@ -385,18 +385,36 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
   } 
   
   for(estimation_type_i in rev(estimation_type_vec)){
-    for(target_var_i in rev(target_vars_vec)){
-      for(feature_type_i in feature_types){
+    for(target_var_i in target_vars_vec){
+      for(feature_type_i in rev(feature_types)){
         for(country_i in rev(countries_vec)){
           
           ## XG Boost Parameters
-          for(xg_max.depth in c(2,5, 6, 10)){ # 2,5,6,10
-            for(xg_eta in c(0.3)){ # 0.3,0.8
-              for(xg_nthread in c(4)){
-                for(xg_nrounds in rev(c(50))){ # 50,100,500
-                  for(xg_subsample in rev(c(0.3,0.6, 1))){ # 0.3,0.6,1
-                    for(xg_objective in c("reg:squarederror")){
-                      for(xg_min_child_weight in c(1)){
+          if(level_change == "levels"){
+            xg_max.depth_params <- c(2, 5, 6, 10) %>% rev()
+            xg_eta_params <- c(0.3) %>% rev()
+            xg_nrounds_params <- c(50) %>% rev()
+            xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            xg_objective_params <- c("reg:squarederror")
+            xg_min_child_weight_params <- c(1)
+          }
+          
+          if(level_change == "changes"){
+            xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
+            xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
+            xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
+            xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            xg_objective_params <- c("reg:squarederror")
+            xg_min_child_weight_params <- c(1)
+          }
+          
+          for(xg_max.depth in xg_max.depth_params){ # 2,5,6,10
+            for(xg_eta in xg_eta_params){ # 0.3,0.8
+              for(xg_nthread in 4){
+                for(xg_nrounds in xg_nrounds_params){ # 50,100,500
+                  for(xg_subsample in xg_subsample_params){ # 0.3,0.6,1
+                    for(xg_objective in xg_objective_params){
+                      for(xg_min_child_weight in xg_min_child_weight_params){
                         
                         # Skip -----------------------------------------------------------------
                         # Only implement within country on individual countries

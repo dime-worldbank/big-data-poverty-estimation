@@ -7,7 +7,11 @@ p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 
 # Load/prep survey data --------------------------------------------------------
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-                                "survey_alldata_clean_changes_cluster_predictions.Rds"))
+                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
+
+district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+                                "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+
 
 cluster_df <- cluster_df %>%
   dplyr::mutate(country_name = case_when(
@@ -15,13 +19,21 @@ cluster_df <- cluster_df %>%
     TRUE ~ country_name
   ))
 
-# TODO: What's going on with Liberia?
-cluster_df$predict_pca_allvars_best[cluster_df$country_code %in% "LB"] <- cluster_df$predict_pca_allvars_best[cluster_df$country_code %in% "LB"] / 100
+district_df <- district_df %>%
+  dplyr::mutate(country_name = case_when(
+    country_name == "Congo - Kinshasa" ~ "Congo - DRC",
+    TRUE ~ country_name
+  )) %>%
+  dplyr::rename(predict_pca_allvars_best = prediction,
+                pca_allvars = truth)
 
-district_df <- cluster_df %>%
-  group_by(continent_adj, country_code, country_name, gadm_uid) %>%
-  summarise_if(is.numeric, mean) %>%
-  ungroup()
+# TODO: What's going on with Liberia?
+#cluster_df$predict_pca_allvars_best[cluster_df$country_code %in% "LB"] <- cluster_df$predict_pca_allvars_best[cluster_df$country_code %in% "LB"] / 100
+
+# district_df <- cluster_df %>%
+#   group_by(continent_adj, country_code, country_name, gadm_uid) %>%
+#   summarise_if(is.numeric, mean) %>%
+#   ungroup()
 
 ## Add correlation
 cluster_df <- cluster_df %>%
@@ -116,7 +128,7 @@ p_scatter_cluster_ex <- cluster_df %>%
   stat_poly_eq(color = "red", small.r=T) +
   labs(x = "True Change in Wealth Index",
        y = "Estimated Change in\nWealth Index",
-       title = "A. Village Level",
+       title = "A. Estimated vs. true change in wealth index [cluster]",
        color = NULL) +
   theme_classic() +
   theme(strip.background = element_blank(),
@@ -134,7 +146,7 @@ p_scatter_district_ex <- district_df %>%
   stat_poly_eq(color = "red", small.r=T) +
   labs(x = "True Change in Wealth Index",
        y = "Estimated Change in\nWealth Index",
-       title = "B. District Level",
+       title = "B. Estimated vs. true change in wealth index [district]",
        color = NULL) +
   theme_classic() +
   theme(strip.background = element_blank(),

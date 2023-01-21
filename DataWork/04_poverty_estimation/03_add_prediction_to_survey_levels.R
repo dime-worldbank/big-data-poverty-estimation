@@ -18,6 +18,15 @@ pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results
   str_subset("levels") %>%
   map_df(readRDS) 
 
+# Cleanup prediction data ------------------------------------------------------
+pred_df <- pred_df %>%
+  dplyr::mutate(estimation_type = case_when(
+    estimation_type %>% str_detect("continent_") & estimation_type %>% str_detect("country_pred") ~ "same_continent",
+    estimation_type %in% "continent" ~ "other_continents",
+    TRUE ~ estimation_type
+  )) %>%
+  dplyr::mutate(pred_var = paste("predict", target_var, estimation_type, feature_type, sep = "_")) 
+
 # Restrict to best xg_parameters -----------------------------------------------
 pred_df <- pred_df %>%
   dplyr::mutate(country_model_param = paste(country_code,
@@ -33,15 +42,7 @@ pred_df <- pred_df %>%
                                             xg_min_child_weight,
                                             sep = "_"))
 
-pred_df <- pred_df[pred_df$country_model_param %in% acc_df$country_model_param,]
-
-# Cleanup prediction data ------------------------------------------------------
-pred_long_df <- pred_df %>%
-  dplyr::mutate(estimation_type = case_when(
-    estimation_type %>% str_detect("continent_") ~ "other_continents",
-    TRUE ~ estimation_type
-  )) %>%
-  dplyr::mutate(pred_var = paste("predict", target_var, estimation_type, feature_type, sep = "_")) 
+pred_long_df <- pred_df[pred_df$country_model_param %in% acc_df$country_model_param,]
 
 # Dataset of best prediction for each country & target variable ----------------
 pred_long_df <- pred_long_df %>%
@@ -81,6 +82,16 @@ survey_df <- survey_df %>%
 saveRDS(survey_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
 
-
-
+# a <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
+# 
+# b <- a %>%
+#   dplyr::filter(pca_allvars_mr_stddev < 1)
+# 
+# cor(b$pca_allvars_mr, b$predict_pca_allvars_mr_global_country_pred_all)^2
+# 
+# b %>%
+# ggplot() +
+#   geom_point(aes(x = pca_allvars_mr,
+#                  y = predict_pca_allvars_mr_global_country_pred_all),
+#              size = 0.1)
 

@@ -387,8 +387,16 @@ dhs_all_df_coll_sum <- dhs_all_df %>%
   ungroup() %>%
   rename_with(~paste0(., "_sum"), -c("uid"))
 
+## Standard Deviation
+dhs_all_df_coll_stddev <- dhs_all_df %>%
+  group_by(uid) %>%
+  summarise_at(vars(pca_allvars, pca_allvars_mr), sd, na.rm=T) %>%
+  ungroup() %>%
+  rename_with(~paste0(., "_stddev"), -c("uid"))
+
 dhs_all_df_coll <- dhs_all_df_coll %>%
-  left_join(dhs_all_df_coll_sum, by = "uid")
+  left_join(dhs_all_df_coll_sum, by = "uid") %>%
+  left_join(dhs_all_df_coll_stddev, by = "uid")
 
 # Country Name -----------------------------------------------------------------
 dhs_all_df_coll$iso2 <- countrycode(dhs_all_df_coll$country_code, origin = "dhs", destination = "iso2c")

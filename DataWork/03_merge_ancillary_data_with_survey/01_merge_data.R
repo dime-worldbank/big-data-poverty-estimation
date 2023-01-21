@@ -295,19 +295,16 @@ s1_df <- lapply(s1_files, function(file_i){
 
 ## Take maximum across descending and ascending
 s1_df <- s1_df %>%
-  dplyr::mutate(s1_sar_vv_mean = pmax(s1_sar_vv_desc_mean, s1_sar_vv_asc_mean, na.rm = T),
-                s1_sar_vh_mean = pmax(s1_sar_vh_desc_mean, s1_sar_vh_asc_mean, na.rm = T),
-                s1_sar_hv_mean = pmax(s1_sar_hv_desc_mean, s1_sar_hv_asc_mean, na.rm = T),
-                s1_sar_hh_mean = pmax(s1_sar_hh_desc_mean, s1_sar_hh_asc_mean, na.rm = T),
+  dplyr::mutate(s1_sar_vv_mean   = pmax(s1_sar_vv_desc_mean,   s1_sar_vv_asc_mean, na.rm = T),
+                s1_sar_vh_mean   = pmax(s1_sar_vh_desc_mean,   s1_sar_vh_asc_mean, na.rm = T),
+                s1_sar_vdiv_mean = pmax(s1_sar_vdiv_desc_mean, s1_sar_vdiv_asc_mean, na.rm = T),
                 
-                s1_sar_vv_stddev = pmax(s1_sar_vv_desc_stddev, s1_sar_vv_asc_stddev, na.rm = T),
-                s1_sar_vh_stddev = pmax(s1_sar_vh_desc_stddev, s1_sar_vh_asc_stddev, na.rm = T),
-                s1_sar_hv_stddev = pmax(s1_sar_hv_desc_stddev, s1_sar_hv_asc_stddev, na.rm = T),
-                s1_sar_hh_stddev = pmax(s1_sar_hh_desc_stddev, s1_sar_hh_asc_stddev, na.rm = T)) %>%
+                s1_sar_vv_stddev   = pmax(s1_sar_vv_desc_stddev,   s1_sar_vv_asc_stddev, na.rm = T),
+                s1_sar_vh_stddev   = pmax(s1_sar_vh_desc_stddev,   s1_sar_vh_asc_stddev, na.rm = T),
+                s1_sar_vdiv_stddev = pmax(s1_sar_vdiv_desc_stddev, s1_sar_vdiv_asc_stddev, na.rm = T)) %>%
   dplyr::select(uid, 
-                s1_sar_vv_mean, s1_sar_vh_mean,
-                s1_sar_vv_stddev, s1_sar_vh_stddev)
-# HH and HV have too few observations
+                s1_sar_vv_mean,   s1_sar_vh_mean,   s1_sar_vdiv_mean,
+                s1_sar_vv_stddev, s1_sar_vh_stddev, s1_sar_vdiv_stddev)
 
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 

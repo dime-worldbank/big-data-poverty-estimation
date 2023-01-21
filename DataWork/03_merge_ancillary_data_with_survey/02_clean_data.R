@@ -117,6 +117,10 @@ df <- df %>%
     "wealth_index_score",
     "wealth_index",
     
+    # Standard Deviation
+    "pca_allvars_stddev",
+    "pca_allvars_mr_stddev",
+    
     # Features
     starts_with("viirs_"),
     

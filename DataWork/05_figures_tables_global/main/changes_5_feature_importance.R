@@ -65,6 +65,7 @@ feature_df <- fi_df %>%
 
 feature_df %>%
   head(30) %>%
+  dplyr::mutate(variable_clean = variable_clean %>% str_replace_all("L7 ", "Landsat ")) %>%
   ggplot(aes(x = gain_avg,
              xmin = 0,
              xmax = gain_avg,
@@ -77,7 +78,7 @@ feature_df %>%
   labs(x = "Gain",
        y = NULL,
        color = "Feature\nCategory") +
-  xlim(0, 0.1) +
+  xlim(0, max(feature_df$gain_avg) + 0.01) +
   theme_minimal() +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),

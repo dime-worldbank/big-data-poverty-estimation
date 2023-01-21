@@ -139,8 +139,8 @@ for(aggregate_district in c(F, T)){
       scale_color_manual(values = c("chartreuse4", "chocolate2")) +
       labs(color = NULL,
            title = ifelse(aggregate_district,
-                          "C. Estimated vs. True Wealth Asset Index [District]",
-                          "A. Estimated vs. True Wealth Asset Index [Village]"),
+                          "C. Estimated vs. true wealth index [district]",
+                          "A. Estimated vs. true wealth index [cluster]"),
            x = "True Wealth Asset Index",
            y = "Estimated Wealth Asset Index") +
       theme_minimal() +
@@ -199,7 +199,7 @@ for(aggregate_district in c(F, T)){
                     size = FONT_SIZE) +
       scale_color_manual(values = c("chartreuse4", "chocolate2")) +
       labs(color = NULL,
-           title = "A. Estimated vs. True Wealth Asset Index",
+           title = "A. Estimated vs. true wealth index [cluster]",
            x = "True Wealth Asset Index",
            y = "Estimated Wealth Asset Index") +
       theme_minimal() +
@@ -333,8 +333,8 @@ for(aggregate_district in c(F, T)){
                            labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
-                          "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
-                          "B. r2 of Estimated vs True Wealth Score Within Countries [Village]"), 
+                          "D. r2 of estimated vs true wealth index within countries [district]",
+                          "B. r2 of estimated vs true wealth index within countries [cluster]"), 
            caption = "") +
       theme_void() +
       coord_quickmap() +
@@ -398,8 +398,8 @@ for(aggregate_district in c(F, T)){
                            labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
-                          "D. r2 of Estimated vs True Wealth Score Within Countries [District]",
-                          "B. r2 of Estimated vs True Wealth Score Within Countries [Village]"), 
+                          "D. r2 of estimated vs true wealth index within countries [district]",
+                          "B. r2 of estimated vs true wealth index within countries [cluster]"), 
            caption = "") +
       theme_void() +
       coord_quickmap() +

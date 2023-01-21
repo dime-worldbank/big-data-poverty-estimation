@@ -53,7 +53,7 @@ p_trainsample <- results_df %>%
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
-       title = "A. Performance by training sample type") +
+       title = "A. Performance by training sample type [cluster]") +
   scale_y_continuous(limits = c(0,1)) +
   theme_classic() +
   theme(legend.position = "none",
@@ -101,7 +101,7 @@ p_feature <- results_df %>%
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
-       title = "C. Performance using different features") +
+       title = "B. Performance using different features [cluster]") +
   scale_y_continuous(limits = c(0,1)) +
   theme_classic() +
   theme(legend.position = "none",
@@ -114,7 +114,7 @@ p_feature <- results_df %>%
 best_df <- bind_rows(
   cluster_df %>%
     distinct(country_name, .keep_all = T) %>%
-    mutate(type = "Village"),
+    mutate(type = "Cluster"),
   
   district_df %>%
     distinct(country_name, .keep_all = T) %>%
@@ -161,7 +161,7 @@ p_cluster_adm <- best_sum_df %>%
   labs(x = "N Countries",
        y = expression(r^2),
        fill = "Unit",
-       title = "B. Performance by unit") +
+       title = "C. Performance by unit") +
   scale_fill_manual(values = c("lightblue1",
                                "tan1"),
                     guide = guide_legend(reverse = TRUE)) +

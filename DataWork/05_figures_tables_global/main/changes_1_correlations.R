@@ -1,7 +1,5 @@
 # Correlations: Changes
 
-# TODO: Rank cor?
-
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
 
@@ -10,7 +8,9 @@ df_cor <- df %>%
   dplyr::select(-c(latitude, longitude)) %>%
   pivot_longer(cols = -c(uid, within_country_fold, continent_adj, country_code, country_name, gadm_uid, iso2, year_diff, 
                          pca_allvars, 
-                         urban_rural_yr1, urban_rural_yr2)) %>%
+                         urban_rural_yr1, urban_rural_yr2,
+                         pca_allvars_stddev,
+                         pca_allvars_stddev_yr1, pca_allvars_stddev_yr2)) %>%
   dplyr::filter(!is.na(value)) %>%
   group_by(name, country_code, year_diff) %>%
   dplyr::summarise(cor = cor(pca_allvars, value),
@@ -59,7 +59,7 @@ df_cor %>%
   labs(y = NULL,
        x = "Correlation",
        fill = "Variable\nCategory",
-       title = "Correlation Between Changes in Variables and Wealth Index") +
+       title = "Correlation between changes in variables and wealth index") +
   scale_x_continuous(breaks = seq(from = -.5, to = 0.5, by = 0.25))
 
 ggsave(filename = file.path(figures_global_dir, "cor_changes.png"),

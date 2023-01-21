@@ -14,7 +14,8 @@ df <- df %>%
   dplyr::select(uid, country_code, country_name, gadm_uid, iso2, year, within_country_fold, continent_adj,
                 urban_rural,
                 latitude, longitude,
-                pca_allvars, 
+                "pca_allvars", 
+                "pca_allvars_stddev",
                 starts_with("l7_"),
                 starts_with("gc_"),
                 starts_with("ntlharmon_"),
@@ -76,6 +77,9 @@ df_pairs <- map_df(unique(df$country_code), function(country_code_i){
     df_append_i$urban_rural_yr1 <- df_c_yr1_i$urban_rural 
     df_append_i$urban_rural_yr2 <- df_c_yr2_i$urban_rural 
     
+    df_append_i$pca_allvars_stddev_yr1 <- df_c_yr1_i$pca_allvars_stddev 
+    df_append_i$pca_allvars_stddev_yr2 <- df_c_yr2_i$pca_allvars_stddev 
+  
     ## For some variables, use data from data_yr1 for both
     for(var in c("country_code", "gadm_uid", "within_country_fold", "continent_adj", "iso2")){
       df_append_i[[var]] <- df_c_yr1_i[[var]]
@@ -109,7 +113,9 @@ df_change <- df_pairs %>%
   #dplyr::mutate(year_str = year %>% as.character()) %>%
   arrange(year) %>%
   group_by(uid_panel, country_code, country_name, gadm_uid, within_country_fold, continent_adj, iso2,
-           urban_rural_yr1, urban_rural_yr2) %>%
+           urban_rural_yr1, urban_rural_yr2,
+           pca_allvars_stddev_yr1,
+           pca_allvars_stddev_yr2) %>%
   summarise_if(is.numeric, diff) %>%
   ungroup() %>%
   dplyr::rename(year_diff = year) %>%
@@ -117,7 +123,6 @@ df_change <- df_pairs %>%
 #dplyr::rename(year_diff = year,
 #              year      = year_str) %>%
 #dplyr::filter(!is.na(year_diff))
-
 
 # Export -----------------------------------------------------------------------
 saveRDS(df_change, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))

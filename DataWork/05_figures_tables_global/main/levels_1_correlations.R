@@ -144,7 +144,7 @@ p_topvar <- cor_topvars_clean_df %>%
   geom_boxplot(aes(x = cor,
                    y = reorder(variable_clean_with_dataset, cor, FUN = median, .desc =TRUE)),
                fill = "gray80") +
-  labs(title = "A. Correlation of Select Variables to Wealth Score Across Countries",
+  labs(title = "A. Correlation of select variables to wealth index across countries",
        subtitle = "The variable with the highest median correlation for each dataset is shown",
        y = NULL,
        x = "Correlation") + 
@@ -187,7 +187,7 @@ p_fb <- cor_df %>%
   labs(y = NULL,
        x = "Correlation",
        fill = "Variable\nCategory",
-       title = "B. Correlation of Facebook Variables to Wealth Score") +
+       title = "B. Correlation of Facebook variables to wealth index") +
   theme_classic() +
   scale_x_continuous(limits = c(-0.5, 1)) +
   theme(axis.text.y = element_text(color = "black"),
@@ -248,7 +248,7 @@ p_osm <- cor_df %>%
   labs(y = NULL,
        x = "Correlation",
        fill = "Variable\nCategory",
-       title = "C. Correlation of Select OSM Variables to Wealth Score") +
+       title = "C. Correlation of select OSM variables to wealth index") +
   scale_x_continuous(limits = c(-0.5, 1)) +
   theme_classic() +
   theme(axis.text.y = element_text(color = "black"),
@@ -278,7 +278,7 @@ p_pollution <- cor_df %>%
   labs(y = NULL,
        x = "Correlation",
        fill = "Variable\nCategory",
-       title = "D. Correlation of Pollution Variables to Wealth Score") +
+       title = "D. Correlation of pollution variables to wealth index") +
   scale_x_continuous(limits = c(-0.539, 1)) +
   theme_classic() +
   theme(axis.text.y = element_text(color = "black"),

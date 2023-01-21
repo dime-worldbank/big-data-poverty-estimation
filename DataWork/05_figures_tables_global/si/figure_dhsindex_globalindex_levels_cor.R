@@ -25,10 +25,11 @@ p <- df %>%
                color = "red") +
   geom_point(size = 0.1) +
   labs(x = "DHS Wealth Index",
-       y = "Global Asset Index") +
+       y = "Global\nWealth\nIndex") +
   theme_classic() +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        axis.title.y = element_text(angle = 0, vjust = 0.5)) +
   facet_wrap(~title)
 
 ggsave(p, 

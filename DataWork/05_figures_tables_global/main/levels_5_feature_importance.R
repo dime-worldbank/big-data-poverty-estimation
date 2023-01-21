@@ -77,6 +77,8 @@ feature_df <- fi_df %>%
   )) %>%
   arrange(-gain_avg) 
 
+
+
 feature_df %>%
   head(30) %>%
   ggplot(aes(x = gain_avg,
@@ -91,7 +93,7 @@ feature_df %>%
   labs(x = "Gain",
        y = NULL,
        color = "Feature\nCategory") +
-  xlim(0, 0.11) +
+  xlim(0, max(feature_df$gain_avg) + 0.05) +
   theme_minimal() +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
@@ -99,7 +101,7 @@ feature_df %>%
 
 ggsave(filename = file.path(figures_global_dir, "fi_levels.png"),
        height = 5,
-       width = 8)
+       width = 10)
 
 
 

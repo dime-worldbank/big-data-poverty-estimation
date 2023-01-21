@@ -172,6 +172,21 @@ clean_varnames <- function(df){
                                                                            "cnn_viirs_s2_ndvi_pc",
                                                                            "NDVI CNN Feature "),
       
+      
+      
+      
+      variable_clean %>% str_detect("cnn_ntlharmon_landsat_bu") ~ str_replace_all(variable_clean, 
+                                                                         "cnn_ntlharmon_landsat_bu_pc",
+                                                                         "BU CNN Feature "),
+      
+      variable_clean %>% str_detect("cnn_ntlharmon_landsat_rgb") ~ str_replace_all(variable_clean, 
+                                                                          "cnn_ntlharmon_landsat_rgb_pc",
+                                                                          "RGB CNN Feature "),
+      
+      variable_clean %>% str_detect("cnn_ntlharmon_landsat_ndvi") ~ str_replace_all(variable_clean, 
+                                                                           "cnn_ntlharmon_landsat_ndvi_pc",
+                                                                           "NDVI CNN Feature "),
+      
       variable_clean %>% str_detect("weather") ~ variable_clean %>%
         str_replace_all("_",
                         " ") %>%

@@ -9,23 +9,27 @@ p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-district_df <- cluster_df %>%
-  group_by(continent_adj, country_code, country_name, gadm_uid) %>%
-  summarise_if(is.numeric, mean) %>%
-  ungroup()
+district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+                                "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+
+# district_df <- cluster_df %>%
+#   group_by(continent_adj, country_code, country_name, gadm_uid) %>%
+#   summarise_if(is.numeric, mean) %>%
+#   ungroup()
 
 ## Add correlation
 cluster_df <- cluster_df %>%
+  ungroup() %>%
   group_by(country_name) %>%
-  mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
+  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
   ungroup() %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2)) 
 
 district_df <- district_df %>%
-  group_by(country_name) %>%
-  mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
-  ungroup() %>%
-  dplyr::mutate(country_name = fct_reorder(country_name, -r2)) 
+  #group_by(country_name) %>%
+  #mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
+  #ungroup() %>%
+  dplyr::mutate(country_name = fct_reorder(country_name, -r2))
 
 # Load/prep accuracy data ------------------------------------------------------
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
@@ -33,9 +37,45 @@ acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_
 
 acc_df <- acc_df %>%
   dplyr::filter(level_change %in% "changes") %>%
-  mutate(feature_type_clean = feature_type_clean %>%
+  dplyr::mutate(feature_type_clean = feature_type_clean %>%
            str_replace_all("Daytime Imagery: Avg. & Std. Dev.",
                            "Daytime Imagery:\nAvg. & Std. Dev."))
+
+file_name_suffix <- paste0("changes","_",
+                           "continent_africa_country_pred","_",
+                           "AO","_",
+                           "pca_allvars","_",
+                           "all_changes",
+                           5 %>% str_replace_all("[:punct:]", ""), "_",
+                           0.9 %>% str_replace_all("[:punct:]", ""), "_",
+                           4 %>% str_replace_all("[:punct:]", ""), "_",
+                           100 %>% str_replace_all("[:punct:]", ""), "_",
+                           0.3 %>% str_replace_all("[:punct:]", ""), "_",
+                           "reg:squarederror" %>% str_replace_all("[:punct:]", ""), 
+                           1 %>% str_replace_all("[:punct:]", ""), 
+                           ".Rds")
+
+# Global Scatter ---------------------------------------------------------------
+# table(district_df$continent_adj)
+# a <- district_df[district_df$continent_adj == "Eurasia",]
+# 
+# cor(a$truth, a$prediction)^2
+# 
+# district_df %>%
+#   ggplot() +
+#   geom_point(aes(x = truth,
+#                  y = prediction)) +
+#   facet_wrap(~income)
+# 
+# 
+# 
+# cluster_df %>%
+#   ggplot() +
+#   geom_point(aes(x = pca_allvars, 
+#                  y = predict_pca_allvars_best)) +
+#   facet_wrap(~continent_adj)
+
+#district_df cluster_df
 
 # Boxplots: By Training Sample -------------------------------------------------
 p_boxplot_tsample <- acc_df %>%
@@ -53,7 +93,7 @@ p_boxplot_tsample <- acc_df %>%
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
-       title = "A. Performance by training sample type") +
+       title = "A. Performance by training sample type [cluster]") +
   theme_classic() +
   theme(legend.position = "none",
         axis.text.y = element_text(face = "bold"),
@@ -65,11 +105,11 @@ p_boxplot_tsample <- acc_df %>%
 best_df <- bind_rows(
   cluster_df %>%
     distinct(country_name, .keep_all = T) %>%
-    mutate(type = "Cluster"),
+    dplyr::mutate(type = "Cluster"),
   
   district_df %>%
     distinct(country_name, .keep_all = T) %>%
-    mutate(type = "District")
+    dplyr::mutate(type = "District")
 )
 
 # best_df %>%
@@ -77,8 +117,8 @@ best_df <- bind_rows(
 #              y = type)) +
 #   geom_boxplot()
 
-best_df <- best_df %>%
-  mutate(r2_cat = case_when(
+best_clean_df <- best_df %>%
+  dplyr::mutate(r2_cat = case_when(
     r2 < 0.1 ~ "0 - 0.1",
     r2 >= 0.1 & r2 < 0.2 ~ "0.1 - 0.2",
     r2 >= 0.2 & r2 < 0.3 ~ "0.2 - 0.3",
@@ -86,19 +126,20 @@ best_df <- best_df %>%
     r2 >= 0.4 & r2 < 0.5 ~ "0.4 - 0.5",
     r2 >= 0.5 & r2 < 0.6 ~ "0.5 - 0.6",
     r2 >= 0.6 & r2 < 0.7 ~ "0.6 - 0.7",
-    r2 >= 0.7 & r2 < 0.8 ~ "0.7 - 0.8"
+    r2 >= 0.7 & r2 < 0.8 ~ "0.7 - 0.8",
+    r2 >= 0.8 & r2 < 0.9 ~ "0.8 - 0.9"
   )) %>%
   group_by(r2_cat,
            type) %>%
-  summarise(n = n()) %>%
+  dplyr::summarise(n = n()) %>%
   ungroup() %>%
   tidyr::complete(r2_cat, type, fill = list(n = 0)) %>%
   group_by(type) %>%
-  mutate(prop = n / sum(n)) %>%
+  dplyr::mutate(prop = n / sum(n)) %>%
   ungroup() %>%
-  mutate(text = paste0(n, " (", round(prop,2)*100,"%)"))
+  dplyr::mutate(text = paste0(n, " (", round(prop,2)*100,"%)"))
 
-p_cluster_adm <- best_df %>%
+p_cluster_adm <- best_clean_df %>%
   ggplot(aes(y = r2_cat,
              x = n,
              fill = type)) +
@@ -122,8 +163,6 @@ p_cluster_adm <- best_df %>%
         legend.position = c(0.75,0.75),
         plot.title.position = "plot") 
 
-#p_cluster_adm 
-
 # Boxplots: By Feature Set -----------------------------------------------------
 p_boxplot_feature <- acc_df %>%
   dplyr::filter(estimation_type %in% "best",
@@ -141,7 +180,7 @@ p_boxplot_feature <- acc_df %>%
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
-       title = "B. Performance using different features") +
+       title = "B. Performance using different features [cluster]") +
   #scale_y_continuous(limits = c(0,0.6)) +
   theme_classic() +
   theme(legend.position = "none",
@@ -163,4 +202,13 @@ ggsave(p,
        height = 6,
        width = 11)
 
+## Stats
+d_r2 <- best_df %>%
+  dplyr::filter(type == "District") %>%
+  pull(r2)
 
+mean(d_r2 > 0.25)
+sum(d_r2 > 0.25)
+
+mean(d_r2 > 0.5)
+sum(d_r2 > 0.5)

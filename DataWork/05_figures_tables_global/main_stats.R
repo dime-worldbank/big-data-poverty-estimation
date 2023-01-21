@@ -44,7 +44,7 @@ survey_df %>%
   write(file.path(stats_global_dir, "n_countries_levels.txt"))
 
 #### Income Groups
-acc_levels_df$income %>% table()
+#acc_levels_df$income %>% table()
 
 #### Overall r2
 survey_df %>%
@@ -72,7 +72,22 @@ survey_df %>%
   round(2) %>%
   "*"(100) %>%
   paste0("\\%") %>%
-  write(file.path(stats_global_dir, "levels_district_r2.txt")) 
+  write(file.path(stats_global_dir, "levels_district_r2_avg.txt")) 
+
+survey_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  ungroup() %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "levels_district_r2_pooled.txt")) 
 
 #### Low / High Income r2
 acc_levels_best_df %>%
@@ -111,16 +126,55 @@ survey_df %>%
   write(file.path(stats_global_dir, "n_features_levels.txt"))
 
 #### Model type that works best
-est_type_best <- acc_df %>%
+est_type_best_df <- acc_df %>%
   dplyr::filter(feature_type == "all",
                 estimation_type != "best") %>%
   group_by(country) %>%
   slice_max(order_by = r2, n = 1) %>%
   ungroup() %>%
-  pull(estimation_type)
+  dplyr::mutate(within_country_best = estimation_type == "within_country_cv",
+                within_country_best_num = as.numeric(within_country_best))
 
-est_type_best %>% table()
-(est_type_best %>% table()) / length(est_type_best)
+## Prop
+est_type_best_vec <- est_type_best_df$estimation_type
+
+est_type_best_vec %>% table()
+(est_type_best_vec %>% table()) / length(est_type_best_vec)
+
+## When within country doesn't work best
+est_type_best_df_within <- est_type_best_df %>%
+  dplyr::filter(within_country_best %in% T)
+
+est_type_best_df_notwithin <- est_type_best_df %>%
+  dplyr::filter(within_country_best %in% F)
+
+est_type_best_df_within$N_dhs_obs %>% summary()
+est_type_best_df_notwithin$N_dhs_obs %>% summary()
+
+est_type_best_df_within$pca_allvars_mr_sd %>% summary()
+est_type_best_df_notwithin$pca_allvars_mr_sd %>% summary()
+
+est_type_best_df_within$continent_adj %>% table()
+est_type_best_df_notwithin$continent_adj %>% table()
+
+est_type_best_df_within$income %>% table()
+est_type_best_df_notwithin$income %>% table()
+
+lm(within_country_best_num ~ log(N_dhs_obs), data = est_type_best_df) %>% summary()
+lm(within_country_best_num ~ pca_allvars_mr_sd, data = est_type_best_df) %>% summary()
+lm(within_country_best_num ~ viirs_avg_rad_sdspace, data = est_type_best_df) %>% summary()
+
+mean(est_type_best_df_notwithin$N_dhs_obs < 399)
+
+est_type_best_df %>%
+  ggplot() +
+  geom_boxplot(aes(x = within_country_best,
+                   y = viirs_avg_rad_sdspace))
+
+est_type_best_df %>%
+  ggplot() +
+  geom_boxplot(aes(x = within_country_best,
+                   y = log(pca_allvars_mr_sd)))
 
 # Stats: Results Changes ------------------------------------------------
 #### N Obs Changes, Villages
@@ -177,16 +231,15 @@ survey_chn_dist_df %>%
   paste0("\\%") %>%
   write(file.path(stats_global_dir, "changes_district_r2_max.txt")) 
 
-
-acc_changes_best_df %>%
-  dplyr::filter(r2 >= q75,
-                income == "Low income") %>%
-  pull(r2)
-
-acc_changes_best_df %>%
-  dplyr::filter(r2 >= q75,
-                income == "Upper middle income") %>%
-  pull(r2)
+# acc_changes_best_df %>%
+#   dplyr::filter(r2 >= q75,
+#                 income == "Low income") %>%
+#   pull(r2)
+# 
+# acc_changes_best_df %>%
+#   dplyr::filter(r2 >= q75,
+#                 income == "Upper middle income") %>%
+#   pull(r2)
 
 # Correlations -----------------------------------------------------------------
 survey_df %>%
@@ -217,12 +270,22 @@ survey_df %>%
   round(3) %>%
   write(file.path(stats_global_dir, "cor_levels_pca_allvars.txt")) 
 
-survey_chn_df
+# Facebook MAU, Country Level --------------------------------------------------
+fb_df <- readRDS(file.path(fb_marketing_dir, "FinalData", "country_level_mau", 
+                           "country_level_mau.Rds")) %>%
+  dplyr::rename(iso2 = country_iso2)
 
+wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 
+fb_wdi_df <- fb_df %>%
+  left_join(wdi_df, by = "iso2") %>%
+  dplyr::mutate(prop_estimate_mau_1 = estimate_mau_1 / wdi_population) %>%
+  dplyr::select(prop_estimate_mau_1, iso2, country)
 
+fb_wdi_df$prop_estimate_mau_1 %>% summary()
+  
 
-
-
+head(fb_df)
+head(wdi_df)
 
 

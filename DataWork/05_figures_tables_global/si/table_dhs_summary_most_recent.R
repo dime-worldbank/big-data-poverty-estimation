@@ -23,7 +23,7 @@ sink(file.path(tables_global_dir, "dhs_summary_table.tex"))
 cat("\\begin{tabular}{l ccc} \n")
 cat("\\hline \n")
 cat("Country & DHS Year & N        & Global Wealth Index \\\\ \n")
-cat("        &          & Villages & Mean (sd) \\\\ \n")
+cat("        &          & Clusters & Mean (sd) \\\\ \n")
 cat("\\hline \n")
 
 for(i in 1:nrow(df_sum)) cat(df_sum$tex[i])

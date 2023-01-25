@@ -72,7 +72,7 @@ survey_df %>%
   round(2) %>%
   "*"(100) %>%
   paste0("\\%") %>%
-  write(file.path(stats_global_dir, "levels_district_r2_avg.txt")) 
+  write(file.path(stats_global_dir, "levels_district_r2_avg.txt"))
 
 survey_df %>%
   dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
@@ -87,7 +87,7 @@ survey_df %>%
   round(2) %>%
   "*"(100) %>%
   paste0("\\%") %>%
-  write(file.path(stats_global_dir, "levels_district_r2_pooled.txt")) 
+  write(file.path(stats_global_dir, "levels_district_r2_pooled.txt"))
 
 #### Low / High Income r2
 acc_levels_best_df %>%
@@ -204,32 +204,32 @@ survey_chn_df %>%
   paste0("\\%") %>%
   write(file.path(stats_global_dir, "changes_village_r2.txt")) 
 
-survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
-  group_by(country_code, gadm_uid) %>%
-  dplyr::summarise(predict_pca_allvars_best = mean(predict_pca_allvars_best),
-                   pca_allvars = mean(pca_allvars)) %>%
-  group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
-  ungroup() %>%
-  pull(r2) %>%
-  mean() %>%
-  round(2) %>%
-  "*"(100) %>%
-  paste0("\\%") %>%
-  write(file.path(stats_global_dir, "changes_district_r2.txt")) 
-
-#### Top countries
-q75_level <- acc_changes_best_df$r2 %>% quantile(probs = 0.75) %>% as.vector()
-q75_level <- survey_chn_dist_df$r2 %>% quantile(probs = 0.75) %>% as.vector()
-
-survey_chn_dist_df %>%
-  pull(r2) %>%
-  max() %>%
-  round(2) %>%
-  "*"(100) %>%
-  paste0("\\%") %>%
-  write(file.path(stats_global_dir, "changes_district_r2_max.txt")) 
+# survey_chn_df %>%
+#   dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+#   group_by(country_code, gadm_uid) %>%
+#   dplyr::summarise(predict_pca_allvars_best = mean(predict_pca_allvars_best),
+#                    pca_allvars = mean(pca_allvars)) %>%
+#   group_by(country_code) %>%
+#   dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
+#   ungroup() %>%
+#   pull(r2) %>%
+#   mean() %>%
+#   round(2) %>%
+#   "*"(100) %>%
+#   paste0("\\%") %>%
+#   write(file.path(stats_global_dir, "changes_district_r2.txt")) 
+# 
+# #### Top countries
+# q75_level <- acc_changes_best_df$r2 %>% quantile(probs = 0.75) %>% as.vector()
+# q75_level <- survey_chn_dist_df$r2 %>% quantile(probs = 0.75) %>% as.vector()
+# 
+# survey_chn_dist_df %>%
+#   pull(r2) %>%
+#   max() %>%
+#   round(2) %>%
+#   "*"(100) %>%
+#   paste0("\\%") %>%
+#   write(file.path(stats_global_dir, "changes_district_r2_max.txt")) 
 
 # acc_changes_best_df %>%
 #   dplyr::filter(r2 >= q75,
@@ -283,9 +283,57 @@ fb_wdi_df <- fb_df %>%
   dplyr::select(prop_estimate_mau_1, iso2, country)
 
 fb_wdi_df$prop_estimate_mau_1 %>% summary()
-  
+
 
 head(fb_df)
 head(wdi_df)
+
+# District changes results -----------------------------------------------------
+dist_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+
+dist_r2_df <- dist_df %>%
+  distinct(country_code, income, r2)
+
+dist_r2_df %>% 
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2.txt"))
+
+dist_r2_df %>%
+  dplyr::filter(income %in% "Low income") %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_lowincome.txt"))
+
+dist_r2_df %>% 
+  dplyr::filter(income %in% "Lower middle income") %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_lowermiddleincome.txt"))
+
+dist_r2_df %>% 
+  dplyr::filter(income %in% "Upper middle income") %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_uppermiddleincome.txt"))
+
+dist_r2_df$r2 %>% mean()
+dist_r2_df$r2[dist_r2_df$income %in% "Low income"] %>% mean()
+dist_r2_df$r2[dist_r2_df$income %in% "Lower middle income"] %>% mean()
+dist_r2_df$r2[dist_r2_df$income %in% "Upper middle income"] %>% mean()
+
+
 
 

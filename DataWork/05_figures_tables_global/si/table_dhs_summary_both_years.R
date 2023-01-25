@@ -34,7 +34,7 @@ cat("\\begin{tabular}{l | ccc | ccc} \n")
 cat("\\hline \n")
 cat("Country & \\multicolumn{3}{c}{1st Survey Closest to 2000} & \\multicolumn{3}{c}{Latest Survey} \\\\ \n")
 cat("        & Year & N        & Global Wealth Index      & Year & N        & Global Wealth Index    \\\\ \n")
-cat("        &      & Villages & Mean (sd)                &      & Villages & Mean (sd)      \\\\ \n")
+cat("        &      & Clusters & Mean (sd)                &      & Clusters & Mean (sd)      \\\\ \n")
 
 cat("\\hline \n")
 

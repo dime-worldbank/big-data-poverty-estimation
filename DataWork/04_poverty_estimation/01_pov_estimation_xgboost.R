@@ -391,9 +391,16 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
           
           ## XG Boost Parameters
           if(level_change == "levels"){
-            xg_max.depth_params <- c(2, 5, 6, 10) %>% rev()
-            xg_eta_params <- c(0.3) %>% rev()
-            xg_nrounds_params <- c(50) %>% rev()
+            # xg_max.depth_params <- c(2, 5, 6, 10) %>% rev()
+            # xg_eta_params <- c(0.3) %>% rev()
+            # xg_nrounds_params <- c(50) %>% rev()
+            # xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            # xg_objective_params <- c("reg:squarederror")
+            # xg_min_child_weight_params <- c(1)
+            
+            xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
+            xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
+            xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
             xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
             xg_objective_params <- c("reg:squarederror")
             xg_min_child_weight_params <- c(1)

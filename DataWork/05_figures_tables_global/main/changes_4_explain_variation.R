@@ -101,7 +101,7 @@ p_bar <- cor_df %>%
   labs(x = expression(r^2),
        y = NULL,
        fill = "Unit",
-       title = "E. Model performance by income group and unit") +
+       title = "G. Model performance by income group and unit") +
   scale_fill_manual(values = c("lightblue1",
                                 "tan1"),
                      guide = guide_legend(reverse = T)) +

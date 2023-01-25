@@ -48,18 +48,18 @@ df_sum <- bind_rows(
     dplyr::summarise(fb_educ_var = mean(fb_educ_var),
                      dhs_educ_var = mean(dhs_educ_var)) %>%
     ungroup() %>%
-    mutate(unit = "ADM 2")
+    mutate(unit = "District")
 ) %>%
   mutate(unit = unit %>%
            factor(levels = c("Survey Cluster",
-                             "ADM 2"))) %>%
+                             "District"))) %>%
   group_by(country_code, unit) %>%
   mutate(n = n()) %>%
   ungroup() 
 
-## Use constant set of countries where enough ADM 2 observations.
+## Use constant set of countries where enough District observations.
 countries_to_use <- df_sum %>%
-  dplyr::filter(unit == "ADM 2",
+  dplyr::filter(unit == "District",
                 n >= 30) %>%
   pull(country_code) %>%
   unique()
@@ -138,7 +138,7 @@ ggsave(p,
 
 ## ADM2
 p <- df_sum %>%
-  dplyr::filter(unit == "ADM 2") %>%
+  dplyr::filter(unit == "District") %>%
   ggplot(aes(x = fb_educ_var,
              y = dhs_educ_var)) +
   geom_point(size = 0.75) +
@@ -187,6 +187,7 @@ p <- df_cor_data %>%
        y = "Value") +
   facet_grid(name~unit,
              scales = "free")
+
 
 ggsave(p, 
        filename = file.path(figures_global_dir, "educ_fb_dhs_explain.png"),

@@ -170,7 +170,7 @@ p_boxplot_income <- results_best_df %>%
                     guide = guide_legend(reverse = FALSE)) +
   labs(x = expression(r^2),
        y = NULL,
-       title = "D. Model performance by income group across all feature types",
+       title = "E. Model performance by income group across all feature types",
        fill = "Income Group")
 
 # Arrange ----------------------------------------------------------------------
@@ -198,6 +198,6 @@ p_all <- ggarrange(p_l,
 
 ggsave(p_all,
        filename = file.path(figures_global_dir, "explain_var_in_r2.png"),
-       height = 7,
+       height = 8,
        width = 9.1)
 

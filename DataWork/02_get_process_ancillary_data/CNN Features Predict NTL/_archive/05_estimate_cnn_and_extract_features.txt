@@ -1,3 +1,0 @@
-# Run on Google Colab
-
-https://colab.research.google.com/drive/141pcofHVZK20jw8U7jINZ8HwWBZytlGF?usp=sharing

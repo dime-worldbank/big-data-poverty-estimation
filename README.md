@@ -1,4 +1,4 @@
-# Pakistan Poverty Estimation
+# Poverty Estimation
 
 ## High-Level Folders
 

@@ -1,0 +1,49 @@
+# Followed from: https://www.youtube.com/watch?v=oZjau-aUk0U
+
+# Everything should be done in the i386 terminal
+
+# INSTALLATION ---------------------------------------------
+
+# Make new virtual environment
+conda create --name env_tensorflow_m1_v2 python=3.9
+
+# Activate environment
+conda activate env_tensorflow_m1_v2 
+
+# Install tensorflow
+conda install -c apple tensorflow-deps 
+
+# Install tensorflow macOS
+pip install tensorflow-macos 
+pip install tensorflow-metal 
+
+# To check successful installation in python
+python
+import tensorflow as tf 
+tf.__version__
+tf.config.list_physical_devices() # List GPU devices
+exit() 
+
+# Install jupyterlab 
+conda install -c conda-forge jupyter jupyterlab
+
+# Install other
+conda install -c conda-forge matplotlib
+pip install -U scikit-learn
+pip install pandas
+conda install scikit-image
+
+# RUN ----------------------------------------------------
+
+# Activate environment
+conda activate env_tensorflow_m1_v2 
+
+# Launch jupyter lab
+jupyter lab   
+
+
+
+
+
+
+ 

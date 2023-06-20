@@ -7,7 +7,8 @@ fb_df <- readRDS(file.path(fb_rwi_dir, "FinalData", "fb_rwi.Rds"))
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
                                "survey_socioeconomic.Rds"))
 
-survey_df <- survey_df[survey_df$iso2 %in% fb_df$iso2s,]
+survey_df$iso2 <- "NG"
+survey_df <- survey_df[survey_df$iso2 %in% fb_df$iso2,]
 
 # Nearest Neighbor Within Country ----------------------------------------------
 survey_df <- map_df(unique(survey_df$iso2), function(iso2){

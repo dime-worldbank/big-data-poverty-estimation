@@ -25,10 +25,15 @@ road_df <- road_density_df %>%
 # Combine Types ----------------------------------------------------------------
 # Combine trunk and motorways
 
+if(SURVEY_NAME == "LAGOS_POINTS"){
+  names(road_df) <- names(road_df) %>%
+    str_replace_all("1000m", "5000m")
+}
+
 # Deal with NAs in motorways
-road_df$osm_dist_motorway[is.na(road_df$osm_dist_motorway)] <- 999999999
-road_df$osm_length_motorway_5000m[is.na(road_df$osm_length_motorway_5000m)] <- 0
-road_df$osm_N_segments_motorway_5000m[is.na(road_df$osm_N_segments_motorway_5000m)] <- 0
+if(sum(is.na(road_df$osm_dist_motorway)) > 0) road_df$osm_dist_motorway[is.na(road_df$osm_dist_motorway)] <- 999999999
+if(sum(is.na(road_df$osm_length_motorway_5000m)) > 0) road_df$osm_length_motorway_5000m[is.na(road_df$osm_length_motorway_5000m)] <- 0
+if(sum(is.na(road_df$osm_N_segments_motorway_5000m)) > 0) road_df$osm_N_segments_motorway_5000m[is.na(road_df$osm_N_segments_motorway_5000m)] <- 0
 
 # Combine with trunk
 road_df$osm_trunk_motorway <- road_df[,c("osm_dist_motorway", "osm_dist_trunk")] %>%

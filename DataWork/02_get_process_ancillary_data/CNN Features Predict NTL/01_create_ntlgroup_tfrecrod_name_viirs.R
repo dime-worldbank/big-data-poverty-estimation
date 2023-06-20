@@ -17,6 +17,12 @@ for(DTL_SATELLITE in c("landsat", "s2")){
                                        "Individual Datasets",
                                        "survey_socioeconomic.Rds"))
     
+    if(SURVEY_NAME == "LAGOS_POINTS"){
+      survey_all_df$within_country_fold <- "fold1"
+    }
+    
+    dhs_all_df_coll$within_country_fold
+    
     if(DTL_SATELLITE %in% "s2"){
       # For s2, we always just extract 2018 - 2020 data
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
@@ -33,7 +39,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       dplyr::filter(!is.na(avg_rad)) %>%
       arrange(runif(n()))
     
-    if(SURVEY_NAME %in% "DHS"){
+    if(SURVEY_NAME %in% c("DHS", "LAGOS_POINTS")){
       years <- "all"
     } else if(SURVEY_NAME %in% "OPM"){
       years <- unique(survey_all_df$year)
@@ -78,6 +84,8 @@ for(DTL_SATELLITE in c("landsat", "s2")){
         as.data.frame() %>%
         pull(Freq) %>% 
         min()
+      
+      min_group_size <- max(min_group_size, 5)
       
       ### Split into groups
       # (1) For CNN - train
@@ -156,7 +164,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
     
     write.csv(survey_df_clean_append, file.path(data_dir, SURVEY_NAME, "FinalData",
                                                 "Individual Datasets",
-                                                paste0("data_for_cnn_viirsgee_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
+                                                paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
               row.names = F)
     
     

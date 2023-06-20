@@ -104,7 +104,7 @@ p_all_wealthsd_scatter <- results_all_sum_df %>%
   #               size = R2_SCATTER_TEXT_SIZE) +
   theme_classic() +
   labs(x = "Wealth Index, Standard Deviation",
-       title = expression(bold(C.~Model~r^2~vs.~Wealth~Index~Standard~Deviation)),
+       title = expression(bold(B.~Model~r^2~vs.~Wealth~Index~Standard~Deviation)),
        subtitle = "Performance using all features",
        y = expression(Model~r^2))
 

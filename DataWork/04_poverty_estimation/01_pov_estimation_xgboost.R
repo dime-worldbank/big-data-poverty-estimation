@@ -14,7 +14,7 @@ grid_search <- F
 REPLACE_IF_EXTRACTED <- F
 
 # Define out path --------------------------------------------------------------
-OUT_PATH <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results")
+OUT_PATH <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results")
 
 # Delete existing files --------------------------------------------------------
 if(REPLACE_IF_EXTRACTED){
@@ -68,6 +68,22 @@ grab_x_features <- function(df,
     }
     
     X <- X %>%
+      as.matrix()
+    
+  } else if(feature_type_i %in% "all_except_cnn"){
+    
+    X <- df %>%
+      dplyr::select_at(vars(starts_with("viirs_"),
+                            starts_with("s1_sar_"),
+                            starts_with("fb_prop_"),
+                            starts_with("fb_wp_prop"),
+                            #starts_with("osm_"),
+                            starts_with("gc_"),
+                            starts_with("l7_"),
+                            starts_with("elevslope_"),
+                            starts_with("weather_"),
+                            starts_with("worldclim_"),
+                            starts_with("pollution_"))) %>%
       as.matrix()
     
   } else if(feature_type_i %in% "all_changes"){
@@ -215,6 +231,7 @@ run_model <- function(df,
     
     ## Predictions
     pred <- predict(xgb_model, X_test)
+    saveRDS(xgb_model, MODEL_OUT)
     
     results_fold_df <- data.frame(truth = y_test,
                                   prediction = pred,
@@ -289,49 +306,53 @@ run_model <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("changes", "levels")){ # "changes", "levels"
+for(level_change in c("levels")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% "levels"){
     
     #### Load data
-    df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+    df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                             "survey_alldata_clean.Rds"))
     
     df <- df %>%
       dplyr::filter(most_recent_survey %in% T)
     
     #### Define parameters
-    feature_types_indiv <- c("viirs",
-                             "cnn_viirs_s2_rgb", 
-                             "cnn_viirs_s2_ndvi", 
-                             "cnn_viirs_s2_bu", 
-                             "cnn_viirs_s2",
-                             "l7",
-                             "fb",
-                             "osm",
-                             "pollution",
-                             "s1_sar",
-                             
-                             # Groupings
-                             "landcover",
-                             "weatherclimate",
-                             "satellites") 
-    
-    feature_types_all_but_indiv <- paste0("all_not_", 
-                                          c(feature_types_indiv, "viirs")) 
-    
-    feature_types <- c(feature_types_indiv,
-                       #feature_types_all_but_indiv,
-                       "all")
-    
-    estimation_type_vec <- c("within_country_cv",
-                             "global_country_pred",
-                             "continent_africa_country_pred",
-                             "continent_americas_country_pred",
-                             "continent_eurasia_country_pred", 
-                             "continent") # "continent" means "other continents"
-    
+    if(F){
+      feature_types_indiv <- c("viirs",
+                               "cnn_viirs_s2_rgb", 
+                               "cnn_viirs_s2_ndvi", 
+                               "cnn_viirs_s2_bu", 
+                               "cnn_viirs_s2",
+                               "l7",
+                               "fb",
+                               "osm",
+                               "pollution",
+                               "s1_sar",
+                               
+                               # Groupings
+                               "landcover",
+                               "weatherclimate",
+                               "satellites") 
+      
+      feature_types_all_but_indiv <- paste0("all_not_", 
+                                            c(feature_types_indiv, "viirs")) 
+      
+      feature_types <- c(feature_types_indiv,
+                         #feature_types_all_but_indiv,
+                         "all")
+      
+      estimation_type_vec <- c("within_country_cv",
+                               "global_country_pred",
+                               "continent_africa_country_pred",
+                               "continent_americas_country_pred",
+                               "continent_eurasia_country_pred", 
+                               "continent") # "continent" means "other continents"
+    } else{
+      feature_types <- "all_except_cnn"
+      estimation_type_vec <- "within_country_cv"
+    }
     # TODO: DELETE/CHANGE
     # target_vars_vec <- c("pca_allvars",
     #                      "pca_allvars_mr", 
@@ -348,7 +369,7 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
   if(level_change %in% "changes"){
     
     #### Load data
-    df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+    df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                             "survey_alldata_clean_changes_cluster.Rds"))
     
     #### Define parameters
@@ -435,7 +456,7 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
                         
                         # Only implement weath_score with individual countries for DHS
                         if((target_var_i == "wealth_index_score") & 
-                           (SURVEY_NAME == "DHS") & 
+                           ("DHS" == "DHS") & 
                            (estimation_type_i != "within_country_cv")) next
                         
                         # Skip: If continent, country_pred, must be in same continent ----------
@@ -489,6 +510,9 @@ for(level_change in c("changes", "levels")){ # "changes", "levels"
                         
                         GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
                                                     paste0("gs_", file_name_suffix))
+                        
+                        MODEL_OUT <- file.path(OUT_PATH, "models", 
+                                               paste0("model_", file_name_suffix))
                         
                         # Check if file exists/ should run -------------------------------------
                         if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){

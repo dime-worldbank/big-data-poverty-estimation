@@ -19,7 +19,7 @@ if(Sys.info()[["user"]] == "robmarty"){
   dropbox_dir <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
   gdrive_dir <- "~/Google Drive/World Bank/IEs/Pakistan Poverty Estimation"
   secure_dir <- "~/Documents/World Bank/Pakistan Poverty from Sky" 
-  github_dir <- "~/Documents/Github/Pakistan-Poverty-from-Sky"
+  github_dir <- "~/Documents/Github/big-data-poverty-estimation"
   overleaf_global_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
   overleaf_pak_dir <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Pakistan Paper"
 }
@@ -65,7 +65,7 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 # Create Directory Structure for Survey Data -----------------------------------
 survey_name_i <- "DHS"
 
-for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS")){
+for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS", "LAGOS_POINTS")){
   
   ### DROPBOX
   file.path(data_dir, survey_name_i) %>% dir.create()
@@ -83,7 +83,8 @@ for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "satellite_data_from_gee") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "worldclim") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "cnn_features") %>% dir.create()
-  
+  file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "ntl_harmonized") %>% dir.create()
+
   # FinalData/Individual Datasets/osm
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "poi") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "roads_density") %>% dir.create()
@@ -130,6 +131,11 @@ if(SURVEY_NAME %in% "PAK_POINTS"){
 if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
   BUFFER_OSM       <- 750
   BUFFER_SATELLITE <- 750
+} 
+
+if(SURVEY_NAME %in% "LAGOS_POINTS"){
+  BUFFER_OSM       <- 1000
+  BUFFER_SATELLITE <- 1000
 } 
 
 # Packages ---------------------------------------------------------------------
@@ -209,7 +215,13 @@ source(file.path(github_dir, "Functions", "functions.R"))
 source("https://raw.githubusercontent.com/ramarty/download_blackmarble/main/R/download_blackmarble.R")
 
 source("https://raw.githubusercontent.com/ramarty/fast-functions/master/R/functions_in_chunks.R")
-source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/main.R")
+
+source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/52eede6cf561a74584503846eb78ee8bc8fa780b/R/main.R")
+
+#source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/fill_fb_id_names.R")
+#source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/get_fb_parameter_ids.R")
+#source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/get_fb_suggested_radius.R")
+#source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/query_fb_marketing_api.R")
 
 # Run Scripts ------------------------------------------------------------------
 
@@ -245,6 +257,8 @@ anc_fb_rwi_dir       <- file.path(anc_dir, "Facebook Relative Wealth Index")
 anc_osm_dir          <- file.path(anc_dir, "OSM")
 anc_satellite_dir    <- file.path(anc_dir, "Satellite Data")
 anc_cnn_features_dir <- file.path(anc_dir, "CNN Features Predict NTL")
+anc_s5p_dir          <- file.path(anc_dir, "Sentinel 5P Pollution")
+anc_dmspharmon_dir   <- file.path(anc_dir, "DMSPOLS_VIIRS_HARMONIZED")
 
 #### RUN CODE
 if(F){
@@ -318,7 +332,9 @@ if(F){
   source(file.path(anc_osm_dir, "03_extract_poi.R"))
   source(file.path(anc_osm_dir, "03_extract_road_density.R"))
   source(file.path(anc_osm_dir, "03_extract_road_distance.R"))
-  source(file.path(anc_osm_dir, "04_merge_data.R"))
+  #source(file.path(anc_osm_dir, "04_merge_data.R"))
+  source(file.path(anc_osm_dir, "04_append_clean_poi.R"))
+  source(file.path(anc_osm_dir, "04_append_clean_road.R"))
   
   # ** 2.1 Facebook Marketing Data ---------------------------------------------
   # Extracts Facebook Marketing data around each survey location (monthly and
@@ -336,9 +352,11 @@ if(F){
   if(RERUN_FB_CREATE_PARAM_DATASET){
     source(file.path(anc_fb_marketing_dir, "01_search_behavior_interests_IDs.R"))
   }
-  source(file.path(anc_fb_marketing_dir, "02_scrape_facebook_data.R"))
-  source(file.path(anc_fb_marketing_dir, "03_append_data.R"))
-  source(file.path(anc_fb_marketing_dir, "04_clean_param_df.R"))
+  source(file.path(anc_fb_marketing_dir, "04a_scrape_fb.R"))
+  source(file.path(anc_fb_marketing_dir, "04b_append_data.R"))
+  #source(file.path(anc_fb_marketing_dir, "02_scrape_facebook_data.R"))
+  #source(file.path(anc_fb_marketing_dir, "03_append_data.R"))
+  #source(file.path(anc_fb_marketing_dir, "04_clean_param_df.R"))
   
   # ** 2.1 Satellite Data ------------------------------------------------------
   # Extracts satellite data from Google Earth Engine. For example, extracts
@@ -347,6 +365,18 @@ if(F){
   # RUN THIS USING PYTHON!
   #source(file.path(anc_fb_marketing_dir, "01_extract_values.ipynb"))
   source(file.path(anc_fb_marketing_dir, "02_append_data.R"))
+  
+  # ** 2.1 Sentinel 5P Pollution -----------------------------------------------
+  # Extracts Sentinel 5P Data
+
+  source(file.path(anc_s5p_dir, "extract_s5p.R"))
+  
+  # ** 2.1 DMSP -----------------------------------------------
+  # Extracts Sentinel 5P Data
+  
+  source(file.path(anc_dmspharmon_dir, "01_extract_181920_average.R"))
+  source(file.path(anc_dmspharmon_dir, "01_extract_ntl_harmonized.R"))
+  source(file.path(anc_dmspharmon_dir, "02_append.R"))
   
   # ** 2.2 CNN Features Predict NTL --------------------------------------------
   # Extracts features from CNN model that uses daytime imagery to predict NTL

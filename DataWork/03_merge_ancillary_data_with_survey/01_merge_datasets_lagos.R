@@ -1,7 +1,7 @@
 # Merge Data with Survey Data
 
 # [Load] Survey data -----------------------------------------------------------
-INV_DATA_DIR <- file.path(data_dir, "DHS", "FinalData", "Individual Datasets")
+INV_DATA_DIR <- file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets")
 
 survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
@@ -28,23 +28,6 @@ osm_road_df <- osm_road_df %>%
   dplyr::select(-contains("osm_N_segments"))
 names(osm_road_df) <- names(osm_road_df) %>%
   str_replace_all("dist", "distmeters_road")
-
-# [Load] MOSAIKS ---------------------------------------------------------------
-mosaiks_df <- read_csv(file.path(INV_DATA_DIR, "Mosaiks_features.csv"))
-
-mosaiks_c_df <- mosaiks_df %>%
-  dplyr::rename(latitude = Lat,
-                longitude = Lon) %>%
-  rename_at(vars(-latitude, -longitude), ~ paste0('mosaik_', .) %>% str_replace_all("\\.\\.\\.", ""))
-
-survey_df <- survey_df %>%
-  left_join(mosaiks_c_df, by = c("latitude", "longitude"))
-
-survey_df <- survey_df %>%
-  dplyr::filter(most_recent_survey %in% T)
-
-survey_df$mosaik_3 %>% is.na %>% table()
-
 
 # [Load] CNN Features ----------------------------------------------------------
 ## Landsat
@@ -135,11 +118,11 @@ if(F){
 ##### ** VIIRS, Mean #####
 viirs_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                               paste0("viirs_",
-                                     BUFFER_SATELLITE,
+                                     1120,
                                      "_ubuff",
-                                     BUFFER_SATELLITE,
+                                     1120,
                                      "_rbuff",
-                                     BUFFER_SATELLITE,".Rds")))
+                                     1120,".Rds")))
 
 viirs_df <- viirs_df %>%
   rename_at(vars(-uid, -year), ~ paste0("viirs_", .))
@@ -147,11 +130,11 @@ viirs_df <- viirs_df %>%
 ##### ** VIIRS, SD Time #####
 viirs_sdtime_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                                      paste0("viirs_sdtime_",
-                                            BUFFER_SATELLITE,
+                                            2500,
                                             "_ubuff",
-                                            BUFFER_SATELLITE,
+                                            2500,
                                             "_rbuff",
-                                            BUFFER_SATELLITE,".Rds")))
+                                            2500,".Rds")))
 
 viirs_sdtime_df <- viirs_sdtime_df %>%
   dplyr::rename(viirs_avg_rad_sdtime = avg_rad_stdDev)
@@ -159,11 +142,11 @@ viirs_sdtime_df <- viirs_sdtime_df %>%
 ##### ** VIIRS, SD Space #####
 viirs_sdspace_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                                       paste0("viirs_sdspace_",
-                                             BUFFER_SATELLITE,
+                                             2500,
                                              "_ubuff",
-                                             BUFFER_SATELLITE,
+                                             2500,
                                              "_rbuff",
-                                             BUFFER_SATELLITE,".Rds")))
+                                             2500,".Rds")))
 
 viirs_sdspace_df <- viirs_sdspace_df %>%
   dplyr::rename(viirs_avg_rad_sdspace = avg_rad)
@@ -198,6 +181,10 @@ l7_sdspace_df <- l7_sdspace_df %>%
 
 ##### ** World pop #####
 ## Year of survey
+wp1km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                              "worldpop_1000_ubuff1000_rbuff1000.Rds")) %>%
+  dplyr::rename(worldpop_1km = sum)
+
 wp2km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                               "worldpop_2000_ubuff2000_rbuff2000.Rds")) %>%
   dplyr::rename(worldpop_2km = sum)
@@ -211,6 +198,10 @@ wp10km_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee",
   dplyr::rename(worldpop_10km = sum)
 
 ## 2020
+wp1km2020_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
+                                  "worldpop2020_1000_ubuff1000_rbuff1000.Rds")) %>%
+  dplyr::rename(worldpop2020_1km = sum)
+
 wp2km2020_df <- readRDS(file.path(INV_DATA_DIR, "satellite_data_from_gee", 
                                   "worldpop2020_2000_ubuff2000_rbuff2000.Rds")) %>%
   dplyr::rename(worldpop2020_2km = sum)
@@ -329,12 +320,12 @@ survey_ancdata_df <- list(survey_df,
                           #fb_prop_df, 
                           s5p_df,
                           fb_rwi_df,
-                          cnn_landsat_rgb_df,
-                          cnn_landsat_ndvi_df,
-                          cnn_landsat_bu_df,
-                          cnn_sentinel_rgb_df,
-                          cnn_sentinel_ndvi_df,
-                          cnn_sentinel_bu_df,
+                          # cnn_landsat_rgb_df,
+                          # cnn_landsat_ndvi_df,
+                          # cnn_landsat_bu_df,
+                          # cnn_sentinel_rgb_df,
+                          # cnn_sentinel_ndvi_df,
+                          # cnn_sentinel_bu_df,
                           osm_poi_df, 
                           osm_road_df,
                           s1_df) %>%
@@ -379,6 +370,35 @@ if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
 # Dataset specific fixes -------------------------------------------------------
 if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
   survey_ancdata_df$iso2 <- "PK" 
+}
+
+if(SURVEY_NAME %in% "LAGOS_POINTS"){
+  survey_ancdata_df$iso2 <- "NG" 
+  survey_ancdata_df$country_name <- "Nigeria"
+  
+  for(var in c("within_country_fold",
+               "gadm_uid",
+               "wealth_index_score",
+               "wealth_index",
+               "n_hh_members", "n_hh_members_sum",
+               "pca_allvars_stddev",
+               "pca_allvars_mr_stddev",
+                
+                "educ_years_hh_max",
+                "educ_levels",
+                
+                "pca_allvars",
+                "pca_allvars_mr",
+                "pca_allvars_noroof_mr",
+                "pca_physicalvars_mr",
+                "pca_physicalvars_noroof_mr",
+                "pca_nonphysicalvars_mr")){
+    
+    survey_ancdata_df[[var]] <- NA
+    
+  }
+  
+
 }
 
 # [Export] Data ----------------------------------------------------------------

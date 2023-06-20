@@ -334,6 +334,35 @@ dist_r2_df$r2[dist_r2_df$income %in% "Low income"] %>% mean()
 dist_r2_df$r2[dist_r2_df$income %in% "Lower middle income"] %>% mean()
 dist_r2_df$r2[dist_r2_df$income %in% "Upper middle income"] %>% mean()
 
+# Leave one out levels average -------------------------------------------------
+
+acc_df %>%
+  dplyr::filter(feature_type %in% "all",
+                estimation_type %in% "global_country_pred",
+                target_var %in% "pca_allvars_mr",
+                level_change %in% "levels") %>%
+  pull(r2) %>%
+  mean()
+
+survey_df_af <- survey_df[survey_df$continent_adj == "Africa",]
+cor.test(survey_df$predict_pca_allvars_mr_best,
+         survey_df$pca_allvars_mr)
+
+cor.test(survey_df_af$predict_pca_allvars_mr_global_country_pred_all,
+         survey_df_af$pca_allvars_mr)
+
+survey_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all),
+                continent_adj == "Africa") %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  ungroup() %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2)
+
+
+
+
 
 
 

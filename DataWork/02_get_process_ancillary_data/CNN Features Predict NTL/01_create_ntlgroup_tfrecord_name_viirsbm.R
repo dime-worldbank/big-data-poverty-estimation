@@ -17,6 +17,10 @@ for(DTL_SATELLITE in c("landsat", "s2")){
                                        "Individual Datasets",
                                        "survey_socioeconomic.Rds"))
     
+    if(SURVEY_NAME == "LAGOS_POINTS"){
+      survey_all_df$within_country_fold <- "fold1"
+    }
+    
     survey_all_df <- survey_all_df %>%
       # Black marble, restrict just to most recent
       dplyr::filter(most_recent_survey %in% T)
@@ -95,6 +99,9 @@ for(DTL_SATELLITE in c("landsat", "s2")){
         as.data.frame() %>%
         pull(Freq) %>% 
         min()
+      
+      min_group_size <- max(min_group_size, 5)
+      
       
       ### Split into groups
       # (1) For CNN - train

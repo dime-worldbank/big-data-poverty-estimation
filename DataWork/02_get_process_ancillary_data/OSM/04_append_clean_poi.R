@@ -1,12 +1,26 @@
 # Merge data from OSM
 
 # Load data --------------------------------------------------------------------
-n_poi_df <- file.path(data_dir, SURVEY_NAME, 
-                      "FinalData", "Individual Datasets", "osm", "poi") %>%
-  list.files(full.names = T,
-             pattern = "*.Rds") %>%
-  str_subset("_n_poi_5000m") %>%
-  map_df(readRDS)
+if(SURVEY_NAME == "LAGOS_POINTS"){
+  n_poi_df <- file.path(data_dir, SURVEY_NAME, 
+                        "FinalData", "Individual Datasets", "osm", "poi") %>%
+    list.files(full.names = T,
+               pattern = "*.Rds") %>%
+    str_subset("_n_poi_1000m") %>%
+    map_df(readRDS)
+  
+  names(n_poi_df) <- names(n_poi_df) %>%
+    str_replace_all("1000m", "5000m")
+  
+} else{
+  n_poi_df <- file.path(data_dir, SURVEY_NAME, 
+                        "FinalData", "Individual Datasets", "osm", "poi") %>%
+    list.files(full.names = T,
+               pattern = "*.Rds") %>%
+    str_subset("_n_poi_5000m") %>%
+    map_df(readRDS)
+}
+
 
 dist_poi_df <- file.path(data_dir, SURVEY_NAME, 
                          "FinalData", "Individual Datasets", "osm", "poi") %>%

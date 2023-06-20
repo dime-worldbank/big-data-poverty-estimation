@@ -10,12 +10,18 @@ INDIA_UNDER_SAMPLE <- T
 DTL_SATELLITE <- "landsat"
 
 for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
-  for(INDIA_UNDER_SAMPLE in c(T, F)){
+  for(INDIA_UNDER_SAMPLE in c(F, T)){
+    
+    print(paste(DTL_SATELLITE, INDIA_UNDER_SAMPLE))
     
     # Load data --------------------------------------------------------------------
     survey_all_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
                                        "Individual Datasets",
                                        "survey_socioeconomic.Rds"))
+    
+    if(SURVEY_NAME == "LAGOS_POINTS"){
+      survey_all_df$within_country_fold <- "fold1"
+    }
     
     if(DTL_SATELLITE %in% "landsat"){
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
@@ -30,7 +36,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
       dplyr::filter(!is.na(ntlharmon_avg)) %>%
       dplyr::arrange(runif(n()))
     
-    if(SURVEY_NAME %in% "DHS"){
+    if(SURVEY_NAME %in% c("DHS", "LAGOS_POINTS")){
       years <- "all"
     } else if(SURVEY_NAME %in% "OPM"){
       years <- unique(survey_all_df$year)
@@ -99,6 +105,8 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
         as.data.frame() %>%
         pull(Freq) %>% 
         min()
+      
+      min_group_size <- max(min_group_size, 5)
       
       ### Split into groups
       # (1) For CNN - train

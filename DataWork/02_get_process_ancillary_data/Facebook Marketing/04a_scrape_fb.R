@@ -32,6 +32,12 @@ if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
   RADIUS_TRY_3 <- 2
 }
 
+if(SURVEY_NAME %in% "LAGOS_POINTS"){
+  RADIUS_TRY_1 <- 1
+  RADIUS_TRY_2 <- 1.25
+  RADIUS_TRY_3 <- 1.5
+}
+
 # Load Coordinates -------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
@@ -292,6 +298,21 @@ for(country_code_i in country_code_all_rep){
         fb_df <- map_df(1:nrow(parameters_df), function(param_i){
           
           parameters_df_i <- parameters_df[param_i,]
+          
+          # fb_df_i <- query_fb_marketing_api(location_unit_type = "coordinates",
+          #                                   lat_lon = c(df_i$latitude, df_i$longitude),
+          #                                   radius = radius,
+          #                                   radius_unit = "kilometer",
+          #                                   education_statuses = parameters_df_i$education_statuses,
+          #                                   behavior = parameters_df_i$behavior %>% str_split(",") %>% unlist(),
+          #                                   interest = parameters_df_i$interest,
+          #                                   gender = parameters_df_i$gender %>% str_split(",") %>% unlist(),
+          #                                   age_min = parameters_df_i$age_min,
+          #                                   age_max = parameters_df_i$age_max,
+          #                                   version = version,
+          #                                   creation_act = creation_act,
+          #                                   token = token,
+          #                                   sleep_time = 0.3)
           
           fb_df_i <- query_fb_marketing_api(location_type = "coordinates",
                                             latitude = df_i$latitude,

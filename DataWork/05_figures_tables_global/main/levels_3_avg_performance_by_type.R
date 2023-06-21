@@ -51,6 +51,8 @@ p_trainsample <- results_df %>%
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   stat_summary(fun = max, geom = "text", col = "firebrick3",    
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = min, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
        title = "A. Performance by training sample type [cluster]") +
@@ -98,6 +100,8 @@ p_feature <- results_df %>%
   stat_summary(fun = median, geom = "text", col = "black",     # Add text to plot
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   stat_summary(fun = max, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = min, geom = "text", col = "firebrick3",    
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),

@@ -121,10 +121,12 @@ for(aggregate_district in c(F, T)){
     TEXT_Y_INCR <- 0.45
     FONT_SIZE <- 4.5
     
+    values <- c(pred_global_df$truth, pred_global_df$prediction)
+    
     p_list[[p_list_i]] <- ggplot() +
       geom_point(data = pred_global_df,
-                 aes(x = truth,
-                     y = prediction),
+                 aes(y = truth,
+                     x = prediction),
                  color = "black",
                  size = 0.3,
                  alpha = 0.8) +
@@ -141,8 +143,8 @@ for(aggregate_district in c(F, T)){
            title = ifelse(aggregate_district,
                           "C. Estimated vs. true wealth index [district]",
                           "A. Estimated vs. true wealth index [cluster]"),
-           x = "True Wealth Asset Index",
-           y = "Estimated Wealth Asset Index") +
+           y = "True Wealth Asset Index",
+           x = "Estimated Wealth Asset Index") +
       theme_minimal() +
       theme(legend.position = c(0.9, 0.1),
             legend.box.background = element_rect(colour = "black"),
@@ -151,7 +153,9 @@ for(aggregate_district in c(F, T)){
             panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank()) +
       guides(color = guide_legend(override.aes = list(size = 2)),
-             alpha = guide_legend(override.aes = list(alpha = 1)))
+             alpha = guide_legend(override.aes = list(alpha = 1))) +
+      scale_x_continuous(limits = c(min(values), max(values))) +
+      scale_y_continuous(limits = c(min(values), max(values)))
     
   } else{
     pred_df_u <- pred_global_df[pred_global_df$urban_rural %in% "U",]
@@ -166,10 +170,12 @@ for(aggregate_district in c(F, T)){
     TEXT_Y_INCR <- 0.45
     FONT_SIZE <- 4.5
     
+    values <- c(pred_global_df$truth, pred_global_df$prediction)
+    
     p_list[[p_list_i]] <- ggplot() +
       geom_point(aes(color = urban_rural,
-                     x = truth,
-                     y = prediction),
+                     y = truth,
+                     x = prediction),
                  data = pred_global_df,
                  size = 0.25,
                  alpha = 0.3) +
@@ -200,8 +206,8 @@ for(aggregate_district in c(F, T)){
       scale_color_manual(values = c("chartreuse4", "chocolate2")) +
       labs(color = NULL,
            title = "A. Estimated vs. true wealth index [cluster]",
-           x = "True Wealth Asset Index",
-           y = "Estimated Wealth Asset Index") +
+           y = "True Wealth Asset Index",
+           x = "Estimated Wealth Asset Index") +
       theme_minimal() +
       theme(legend.position = c(0.9, 0.1),
             legend.box.background = element_rect(colour = "black"),
@@ -210,7 +216,9 @@ for(aggregate_district in c(F, T)){
             panel.grid.major = element_blank(), 
             panel.grid.minor = element_blank()) +
       guides(color = guide_legend(override.aes = list(size = 2)),
-             alpha = guide_legend(override.aes = list(alpha = 1)))
+             alpha = guide_legend(override.aes = list(alpha = 1))) +
+      scale_x_continuous(limits = c(min(values), max(values))) +
+      scale_y_continuous(limits = c(min(values), max(values)))
     
   }
   
@@ -422,16 +430,16 @@ for(aggregate_district in c(F, T)){
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
                       fct_rev()) %>%
-      ggplot(aes(x = truth,
-                 y = prediction),
+      ggplot(aes(y = truth,
+                 x = prediction),
              color = "black") +
       geom_point(size = 0.4, # 0.25
                  alpha = 0.7) + # 0.3
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +
       labs(color = NULL,
            title = "Predicted vs. True Wealth Scores",
-           x = "True Asset Index",
-           y = "Predicted Asset Index") +
+           y = "True Asset Index",
+           x = "Predicted Asset Index") +
       theme_minimal() +
       theme(legend.position = "top",
             legend.box.background = element_rect(colour = "black"),
@@ -457,16 +465,16 @@ for(aggregate_district in c(F, T)){
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
                       fct_rev()) %>%
-      ggplot(aes(x = truth,
-                 y = prediction,
+      ggplot(aes(y = truth,
+                 x = prediction,
                  color = urban_rural)) +
       geom_point(size = 0.4, # 0.25
                  alpha = 0.7) + # 0.3
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +
       labs(color = NULL,
            title = "Predicted vs. True Wealth Scores",
-           x = "True Asset Index",
-           y = "Predicted Asset Index") +
+           y = "True Asset Index",
+           x = "Predicted Asset Index") +
       theme_minimal() +
       theme(legend.position = "top",
             legend.box.background = element_rect(colour = "black"),

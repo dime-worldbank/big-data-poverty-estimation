@@ -33,13 +33,15 @@ district_clean_df <- bind_rows(district_df,
            factor(levels = c("All", "Africa", "Americas", "Eurasia")))
 
 # Figures ----------------------------------------------------------------------
+v <- c(cluster_clean_df$predict_pca_allvars_best, cluster_clean_df$pca_allvars)
+
 p1 <- cluster_clean_df %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
+  ggplot(aes(x = predict_pca_allvars_best,
+             y = pca_allvars)) +
   geom_point(size = 0.1) +
   stat_poly_eq(color = "red", small.r=T) +
-  labs(x = "True Change in Wealth Index",
-       y = "Estimated Change in\nWealth Index",
+  labs(x = "Estimated Change in Wealth Index",
+       y = "True Change in\nWealth Index",
        title = "A. Estimated vs. true change in wealth index [cluster]",
        color = NULL) +
   theme_classic() +
@@ -48,7 +50,12 @@ p1 <- cluster_clean_df %>%
         plot.title = element_text(face = "bold")) +
   facet_wrap(~continent_adj,
              nrow = 1,
-             scales = "free") 
+             scales = "fixed") +
+  scale_x_continuous(limits = c(min(v), max(v))) +
+  scale_y_continuous(limits = c(min(v), max(v)))
+
+
+v <- c(district_clean_df$truth, district_clean_df$prediction)
 
 p2 <- district_clean_df %>%
   ggplot(aes(x = truth,
@@ -65,7 +72,9 @@ p2 <- district_clean_df %>%
         plot.title = element_text(face = "bold")) +
   facet_wrap(~continent_adj,
              nrow = 1,
-             scales = "free")
+             scales = "fixed") +
+  scale_x_continuous(limits = c(min(v), max(v))) +
+  scale_y_continuous(limits = c(min(v), max(v))) 
 
 # Arrange / Export -------------------------------------------------------------
 p <- ggarrange(p1, p2, ncol = 1)

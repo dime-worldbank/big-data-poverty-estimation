@@ -91,6 +91,8 @@ p_boxplot_tsample <- acc_df %>%
                vjust = -0.2, hjust = -0.05, aes(label = paste(round(..y.., digits = 2)))) +
   stat_summary(fun = max, geom = "text", col = "firebrick3",    
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = min, hjust = 0.05, geom = "text", col = "firebrick3",   
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
        title = "A. Performance by training sample type [cluster]") +
@@ -178,6 +180,8 @@ p_boxplot_feature <- acc_df %>%
                vjust = -0.2, hjust = -0.01, aes(label = paste(round(..y.., digits = 2)))) +
   stat_summary(fun = max, geom = "text", col = "firebrick3",    
                vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
+  stat_summary(fun = min, hjust = 0.05, geom = "text", col = "firebrick3",    
+               vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
        title = "B. Performance using different features [cluster]") +
@@ -200,7 +204,7 @@ p <- ggarrange(p_left, p_boxplot_feature,
 ggsave(p,
        filename = file.path(figures_global_dir, "changes_results.png"),
        height = 6,
-       width = 11)
+       width = 12)
 
 ## Stats
 d_r2 <- best_df %>%

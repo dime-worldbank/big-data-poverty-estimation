@@ -64,12 +64,12 @@ district_df <- district_df %>%
 
 # All countries ----------------------------------------------------------------
 p_scatter_cluster <- cluster_df %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
+  ggplot(aes(x = predict_pca_allvars_best,
+             y = pca_allvars)) +
   geom_point(size = 0.5) +
   #stat_poly_eq(color = "red") +
-  labs(x = "True Change in Wealth Index",
-       y = "Estimated Change in\nWealth Index",
+  labs(x = "Estimated Change in Wealth Index",
+       y = "True Change in\nWealth Index",
        #title = "A. Cluster Level",
        color = NULL) +
   theme_classic() +
@@ -80,12 +80,12 @@ p_scatter_cluster <- cluster_df %>%
              scales = "free") 
 
 p_scatter_district <- district_df %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
+  ggplot(aes(x = predict_pca_allvars_best,
+             y = pca_allvars)) +
   geom_point(size = 0.75) +
   #stat_poly_eq(color = "red") +
-  labs(x = "True Change in Wealth Index",
-       y = "Estimated Change in\nWealth Index",
+  labs(x = "Estimated Change in Wealth Index",
+       y = "True Change in\nWealth Index",
        #title = "B. District Level",
        color = NULL) +
   theme_classic() +
@@ -122,12 +122,12 @@ district_countries <- district_df %>%
 ## Figures
 p_scatter_cluster_ex <- cluster_df %>%
   filter(country_name %in% cluster_countries) %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
+  ggplot(aes(x = predict_pca_allvars_best,
+             y = pca_allvars)) +
   geom_point(size = 1) +
   stat_poly_eq(color = "red", small.r=T) +
-  labs(x = "True Change in Wealth Index",
-       y = "Estimated Change in\nWealth Index",
+  labs(x = "Estimated Change in Wealth Index",
+       y = "True Change in\nWealth Index",
        title = "A. Estimated vs. true change in wealth index [cluster]",
        color = NULL) +
   theme_classic() +
@@ -140,12 +140,12 @@ p_scatter_cluster_ex <- cluster_df %>%
 
 p_scatter_district_ex <- district_df %>%
   filter(country_name %in% district_countries) %>%
-  ggplot(aes(x = pca_allvars,
-             y = predict_pca_allvars_best)) +
+  ggplot(aes(x = predict_pca_allvars_best,
+             y = pca_allvars)) +
   geom_point(size = 1) +
   stat_poly_eq(color = "red", small.r=T) +
-  labs(x = "True Change in Wealth Index",
-       y = "Estimated Change in\nWealth Index",
+  labs(x = "Estimated Change in Wealth Index",
+       y = "True Change in\nWealth Index",
        title = "B. Estimated vs. true change in wealth index [district]",
        color = NULL) +
   theme_classic() +

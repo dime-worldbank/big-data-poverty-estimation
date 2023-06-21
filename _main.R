@@ -153,6 +153,7 @@ library(stringdist)
 library(tmaptools)
 library(stringr)
 library(doBy)
+library(geosphere)
 library(rgeos)
 library(haven)
 library(alluvial)
@@ -222,6 +223,12 @@ source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/52eede6cf561a74
 #source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/get_fb_parameter_ids.R")
 #source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/get_fb_suggested_radius.R")
 #source("https://raw.githubusercontent.com/ramarty/rSocialWatcher/main/R/query_fb_marketing_api.R")
+
+# Define functions -------------------------------------------------------------
+
+coef_of_det <- function(y, x){
+  summary(lm(y ~ x))$r.squared
+}
 
 # Run Scripts ------------------------------------------------------------------
 

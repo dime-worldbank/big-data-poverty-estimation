@@ -30,21 +30,8 @@ names(osm_road_df) <- names(osm_road_df) %>%
   str_replace_all("dist", "distmeters_road")
 
 # [Load] MOSAIKS ---------------------------------------------------------------
-mosaiks_df <- read_csv(file.path(INV_DATA_DIR, "Mosaiks_features.csv"))
-
-mosaiks_c_df <- mosaiks_df %>%
-  dplyr::rename(latitude = Lat,
-                longitude = Lon) %>%
-  rename_at(vars(-latitude, -longitude), ~ paste0('mosaik_', .) %>% str_replace_all("\\.\\.\\.", ""))
-
-survey_df <- survey_df %>%
-  left_join(mosaiks_c_df, by = c("latitude", "longitude"))
-
-survey_df <- survey_df %>%
-  dplyr::filter(most_recent_survey %in% T)
-
-survey_df$mosaik_3 %>% is.na %>% table()
-
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
+                               "Individual Datasets", "mosaik.Rds"))
 
 # [Load] CNN Features ----------------------------------------------------------
 ## Landsat

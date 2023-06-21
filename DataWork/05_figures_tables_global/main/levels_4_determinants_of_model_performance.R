@@ -74,6 +74,9 @@ results_all_sum_df <- results_df %>%
                 target_var %in% "pca_allvars_mr")
 
 # Scatterplots -----------------------------------------------------------------
+r2_all_min <- results_all_sum_df$r2 %>% min()
+r2_all_max <- 1.1
+
 p_all_gdp_scatter <- results_all_sum_df %>%
   dplyr::filter(!is.na(wdi_gdp_pc)) %>%
   dplyr::mutate(wdi_gdp_pc_ln = log(wdi_gdp_pc)) %>%
@@ -81,7 +84,10 @@ p_all_gdp_scatter <- results_all_sum_df %>%
              x = wdi_gdp_pc_ln)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  stat_poly_eq(small.r = T) +
+  #stat_poly_eq(small.r = T) +
+  stat_cor(aes(label = paste(gsub("R", "r", ..rr.label..), ..p.label.., sep = "*`,`~")),
+           label.x.npc = "left",
+           color = "firebrick3") +
   #geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, wdi_gdp_pc_ln),2)),
   #                  x = 6,
   #                  y = 0.35),
@@ -90,14 +96,18 @@ p_all_gdp_scatter <- results_all_sum_df %>%
   labs(x = "GDP Per Capita, Logged",
        title = expression(bold(A.~Model~r^2~vs.~GDP~Per~Capita)),
        subtitle = "Performance using all features",
-       y = expression(Model~r^2))
+       y = expression(Model~r^2)) +
+  scale_y_continuous(limits = c(r2_all_min, r2_all_max))
 
 p_all_wealthsd_scatter <- results_all_sum_df %>%
   ggplot(aes(y = r2,
              x = pca_allvars_mr_sd)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  stat_poly_eq(small.r = T) +
+  #stat_poly_eq(small.r = T) +
+  stat_cor(aes(label = paste(gsub("R", "r", ..rr.label..), ..p.label.., sep = "*`,`~")),
+           label.x.npc = "left",
+           color = "firebrick3") +
   # geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, prop_pop_on_fb),2)),
   #                   x = 0.4,
   #                   y = 0.6),
@@ -106,14 +116,18 @@ p_all_wealthsd_scatter <- results_all_sum_df %>%
   labs(x = "Wealth Index, Standard Deviation",
        title = expression(bold(B.~Model~r^2~vs.~Wealth~Index~Standard~Deviation)),
        subtitle = "Performance using all features",
-       y = expression(Model~r^2))
+       y = expression(Model~r^2)) +
+  scale_y_continuous(limits = c(r2_all_min, r2_all_max))
 
 p_all_viirs_scatter <- results_all_sum_df %>%
   ggplot(aes(y = r2,
              x = viirs_avg_rad_sd)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  stat_poly_eq(small.r = T) +
+  #stat_poly_eq(small.r = T) +
+  stat_cor(aes(label = paste(gsub("R", "r", ..rr.label..), ..p.label.., sep = "*`,`~")),
+           label.x.npc = "left",
+           color = "firebrick3") +
   # geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, prop_pop_on_fb),2)),
   #                   x = 0.4,
   #                   y = 0.6),
@@ -122,7 +136,8 @@ p_all_viirs_scatter <- results_all_sum_df %>%
   labs(x = "Nighttime Lights, Standard Deviation",
        title = expression(bold(C.~Model~r^2~vs.~Nighttime~Lights~Standard~Deviation)),
        subtitle = "Performance using all features",
-       y = expression(Model~r^2))
+       y = expression(Model~r^2)) +
+  scale_y_continuous(limits = c(r2_all_min, r2_all_max))
 
 p_fb_propfb_scatter <- results_fb_sum_df %>%
   dplyr::filter(!is.na(prop_pop_on_fb)) %>%
@@ -130,7 +145,10 @@ p_fb_propfb_scatter <- results_fb_sum_df %>%
              x = prop_pop_on_fb)) +
   geom_smooth(method = lm, se = F, color = "darkorange") +
   geom_point() +
-  stat_poly_eq(small.r = T) +
+  #stat_poly_eq(small.r = T) +
+  stat_cor(aes(label = paste(gsub("R", "r", ..rr.label..), ..p.label.., sep = "*`,`~")),
+           label.x.npc = "left",
+           color = "firebrick3") +
   # geom_richtext(aes(label = paste0("Cor = ", round(cor(r2, prop_pop_on_fb),2)),
   #                   x = 0.4,
   #                   y = 0.6),
@@ -139,7 +157,8 @@ p_fb_propfb_scatter <- results_fb_sum_df %>%
   labs(x = "Proportion of Population on Facebook",
        title = expression(bold(D.~Model~r^2~vs.~Prop.~of~Pop.~on~Facebook)),
        subtitle = "Performance using only Facebook features",
-       y = expression(Model~r^2))
+       y = expression(Model~r^2)) +
+  scale_y_continuous(limits = c(0, 1))
 
 # Boxplots across all feature types --------------------------------------------
 results_best_df <- results_df %>%

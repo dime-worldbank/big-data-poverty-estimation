@@ -48,7 +48,10 @@ p_scatter <- accu_sum_df %>%
               se = F,
               color = line_color) +
   geom_point() +
-  stat_poly_eq(small.r = T) +
+  #stat_poly_eq(small.r = T) +
+  stat_cor(aes(label = paste(gsub("R", "r", ..rr.label..), ..p.label.., sep = "*`,`~")),
+           label.x.npc = "left",
+           color = "firebrick3") +
   labs(x = NULL,
        y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
   theme_classic() +

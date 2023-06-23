@@ -7,8 +7,6 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 
 #INV_DATA_DIR <- file.path(data_dir, "DHS_OLD", "FinalData", "Individual Datasets")
 
-survey_df$most_recent_survey %>% table()
-
 # [Load] Facebook --------------------------------------------------------------
 fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
 
@@ -30,8 +28,8 @@ names(osm_road_df) <- names(osm_road_df) %>%
   str_replace_all("dist", "distmeters_road")
 
 # [Load] MOSAIKS ---------------------------------------------------------------
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
-                               "Individual Datasets", "mosaik.Rds"))
+mosaik_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", 
+                               "Individual Datasets", "mosaik_pca.Rds"))
 
 # [Load] CNN Features ----------------------------------------------------------
 ## Landsat
@@ -307,8 +305,9 @@ s1_df <- s1_df %>%
                 s1_sar_vh_stddev   = pmax(s1_sar_vh_desc_stddev,   s1_sar_vh_asc_stddev, na.rm = T),
                 s1_sar_vdiv_stddev = pmax(s1_sar_vdiv_desc_stddev, s1_sar_vdiv_asc_stddev, na.rm = T)) %>%
   dplyr::select(uid, 
-                s1_sar_vv_mean,   s1_sar_vh_mean,   s1_sar_vdiv_mean,
-                s1_sar_vv_stddev, s1_sar_vh_stddev, s1_sar_vdiv_stddev)
+                s1_sar_vv_mean,   s1_sar_vh_mean,   s1_sar_vdiv_mean)
+# These are NA
+#  s1_sar_vv_stddev, s1_sar_vh_stddev, s1_sar_vdiv_stddev
 
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 
@@ -324,6 +323,7 @@ survey_ancdata_df <- list(survey_df,
                           cnn_sentinel_bu_df,
                           osm_poi_df, 
                           osm_road_df,
+                          mosaik_df,
                           s1_df) %>%
   reduce(full_join, by = "uid") %>%
   dplyr::filter(!is.na(country_code))

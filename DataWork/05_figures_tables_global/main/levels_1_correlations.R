@@ -1,8 +1,6 @@
 # Correlations of Features with Poverty
 
-# Products tables/figures of (1) all features and (2) select features
-
-# Within country; show distribution. (color by continent?)
+# Produces tables/figures of (1) all features and (2) select features
 
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
@@ -31,6 +29,7 @@ df_long <- df %>%
                 starts_with("globalmod_"),
                 starts_with("pollution_aod_"),
                 starts_with("pollution_s5p_"),
+                starts_with("mosaik_"),
                 starts_with("weather_")) %>%
   pivot_longer(cols = -c(country_name, pca_allvars_mr, continent_adj)) %>%
   dplyr::rename(variable = name) %>%
@@ -51,6 +50,7 @@ df_long <- df %>%
     variable %>% str_detect("pollution_s5p") ~ "Pollution - Sentinel-5P",
     variable %>% str_detect("weather") ~ "Weather",
     variable %>% str_detect("s1_sar") ~ "SAR",
+    variable %>% str_detect("mosaik") ~ "MOSAIK",
     TRUE ~ variable
   ))
 

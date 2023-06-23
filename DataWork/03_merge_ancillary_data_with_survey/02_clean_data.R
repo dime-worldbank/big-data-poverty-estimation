@@ -130,6 +130,8 @@ df <- df %>%
     
     starts_with("s1_sar_"),
     
+    starts_with("mosaik_"),
+    
     starts_with("l8_"),
     starts_with("l7_"),
     

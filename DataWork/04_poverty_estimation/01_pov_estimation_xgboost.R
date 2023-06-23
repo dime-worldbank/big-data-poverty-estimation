@@ -53,7 +53,8 @@ grab_x_features <- function(df,
                             starts_with("elevslope_"),
                             starts_with("weather_"),
                             starts_with("worldclim_"),
-                            starts_with("pollution_"))) 
+                            starts_with("pollution_"),
+                            starts_with("mosaik_"))) 
     
     if(feature_type_i %>% str_detect("all_not_")){
       
@@ -99,7 +100,8 @@ grab_x_features <- function(df,
     X <- df %>%
       dplyr::select_at(vars(starts_with("l7_"),
                             starts_with("cnn_viirs_s2_"),
-                            starts_with("viirs_"))) %>%
+                            starts_with("viirs_"),
+                            starts_with("mosaik_"))) %>%
       as.matrix()
   } else if(feature_type_i %in% "satellites_changes"){
     X <- df %>%
@@ -357,6 +359,8 @@ run_model_glmnet <- function(df,
     
     # Predictions
     pred <- predict(cv_model, s = optimal_lambda, newx = X_test) %>% as.numeric()
+    saveRDS(list(cv_model = cv_model,
+                 optimal_lambda = optimal_lambda), MODEL_OUT)
     
     # Results dataset
     results_fold_df <- data.frame(truth = y_test,
@@ -406,8 +410,75 @@ run_model_glmnet <- function(df,
               feat_imp_df = feat_imp_df))
 }
 
+run_model_svm <- function(df,
+                          level_change,
+                          estimation_type_i,
+                          feature_type_i,
+                          target_var_i,
+                          country_i,
+                          ml_model_type,
+                          svm_kernel,
+                          svm_cost){
+  
+  ## Set Target Var
+  df$target_var <- df[[target_var_i]]
+  
+  df <- df %>%
+    dplyr::filter(!is.na(target_var))
+  
+  results_folds_list <- lapply(unique(df$fold), function(fold_i){
+    
+    ## Separate into train and test set
+    if(estimation_type_i %>% str_detect("country_pred")){
+      df_train <- df[!(df$country_code %in% country_i),]
+      df_test  <- df[df$country_code %in% country_i,]
+    } else{
+      df_train <- df[!(df$fold %in% fold_i),]
+      df_test  <- df[df$fold %in% fold_i,]
+    }
+    
+    ## X and Y
+    X_train <- grab_x_features(df_train, feature_type_i)
+    X_test  <- grab_x_features(df_test,  feature_type_i)
+    
+    y_train <- df_train$target_var
+    y_test  <- df_test$target_var
+    
+    ## Run model
+    svm_model = svm(y_train ~ X_train, 
+                    kernel = svm_kernel, 
+                    cost = svm_cost, 
+                    scale = TRUE)
+    
+    # Predictions
+    pred <- predict(svm_model, X_test) %>% as.numeric()
+    
+    # Results dataset
+    results_fold_df <- data.frame(truth = y_test,
+                                  prediction = pred,
+                                  uid = df_test$uid,
+                                  country_code = df_test$country_code,
+                                  fold = fold_i,
+                                  level_change = level_change,
+                                  estimation_type = estimation_type_i,
+                                  feature_type = feature_type_i,
+                                  target_var = target_var_i,
+                                  country_group = country_i,
+                                  ml_model_type = ml_model_type,
+                                  svm_kernel = svm_kernel,
+                                  svm_cost = svm_cost)
+    
+    return(list(results_fold_df = results_fold_df))
+  })
+  
+  results_df <- map_df(results_folds_list, function(x) x$results_fold_df)
+  
+  return(list(results_df = results_df,
+              feat_imp_df = data.frame(NULL)))
+}
+
 # Implement --------------------------------------------------------------------
-for(level_change in c("levels")){ # "changes", "levels"
+for(level_change in c("levels", "changes")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% c("levels", "changes")){
@@ -420,46 +491,37 @@ for(level_change in c("levels")){ # "changes", "levels"
       dplyr::filter(most_recent_survey %in% T)
     
     #### Define parameters
-    if(F){
-      feature_types_indiv <- c("viirs",
-                               "cnn_viirs_s2_rgb", 
-                               "cnn_viirs_s2_ndvi", 
-                               "cnn_viirs_s2_bu", 
-                               "cnn_viirs_s2",
-                               "l7",
-                               "fb",
-                               "osm",
-                               "pollution",
-                               "s1_sar",
-                               
-                               # Groupings
-                               "landcover",
-                               "weatherclimate",
-                               "satellites") 
-      
-      feature_types_all_but_indiv <- paste0("all_not_", 
-                                            c(feature_types_indiv, "viirs")) 
-      
-      feature_types <- c(feature_types_indiv,
-                         #feature_types_all_but_indiv,
-                         "all")
-      
-      estimation_type_vec <- c("within_country_cv",
-                               "global_country_pred",
-                               "continent_africa_country_pred",
-                               "continent_americas_country_pred",
-                               "continent_eurasia_country_pred", 
-                               "continent") # "continent" means "other continents"
-    } else{
-      feature_types <- "all_except_cnn"
-      estimation_type_vec <- "within_country_cv"
-    }
-    # TODO: DELETE/CHANGE
-    # target_vars_vec <- c("pca_allvars",
-    #                      "pca_allvars_mr", 
-    #                      "pca_physicalvars_mr",
-    #                      "pca_nonphysicalvars_mr",
-    #                      "wealth_index_score") 
+    feature_types_indiv <- c("viirs",
+                             "cnn_viirs_s2_rgb", 
+                             "cnn_viirs_s2_ndvi", 
+                             "cnn_viirs_s2_bu", 
+                             "cnn_viirs_s2",
+                             "l7",
+                             "fb",
+                             "osm",
+                             "pollution",
+                             "s1_sar",
+                             "mosaik",
+                             
+                             # Groupings
+                             "landcover",
+                             "weatherclimate",
+                             "satellites") 
+    
+    feature_types_all_but_indiv <- paste0("all_not_", 
+                                          c(feature_types_indiv, "viirs")) 
+    
+    feature_types <- c(feature_types_indiv,
+                       #feature_types_all_but_indiv,
+                       "all")
+    
+    estimation_type_vec <- c("within_country_cv",
+                             "global_country_pred",
+                             "continent_africa_country_pred",
+                             "continent_americas_country_pred",
+                             "continent_eurasia_country_pred", 
+                             "continent") # "continent" means "other continents"
+    
     
     target_vars_vec <- c("pca_allvars_mr") 
     
@@ -506,13 +568,20 @@ for(level_change in c("levels")){ # "changes", "levels"
     countries_vec <- c("all", unique(df$country_code)) 
   } 
   
-  for(estimation_type_i in rev(estimation_type_vec)){
+  for(estimation_type_i in estimation_type_vec){
     for(target_var_i in target_vars_vec){
-      for(feature_type_i in rev(feature_types)){
-        for(country_i in rev(countries_vec)){
+      for(feature_type_i in feature_types){
+        for(country_i in countries_vec){
           
           ## XG Boost Parameters
           if(level_change == "levels"){
+            xg_max.depth_params <- c(2, 5) 
+            xg_eta_params <- c(0.3)
+            xg_nrounds_params <- c(50)
+            xg_subsample_params <- c(0.3)
+            xg_objective_params <- c("reg:squarederror")
+            xg_min_child_weight_params <- c(1)
+            
             # xg_max.depth_params <- c(2, 5, 6, 10) %>% rev()
             # xg_eta_params <- c(0.3) %>% rev()
             # xg_nrounds_params <- c(50) %>% rev()
@@ -520,21 +589,28 @@ for(level_change in c("levels")){ # "changes", "levels"
             # xg_objective_params <- c("reg:squarederror")
             # xg_min_child_weight_params <- c(1)
             
-            xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
-            xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
-            xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
-            xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
-            xg_objective_params <- c("reg:squarederror")
-            xg_min_child_weight_params <- c(1)
+            # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
+            # xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
+            # xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
+            # xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            # xg_objective_params <- c("reg:squarederror")
+            # xg_min_child_weight_params <- c(1)
           }
           
           if(level_change == "changes"){
-            xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
-            xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
-            xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
-            xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            xg_max.depth_params <- c(2, 5) 
+            xg_eta_params <- c(0.3)
+            xg_nrounds_params <- c(50)
+            xg_subsample_params <- c(0.3)
             xg_objective_params <- c("reg:squarederror")
             xg_min_child_weight_params <- c(1)
+            
+            # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
+            # xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
+            # xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
+            # xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            # xg_objective_params <- c("reg:squarederror")
+            # xg_min_child_weight_params <- c(1)
           }
           
           # Skip -----------------------------------------------------------------
@@ -578,7 +654,7 @@ for(level_change in c("levels")){ # "changes", "levels"
           }
           
           # Loop through XG boost ----------------------------------------------
-          for(ml_model_type in c("glmnet")){ # "glmnet", "xgboost"
+          for(ml_model_type in c("glmnet", "xgboost")){ # "glmnet", "xgboost"
             
             ## xgboost parameter
             for(xg_max.depth in xg_max.depth_params){ # 2,5,6,10
@@ -592,193 +668,227 @@ for(level_change in c("levels")){ # "changes", "levels"
                           ## glmnet parameters
                           for(glmnet_alpha in c(0, 1)){
                             
-                            # Define Out Paths -----------------------------------------------------
-                            if(ml_model_type == "xgboost"){
-                              
-                              file_name_suffix <- paste0(level_change,"_",
-                                                         estimation_type_i,"_",
-                                                         country_i,"_",
-                                                         target_var_i,"_",
-                                                         feature_type_i, "_",
-                                                         ml_model_type, "_",
-                                                         xg_max.depth %>% str_replace_all("[:punct:]", ""), "_",
-                                                         xg_eta %>% str_replace_all("[:punct:]", ""), "_",
-                                                         xg_nthread %>% str_replace_all("[:punct:]", ""), "_",
-                                                         xg_nrounds %>% str_replace_all("[:punct:]", ""), "_",
-                                                         xg_subsample %>% str_replace_all("[:punct:]", ""), "_",
-                                                         xg_objective %>% str_replace_all("[:punct:]", ""), 
-                                                         xg_min_child_weight %>% str_replace_all("[:punct:]", ""), 
-                                                         ".Rds")
-                            }
-                            
-                            if(ml_model_type %in% c("glmnet")){
-                              file_name_suffix <- paste0(level_change,"_",
-                                                         estimation_type_i,"_",
-                                                         country_i,"_",
-                                                         target_var_i,"_",
-                                                         feature_type_i, "_",
-                                                         ml_model_type, "_",
-                                                         glmnet_alpha,
-                                                         ".Rds")
-                            }
-                            
-                            PRED_OUT <- file.path(OUT_PATH, "predictions", 
-                                                  paste0("predictions_", file_name_suffix))
-                            
-                            FI_OUT <- file.path(OUT_PATH, "feature_importance", 
-                                                paste0("fi_", file_name_suffix))
-                            
-                            ACCURACY_OUT <- file.path(OUT_PATH, "accuracy", 
-                                                      paste0("accuracy_", file_name_suffix))
-                            
-                            GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
-                                                        paste0("gs_", file_name_suffix))
-                            
-                            MODEL_OUT <- file.path(OUT_PATH, "models", 
-                                                   paste0("model_", file_name_suffix))
-                            
-                            # Check if file exists/ should run -------------------------------------
-                            if(!file.exists(PRED_OUT) | REPLACE_IF_EXTRACTED){
-                              
-                              print(paste(ml_model_type,
-                                          level_change,
-                                          estimation_type_i,
-                                          target_var_i,
-                                          feature_type_i,
-                                          country_i,
-                                          sep = " - "))
-                              
-                              # Subset Data & Define Fold ------------------------------------------
-                              # For defining the fold: 
-                              # -- If "country_pred" in "estimation_type_i" name, then have only one 
-                              # fold; the function will treat country_i as train and others as test
-                              # -- If "country_pred" not in name, need to define > 1 fold; all
-                              # observations will be in train and test at some point
-                              
-                              if(estimation_type_i == "within_country_cv"){
-                                df_traintest <- df %>%
-                                  dplyr::filter(country_code %in% country_i) %>%
-                                  dplyr::mutate(fold = within_country_fold)
-                              }
-                              
-                              if(estimation_type_i == "global_country_pred"){
-                                df_traintest <- df %>%
-                                  dplyr::mutate(fold = "fold_1")
-                              }
-                              
-                              if(estimation_type_i == "continent_africa_country_pred"){
-                                df_traintest <- df %>%
-                                  dplyr::filter((country_code %in% country_i) |
-                                                  (continent_adj %in% "Africa")) %>%
-                                  dplyr::mutate(fold = "fold_1")
-                              }
-                              
-                              if(estimation_type_i == "continent_americas_country_pred"){
-                                df_traintest <- df %>%
-                                  dplyr::filter((country_code %in% country_i) |
-                                                  (continent_adj %in% "Americas")) %>%
-                                  dplyr::mutate(fold = "fold_1")
-                              }
-                              
-                              if(estimation_type_i == "continent_eurasia_country_pred"){
-                                df_traintest <- df %>%
-                                  dplyr::filter((country_code %in% country_i) |
-                                                  (continent_adj %in% "Eurasia")) %>%
-                                  dplyr::mutate(fold = "fold_1")
-                              }
-                              
-                              # Train on all countries in continent x and predict on countries in continent y
-                              if(estimation_type_i == "continent"){
-                                df_traintest <- df %>%
-                                  dplyr::mutate(fold = continent_adj)
-                              }
-                              
-                              # Run Model ----------------------------------------------------------
-                              if(ml_model_type == "xgboost"){
-                                xg_results_list <- run_model_xgboost(df = df_traintest,
+                            ## svm paremeters
+                            for(svm_kernel in c("linear")){
+                              for(svm_cost in c(1)){
+                                
+                                # Define Out Paths -----------------------------------------------------
+                                if(ml_model_type == "xgboost"){
+                                  
+                                  file_name_suffix <- paste0(level_change,"_",
+                                                             estimation_type_i,"_",
+                                                             country_i,"_",
+                                                             target_var_i,"_",
+                                                             feature_type_i, "_",
+                                                             ml_model_type, "_",
+                                                             xg_max.depth %>% str_replace_all("[:punct:]", ""), "_",
+                                                             xg_eta %>% str_replace_all("[:punct:]", ""), "_",
+                                                             xg_nthread %>% str_replace_all("[:punct:]", ""), "_",
+                                                             xg_nrounds %>% str_replace_all("[:punct:]", ""), "_",
+                                                             xg_subsample %>% str_replace_all("[:punct:]", ""), "_",
+                                                             xg_objective %>% str_replace_all("[:punct:]", ""), 
+                                                             xg_min_child_weight %>% str_replace_all("[:punct:]", ""), 
+                                                             ".Rds")
+                                }
+                                
+                                if(ml_model_type %in% c("glmnet")){
+                                  file_name_suffix <- paste0(level_change,"_",
+                                                             estimation_type_i,"_",
+                                                             country_i,"_",
+                                                             target_var_i,"_",
+                                                             feature_type_i, "_",
+                                                             ml_model_type, "_",
+                                                             glmnet_alpha,
+                                                             ".Rds")
+                                }
+                                
+                                if(ml_model_type %in% c("svm")){
+                                  file_name_suffix <- paste0(level_change,"_",
+                                                             estimation_type_i,"_",
+                                                             country_i,"_",
+                                                             target_var_i,"_",
+                                                             feature_type_i, "_",
+                                                             ml_model_type, "_",
+                                                             svm_kernel, "_",
+                                                             svm_cost,
+                                                             ".Rds")
+                                }
+                                
+                                PRED_OUT <- file.path(OUT_PATH, "predictions", 
+                                                      paste0("predictions_", file_name_suffix))
+                                
+                                FI_OUT <- file.path(OUT_PATH, "feature_importance", 
+                                                    paste0("fi_", file_name_suffix))
+                                
+                                ACCURACY_OUT <- file.path(OUT_PATH, "accuracy", 
+                                                          paste0("accuracy_", file_name_suffix))
+                                
+                                GRIDSEARCH_OUT <- file.path(OUT_PATH, "grid_search", 
+                                                            paste0("gs_", file_name_suffix))
+                                
+                                MODEL_OUT <- file.path(OUT_PATH, "models", 
+                                                       paste0("model_", file_name_suffix))
+                                
+                                # Check if file exists/ should run -------------------------------------
+                                if(!file.exists(PRED_OUT)){
+                                  
+                                  print(paste(ml_model_type,
+                                              level_change,
+                                              estimation_type_i,
+                                              target_var_i,
+                                              feature_type_i,
+                                              country_i,
+                                              sep = " - "))
+                                  
+                                  # Subset Data & Define Fold ------------------------------------------
+                                  # For defining the fold: 
+                                  # -- If "country_pred" in "estimation_type_i" name, then have only one 
+                                  # fold; the function will treat country_i as train and others as test
+                                  # -- If "country_pred" not in name, need to define > 1 fold; all
+                                  # observations will be in train and test at some point
+                                  
+                                  if(estimation_type_i == "within_country_cv"){
+                                    df_traintest <- df %>%
+                                      dplyr::filter(country_code %in% country_i) %>%
+                                      dplyr::mutate(fold = within_country_fold)
+                                  }
+                                  
+                                  if(estimation_type_i == "global_country_pred"){
+                                    df_traintest <- df %>%
+                                      dplyr::mutate(fold = "fold_1")
+                                  }
+                                  
+                                  if(estimation_type_i == "continent_africa_country_pred"){
+                                    df_traintest <- df %>%
+                                      dplyr::filter((country_code %in% country_i) |
+                                                      (continent_adj %in% "Africa")) %>%
+                                      dplyr::mutate(fold = "fold_1")
+                                  }
+                                  
+                                  if(estimation_type_i == "continent_americas_country_pred"){
+                                    df_traintest <- df %>%
+                                      dplyr::filter((country_code %in% country_i) |
+                                                      (continent_adj %in% "Americas")) %>%
+                                      dplyr::mutate(fold = "fold_1")
+                                  }
+                                  
+                                  if(estimation_type_i == "continent_eurasia_country_pred"){
+                                    df_traintest <- df %>%
+                                      dplyr::filter((country_code %in% country_i) |
+                                                      (continent_adj %in% "Eurasia")) %>%
+                                      dplyr::mutate(fold = "fold_1")
+                                  }
+                                  
+                                  # Train on all countries in continent x and predict on countries in continent y
+                                  if(estimation_type_i == "continent"){
+                                    df_traintest <- df %>%
+                                      dplyr::mutate(fold = continent_adj)
+                                  }
+                                  
+                                  # Run Model ----------------------------------------------------------
+                                  if(ml_model_type == "xgboost"){
+                                    xg_results_list <- run_model_xgboost(df = df_traintest,
+                                                                         level_change = level_change,
+                                                                         estimation_type_i = estimation_type_i,
+                                                                         feature_type_i = feature_type_i,
+                                                                         target_var_i = target_var_i,
+                                                                         country_i = country_i,
+                                                                         ml_model_type = ml_model_type,
+                                                                         xg_max.depth = xg_max.depth,
+                                                                         xg_eta = xg_eta,
+                                                                         xg_nthread = xg_nthread,
+                                                                         xg_nrounds = xg_nrounds,
+                                                                         xg_subsample = xg_subsample,
+                                                                         xg_objective = xg_objective,
+                                                                         xg_min_child_weight = xg_min_child_weight)
+                                    
+                                    results_df_i <- xg_results_list$results_df
+                                  }
+                                  
+                                  if(ml_model_type %in% "glmnet"){
+                                    
+                                    xg_results_list <- run_model_glmnet(df = df_traintest,
+                                                                        level_change = level_change,
+                                                                        estimation_type_i = estimation_type_i,
+                                                                        feature_type_i = feature_type_i,
+                                                                        target_var_i = target_var_i,
+                                                                        country_i = country_i,
+                                                                        ml_model_type = ml_model_type,
+                                                                        glmnet_alpha = glmnet_alpha)
+                                    
+                                    results_df_i <- xg_results_list$results_df
+                                    
+                                  }
+                                  
+                                  if(ml_model_type %in% "svm"){
+                                    
+                                    xg_results_list <- run_model_svm(df = df_traintest,
                                                                      level_change = level_change,
                                                                      estimation_type_i = estimation_type_i,
                                                                      feature_type_i = feature_type_i,
                                                                      target_var_i = target_var_i,
                                                                      country_i = country_i,
                                                                      ml_model_type = ml_model_type,
-                                                                     xg_max.depth = xg_max.depth,
-                                                                     xg_eta = xg_eta,
-                                                                     xg_nthread = xg_nthread,
-                                                                     xg_nrounds = xg_nrounds,
-                                                                     xg_subsample = xg_subsample,
-                                                                     xg_objective = xg_objective,
-                                                                     xg_min_child_weight = xg_min_child_weight)
-                                
-                                results_df_i <- xg_results_list$results_df
+                                                                     svm_kernel = svm_kernel,
+                                                                     svm_cost = svm_cost)
+                                    
+                                    results_df_i <- xg_results_list$results_df
+                                    
+                                  }
+                                  
+                                  # Accuracy Stats -----------------------------------------------------
+                                  
+                                  if(estimation_type_i == "continent"){
+                                    acc_fold_df <- results_df_i %>%
+                                      dplyr::group_by(country_code, fold) %>%
+                                      dplyr::summarise(cor_fold = cor(truth, prediction),
+                                                       coef_det_fold = coef_of_det(truth, prediction),
+                                                       N_fold = n()) %>%
+                                      ungroup()
+                                  } else{
+                                    acc_fold_df <- results_df_i %>%
+                                      dplyr::group_by(fold) %>%
+                                      dplyr::summarise(cor_fold = cor(truth, prediction),
+                                                       coef_det_fold = coef_of_det(truth, prediction),
+                                                       N_fold = n()) %>%
+                                      ungroup()
+                                  }
+                                  
+                                  acc_fold_df$cor_all <- cor(results_df_i$truth,
+                                                             results_df_i$prediction)
+                                  
+                                  acc_fold_df$coef_det_all <- coef_of_det(results_df_i$truth,
+                                                                          results_df_i$prediction)
+                                  
+                                  acc_fold_df <- acc_fold_df %>%
+                                    dplyr::mutate(level_change = level_change,
+                                                  estimation_type = estimation_type_i,
+                                                  feature_type = feature_type_i,
+                                                  target_var = target_var_i,
+                                                  country = country_i,
+                                                  ml_model_type = ml_model_type,
+                                                  xg_max.depth = xg_max.depth,
+                                                  xg_eta = xg_eta,
+                                                  xg_nthread = xg_nthread,
+                                                  xg_nrounds = xg_nrounds,
+                                                  xg_subsample = xg_subsample,
+                                                  xg_objective = xg_objective,
+                                                  xg_min_child_weight = xg_min_child_weight,
+                                                  glmnet_alpha = glmnet_alpha,
+                                                  n = nrow(df_traintest))
+                                  
+                                  # Export Results -----------------------------------------------------
+                                  saveRDS(xg_results_list$feat_imp_df, FI_OUT)
+                                  saveRDS(acc_fold_df,                 ACCURACY_OUT)
+                                  saveRDS(xg_results_list$results_df,  PRED_OUT)
+                                  
+                                  # if(grid_search){
+                                  #   saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)
+                                  # }
+                                  
+                                  
+                                }
                               }
-                              
-                              if(ml_model_type %in% "glmnet"){
-                                
-                                xg_results_list <- run_model_glmnet(df = df_traintest,
-                                                                    level_change = level_change,
-                                                                    estimation_type_i = estimation_type_i,
-                                                                    feature_type_i = feature_type_i,
-                                                                    target_var_i = target_var_i,
-                                                                    country_i = country_i,
-                                                                    ml_model_type = ml_model_type,
-                                                                    glmnet_alpha = glmnet_alpha)
-                                
-                                results_df_i <- xg_results_list$results_df
-                                
-                              }
-                              
-                              # Accuracy Stats -----------------------------------------------------
-                              
-                              if(estimation_type_i == "continent"){
-                                acc_fold_df <- results_df_i %>%
-                                  dplyr::group_by(country_code, fold) %>%
-                                  dplyr::summarise(cor_fold = cor(truth, prediction),
-                                                   coef_det_fold = coef_of_det(truth, prediction),
-                                                   N_fold = n()) %>%
-                                  ungroup()
-                              } else{
-                                acc_fold_df <- results_df_i %>%
-                                  dplyr::group_by(fold) %>%
-                                  dplyr::summarise(cor_fold = cor(truth, prediction),
-                                                   coef_det_fold = coef_of_det(truth, prediction),
-                                                   N_fold = n()) %>%
-                                  ungroup()
-                              }
-                              
-                              acc_fold_df$cor_all <- cor(results_df_i$truth,
-                                                         results_df_i$prediction)
-                              
-                              acc_fold_df$coef_det_all <- coef_of_det(results_df_i$truth,
-                                                                      results_df_i$prediction)
-                              
-                              acc_fold_df <- acc_fold_df %>%
-                                dplyr::mutate(level_change = level_change,
-                                              estimation_type = estimation_type_i,
-                                              feature_type = feature_type_i,
-                                              target_var = target_var_i,
-                                              country = country_i,
-                                              ml_model_type = ml_model_type,
-                                              xg_max.depth = xg_max.depth,
-                                              xg_eta = xg_eta,
-                                              xg_nthread = xg_nthread,
-                                              xg_nrounds = xg_nrounds,
-                                              xg_subsample = xg_subsample,
-                                              xg_objective = xg_objective,
-                                              xg_min_child_weight = xg_min_child_weight,
-                                              glmnet_alpha = glmnet_alpha,
-                                              n = nrow(df_traintest))
-                              
-                              # Export Results -----------------------------------------------------
-                              saveRDS(xg_results_list$feat_imp_df, FI_OUT)
-                              saveRDS(acc_fold_df,                 ACCURACY_OUT)
-                              saveRDS(xg_results_list$results_df,  PRED_OUT)
-                              
-                              # if(grid_search){
-                              #   saveRDS(xg_results_list$grid_imp_df, GRIDSEARCH_OUT)
-                              # }
-                              
-                              
                             }
                           }
                         }

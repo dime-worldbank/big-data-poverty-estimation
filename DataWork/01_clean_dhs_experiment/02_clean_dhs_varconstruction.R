@@ -4,7 +4,7 @@
 set.seed(42)
 
 # Load data --------------------------------------------------------------------
-dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", 
+dhs_all_df <- readRDS(file.path(dhs_exp_dir, "FinalData", "Individual Datasets", 
                                 "survey_socioeconomic_hhlevel.Rds"))
 
 # Subset data ------------------------------------------------------------------
@@ -22,28 +22,17 @@ dhs_all_df <- dhs_all_df %>%
   dplyr::mutate(most_recent_survey = survey_year_max == year,
                 oldest_survey = survey_year_min == year) %>%
   dplyr::select(-c(survey_year_min, survey_year_max))
-
-## Subset to recent + oldest survey
-dhs_all_df <- dhs_all_df %>%
-  dplyr::filter(most_recent_survey | oldest_survey)
+# 
+# ## Subset to recent + oldest survey
+# dhs_all_df <- dhs_all_df %>%
+#   dplyr::filter(most_recent_survey | oldest_survey)
 
 # Cleanup wealth index ---------------------------------------------------------
 dhs_all_df <- dhs_all_df %>%
   
   # Wealth Index Category
-  dplyr::mutate(wealth_index = wealth_index %>% as.numeric(),
-                wlthind5 = wlthind5 %>% as.numeric()) %>%
-  dplyr::mutate(wealth_index = case_when(
-    is.na(wealth_index) ~ wlthind5,
-    TRUE ~ wealth_index
-  )) %>%
-  
-  # Wealth Index Score
-  dplyr::mutate(wealth_index_score = case_when(
-    is.na(wealth_index_score) ~ wlthindf,
-    TRUE ~ wealth_index_score
-  )) %>%
-  
+  dplyr::mutate(wealth_index = wealth_index %>% as.numeric()) %>%
+
   # Standardize Wealth Score
   # Some countries had wealth score scaled differently; rescale so that, for all
   # country-years, ranged from 1-5.
@@ -411,7 +400,7 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
   dplyr::mutate(uid = uid %>% as.character())
 
 # Export -----------------------------------------------------------------------
-saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", 
+saveRDS(dhs_all_df_coll, file.path(dhs_exp_dir, "FinalData", "Individual Datasets", 
                                    "survey_socioeconomic_varconstructed_tmp.Rds"))
 
 

@@ -35,7 +35,7 @@ over_nearest <- function(sp_i, gadm_i){
 }
 
 # Load Data --------------------------------------------------------------------
-dhs_all_df_coll <- readRDS(file.path(dhs_exp_dir, "FinalData", "Individual Datasets", 
+dhs_all_df_coll <- readRDS(file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", 
                                      "survey_socioeconomic_varconstructed_tmp.Rds"))
 
 c_dhs <- unique(dhs_all_df_coll$country_code) %>% sort()
@@ -143,19 +143,19 @@ dhs_all_df_coll_folds <- map_df(unique(dhs_all_df_coll$country_code), function(c
 
 # Export -----------------------------------------------------------------------
 #### All Years
-saveRDS(dhs_all_df_coll_folds, file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_allyears.Rds"))
+saveRDS(dhs_all_df_coll_folds, file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
 
 write.csv(dhs_all_df_coll_folds,
-          file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic_allyears.csv"),
+          file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
           row.names = F)
 
-#### Only for predictions
-saveRDS(dhs_all_df_coll_folds[dhs_all_df_coll_folds$year %in% 2013,], 
-        file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-
-write.csv(dhs_all_df_coll_folds[dhs_all_df_coll_folds$year %in% 2013,],
-          file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
-          row.names = F)
+# #### Only for predictions
+# saveRDS(dhs_all_df_coll_folds[dhs_all_df_coll_folds$year %in% 2013,], 
+#         file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+# 
+# write.csv(dhs_all_df_coll_folds[dhs_all_df_coll_folds$year %in% 2013,],
+#           file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
+#           row.names = F)
 
 
 

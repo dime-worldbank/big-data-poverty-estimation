@@ -25,6 +25,8 @@ if_1000_make_0 <- function(x){
   return(x)
 }
 
+df$fb_estimate_mau_upper_bound_1[is.na(df$fb_estimate_mau_upper_bound_1)] <- 0
+
 df <- df %>%
   dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), if_1000_make_0)
 

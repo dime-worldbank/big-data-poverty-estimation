@@ -33,6 +33,10 @@ pred_df <- pred_df %>%
                                             estimation_type,
                                             target_var,
                                             feature_type,
+                                            ml_model_type,
+                                            glmnet_alpha,
+                                            svm_svr_eps, 
+                                            svm_cost,
                                             xg_max.depth,
                                             xg_eta,
                                             xg_nthread,
@@ -46,7 +50,7 @@ pred_long_df <- pred_df[pred_df$country_model_param %in% acc_df$country_model_pa
 
 # Dataset of best prediction for each country & target variable ----------------
 pred_long_df <- pred_long_df %>%
-  mutate(country_est_id = paste(pred_var, country_code))
+  mutate(country_est_id = paste(pred_var, country_code, country_model_param))
 
 cor_df <- pred_long_df %>%
   dplyr::filter(feature_type %in% "all") %>%
@@ -73,6 +77,9 @@ pred_wide_df <- pred_long_df %>%
               names_from = pred_var,
               values_from = prediction)
 
+# # predict_pca_allvars_mr_global_country_pred_all
+# a <- pred_long_df[pred_long_df$pred_var %in% "predict_pca_allvars_mr_global_country_pred_all",]
+
 # Merge back to survey ---------------------------------------------------------
 survey_df <- survey_df %>%
   left_join(pred_wide_best_df, by = "uid") %>%
@@ -81,17 +88,4 @@ survey_df <- survey_df %>%
 # Export -----------------------------------------------------------------------
 saveRDS(survey_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
-
-# a <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
-# 
-# b <- a %>%
-#   dplyr::filter(pca_allvars_mr_stddev < 1)
-# 
-# cor(b$pca_allvars_mr, b$predict_pca_allvars_mr_global_country_pred_all)^2
-# 
-# b %>%
-# ggplot() +
-#   geom_point(aes(x = pca_allvars_mr,
-#                  y = predict_pca_allvars_mr_global_country_pred_all),
-#              size = 0.1)
 

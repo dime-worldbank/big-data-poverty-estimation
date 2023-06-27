@@ -39,7 +39,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       dplyr::filter(!is.na(avg_rad)) %>%
       arrange(runif(n()))
     
-    if(SURVEY_NAME %in% c("DHS", "LAGOS_POINTS")){
+    if(SURVEY_NAME %in% c("DHS", "LAGOS_POINTS", "DHS_nga_policy_experiment", "DHS_policy_experiment")){
       years <- "all"
     } else if(SURVEY_NAME %in% "OPM"){
       years <- unique(survey_all_df$year)

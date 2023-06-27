@@ -7,6 +7,21 @@ acc_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results"
              full.names = T) %>%
   map_df(readRDS)
 
+# Adjust model params ----------------------------------------------------------
+acc_df$xg_max.depth[acc_df$ml_model_type %in% c("glmnet", "svm")]        <- NA
+acc_df$xg_eta[acc_df$ml_model_type %in% c("glmnet", "svm")]              <- NA
+acc_df$xg_nthread[acc_df$ml_model_type %in% c("glmnet", "svm")]          <- NA
+acc_df$xg_nrounds[acc_df$ml_model_type %in% c("glmnet", "svm")]          <- NA
+acc_df$xg_subsample[acc_df$ml_model_type %in% c("glmnet", "svm")]        <- NA
+acc_df$xg_objective[acc_df$ml_model_type %in% c("glmnet", "svm")]        <- NA
+acc_df$xg_min_child_weight[acc_df$ml_model_type %in% c("glmnet", "svm")] <- NA
+
+acc_df$svm_cost[acc_df$ml_model_type %in% c("glmnet", "xgboost")]        <- NA
+acc_df$svm_svr_eps[acc_df$ml_model_type %in% c("glmnet", "xgboost")]     <- NA
+
+acc_df$glmnet_alpha[acc_df$ml_model_type %in% c("svm", "xgboost")]       <- NA
+
+
 ## DELETE LATER
 # acc_levels_df <- acc_df %>%
 #   dplyr::filter(level_change %in% "levels",
@@ -96,6 +111,7 @@ acc_df <- acc_df %>%
     feature_type == "pollution_aod" ~ "Pollution",
     feature_type == "satellites_changes" ~ "Day/Night Satellites",
     feature_type == "s1_sar" ~ "SAR",
+    feature_type == "mosaik" ~ "MOSAIK",
     #feature_type == "" ~ "",
     TRUE ~ feature_type
   )) %>%
@@ -125,6 +141,9 @@ acc_all_df <- acc_df %>%
            estimation_type, estimation_type_clean,
            feature_type, feature_type_clean,
            target_var, target_var_clean, 
+           ml_model_type,
+           glmnet_alpha,
+           svm_svr_eps, svm_cost,
            xg_max.depth, xg_eta, xg_nthread, xg_nrounds, xg_subsample, xg_objective, xg_min_child_weight,
            country_predict_group, country) %>%
   dplyr::summarise(N = sum(N_fold),
@@ -145,20 +164,34 @@ acc_all_df <- acc_df %>%
 #   mutate(est_cat = "Best")
 
 acc_all_best_df <- acc_all_df %>%
+  ungroup() %>%
   group_by(country,
-           N,
+           #N,
+           level_change,
+           estimation_type, estimation_type_clean,
+           feature_type, feature_type_clean,
+           target_var, target_var_clean) %>%
+  slice_max(order_by = cor, n = 1, with_ties = F) %>%
+  ungroup()
+
+acc_all_best_across_est_type_df <- acc_all_best_df %>%
+  ungroup() %>%
+  group_by(country,
+           #N,
            level_change,
            feature_type, feature_type_clean,
            target_var, target_var_clean) %>%
-  slice_max(order_by = cor, n = 1) %>%
+  slice_max(order_by = cor, n = 1, with_ties = F) %>%
+  ungroup() %>%
   mutate(estimation_type_clean = "Using Best Training Sample\nType for Each Country",
          estimation_type = "best",
-         est_cat = "Best") #%>%
-#dplyr::rename(n = N) # TODO: Check n?
+         est_cat = "Best") 
+
+acc_all_best_df <- bind_rows(acc_all_best_df, acc_all_best_across_est_type_df)
 
 acc_all_df <- bind_rows(
   acc_all_df,
-  acc_all_best_df
+  acc_all_best_rn_df
 )
 
 # Merge with select survey/other variables -------------------------------------
@@ -191,7 +224,7 @@ survey_sum_df <- survey_df %>%
                    pca_allvars_mr_mean = mean(pca_allvars_mr),
                    
                    pca_allvars_mr_hh_stddev = mean(pca_allvars_mr_stddev),
-
+                   
                    ntlharmon_avg_sd = sd(ntlharmon_avg),
                    viirs_avg_rad_log_sd = sd(log(viirs_avg_rad+1)),
                    
@@ -233,9 +266,16 @@ otherdata_df <- otherdata_df %>%
 acc_all_df <- acc_all_df %>%
   left_join(otherdata_df, by = "country")
 
+acc_all_best_df <- acc_all_best_df %>%
+  left_join(otherdata_df, by = "country")
+
 # Add variable for parameter set -----------------------------------------------
 acc_all_df <- acc_all_df %>%
-  dplyr::mutate(xg_param_set = paste(xg_max.depth,
+  dplyr::mutate(xg_param_set = paste(ml_model_type,
+                                     glmnet_alpha,
+                                     svm_svr_eps, 
+                                     svm_cost,
+                                     xg_max.depth,
                                      xg_eta,
                                      xg_nthread,
                                      xg_nrounds,
@@ -249,6 +289,10 @@ acc_all_df <- acc_all_df %>%
                                     estimation_type,
                                     target_var,
                                     feature_type,
+                                    ml_model_type,
+                                    glmnet_alpha,
+                                    svm_svr_eps, 
+                                    svm_cost,
                                     xg_max.depth,
                                     xg_eta,
                                     xg_nthread,
@@ -263,6 +307,10 @@ acc_all_df <- acc_all_df %>%
                                             estimation_type,
                                             target_var,
                                             feature_type,
+                                            ml_model_type,
+                                            glmnet_alpha,
+                                            svm_svr_eps, 
+                                            svm_cost,
                                             xg_max.depth,
                                             xg_eta,
                                             xg_nthread,
@@ -272,11 +320,57 @@ acc_all_df <- acc_all_df %>%
                                             xg_min_child_weight,
                                             sep = "_")) 
 
-
-# acc_all_best_param_df <- acc_all_best_param_df %>%
-#   left_join(otherdata_df, by = "country")
-
 # Add model parameter variable -------------------------------------------------
+acc_all_best_df <- acc_all_best_df %>%
+  dplyr::mutate(xg_param_set = paste(ml_model_type,
+                                     glmnet_alpha,
+                                     svm_svr_eps, 
+                                     svm_cost,
+                                     xg_max.depth,
+                                     xg_eta,
+                                     xg_nthread,
+                                     xg_nrounds,
+                                     xg_subsample,
+                                     xg_objective,
+                                     xg_min_child_weight,sep = "_") %>%
+                  str_replace_all("[:punct:]", "_"))
+
+acc_all_best_df <- acc_all_best_df %>%
+  dplyr::mutate(model_param = paste(continent_adj,
+                                    estimation_type,
+                                    target_var,
+                                    feature_type,
+                                    ml_model_type,
+                                    glmnet_alpha,
+                                    svm_svr_eps, 
+                                    svm_cost,
+                                    xg_max.depth,
+                                    xg_eta,
+                                    xg_nthread,
+                                    xg_nrounds,
+                                    xg_subsample,
+                                    xg_objective,
+                                    xg_min_child_weight,
+                                    sep = "_")) 
+
+acc_all_best_df <- acc_all_best_df %>%
+  dplyr::mutate(country_model_param = paste(country,
+                                            estimation_type,
+                                            target_var,
+                                            feature_type,
+                                            ml_model_type,
+                                            glmnet_alpha,
+                                            svm_svr_eps, 
+                                            svm_cost,
+                                            xg_max.depth,
+                                            xg_eta,
+                                            xg_nthread,
+                                            xg_nrounds,
+                                            xg_subsample,
+                                            xg_objective,
+                                            xg_min_child_weight,
+                                            sep = "_")) 
+
 # acc_all_df <- acc_all_df %>%
 #   dplyr::mutate(model_param = paste(continent_adj,
 #                                     estimation_type,
@@ -308,14 +402,14 @@ acc_all_df <- acc_all_df %>%
 # Dataset using best parameters ------------------------------------------------
 # Test multiple parameters; here, only keep best set of parameters for each model
 # and country
-acc_all_best_param_df <- acc_all_df %>%
-  group_by(country, 
-           n,
-           level_change,
-           estimation_type, estimation_type_clean,
-           target_var, target_var_clean, 
-           feature_type, feature_type_clean) %>%
-  slice_max(order_by = r2, n = 1) 
+# acc_all_best_param_df <- acc_all_df %>%
+#   group_by(country, 
+#            n,
+#            level_change,
+#            estimation_type, estimation_type_clean,
+#            target_var, target_var_clean, 
+#            feature_type, feature_type_clean) %>%
+#   slice_max(order_by = r2, n = 1) 
 
 # Export data ------------------------------------------------------------------
 #### All data
@@ -324,7 +418,7 @@ saveRDS(acc_all_df,
                   "accuracy_appended.Rds"))
 
 #### Best params
-saveRDS(acc_all_best_param_df, 
+saveRDS(acc_all_best_df, 
         file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                   "accuracy_appended_bestparam.Rds"))
 

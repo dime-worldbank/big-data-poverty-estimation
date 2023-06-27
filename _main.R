@@ -102,6 +102,8 @@ for(survey_name_i in c("DHS", "DHS_all_policy_experiment",  "DHS_policy_experime
   file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "accuracy") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "grid_search") %>% dir.create()
   
+  file.path(data_dir, survey_name_i, "FinalData", "cnn_features", "split_into_data_subsets") %>% dir.create()
+  
   ### GOOGLE DRIVE
   file.path(gdrive_dir, "Data", survey_name_i) %>% dir.create()
   file.path(gdrive_dir, "Data", survey_name_i, "FinalData") %>% dir.create()

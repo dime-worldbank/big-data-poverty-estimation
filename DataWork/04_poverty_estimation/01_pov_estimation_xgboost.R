@@ -22,7 +22,7 @@ if(REPLACE_IF_EXTRACTED){
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
   
-  #files_to_rm <- files_to_rm %>% str_subset("svm")
+  files_to_rm <- files_to_rm %>% str_subset("levels_changevars_ng")
   
   for(file_i in files_to_rm){
     file.remove(file_i)
@@ -589,12 +589,11 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
     
     feature_types <- c("all_changes")
     
-    estimation_type_vec <- c("global_country_pred",
-                             "within_country_cv")
+    estimation_type_vec <- c("global_country_pred", "continent_africa_country_pred")
     
     target_vars_vec <- c("pca_allvars") 
     
-    countries_vec <- c("all", "NG") 
+    countries_vec <- c("NG") 
   }
   
   # Changes - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

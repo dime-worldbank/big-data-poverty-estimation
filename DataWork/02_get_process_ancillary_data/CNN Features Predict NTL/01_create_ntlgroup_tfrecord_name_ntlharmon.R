@@ -36,7 +36,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){ # , "s2"
       dplyr::filter(!is.na(ntlharmon_avg)) %>%
       dplyr::arrange(runif(n()))
     
-    if(SURVEY_NAME %in% c("DHS", "LAGOS_POINTS")){
+    if(SURVEY_NAME %in% c("DHS", "DHS_policy_experiment", "DHS_nga_policy_experiment", "LAGOS_POINTS")){
       years <- "all"
     } else if(SURVEY_NAME %in% "OPM"){
       years <- unique(survey_all_df$year)

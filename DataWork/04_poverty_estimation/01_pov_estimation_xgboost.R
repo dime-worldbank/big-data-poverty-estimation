@@ -22,7 +22,7 @@ if(REPLACE_IF_EXTRACTED){
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
   
-  files_to_rm <- files_to_rm %>% str_subset("levels")
+  #files_to_rm <- files_to_rm %>% str_subset("svm")
   
   for(file_i in files_to_rm){
     file.remove(file_i)
@@ -349,6 +349,16 @@ run_model_glmnet <- function(df,
     y_train <- df_train$target_var
     y_test  <- df_test$target_var
     
+    # Make complete
+    X_train_comp <- complete.cases(X_train)
+    X_test_comp <- complete.cases(X_test)
+    
+    X_train <- X_train[X_train_comp,]
+    y_train <- y_train[X_train_comp]
+    
+    X_test <- X_test[X_test_comp,]
+    y_test <- y_test[X_test_comp]
+    
     ## Run model
     cv_model <- cv.glmnet(X_train, y_train, 
                           alpha = glmnet_alpha, 
@@ -365,8 +375,8 @@ run_model_glmnet <- function(df,
     # Results dataset
     results_fold_df <- data.frame(truth = y_test,
                                   prediction = pred,
-                                  uid = df_test$uid,
-                                  country_code = df_test$country_code,
+                                  uid = df_test$uid[X_test_comp],
+                                  country_code = df_test$country_code[1],
                                   fold = fold_i,
                                   level_change = level_change,
                                   estimation_type = estimation_type_i,
@@ -417,7 +427,7 @@ run_model_svm <- function(df,
                           target_var_i,
                           country_i,
                           ml_model_type,
-                          svm_kernel,
+                          svm_svr_eps,
                           svm_cost){
   
   ## Set Target Var
@@ -444,20 +454,38 @@ run_model_svm <- function(df,
     y_train <- df_train$target_var
     y_test  <- df_test$target_var
     
+    # Make complete
+    X_train_comp <- complete.cases(X_train)
+    X_test_comp <- complete.cases(X_test)
+    
+    X_train <- X_train[X_train_comp,]
+    y_train <- y_train[X_train_comp]
+    
+    X_test <- X_test[X_test_comp,]
+    y_test <- y_test[X_test_comp]
+    
     ## Run model
-    svm_model = svm(y_train ~ X_train, 
-                    kernel = svm_kernel, 
-                    cost = svm_cost, 
-                    scale = TRUE)
+    svm_model <- LiblineaR(data = X_train, 
+                           target = y_train, 
+                           C = svm_cost,
+                           svr_eps = svm_svr_eps,
+                           type = 11)
+    # 
+    # svm_model = svm(y_train ~ X_train, 
+    #                 kernel = svm_kernel, 
+    #                 cost = svm_cost, 
+    #                 scale = TRUE)
     
     # Predictions
-    pred <- predict(svm_model, X_test) %>% as.numeric()
+    #pred <- predict(svm_model, X_test) %>% as.numeric()
+    pred <- predict(svm_model, X_test)$predictions
+    saveRDS(svm_model, MODEL_OUT)
     
     # Results dataset
     results_fold_df <- data.frame(truth = y_test,
                                   prediction = pred,
-                                  uid = df_test$uid,
-                                  country_code = df_test$country_code,
+                                  uid = df_test$uid[X_test_comp],
+                                  country_code = df_test$country_code[1],
                                   fold = fold_i,
                                   level_change = level_change,
                                   estimation_type = estimation_type_i,
@@ -465,7 +493,7 @@ run_model_svm <- function(df,
                                   target_var = target_var_i,
                                   country_group = country_i,
                                   ml_model_type = ml_model_type,
-                                  svm_kernel = svm_kernel,
+                                  svm_svr_eps = svm_svr_eps,
                                   svm_cost = svm_cost)
     
     return(list(results_fold_df = results_fold_df))
@@ -478,10 +506,10 @@ run_model_svm <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("levels", "changes")){ # "changes", "levels"
+for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes", "levels"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  if(level_change %in% c("levels", "changes")){
+  if(level_change %in% c("levels")){
     
     #### Load data
     df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
@@ -515,8 +543,8 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
                        #feature_types_all_but_indiv,
                        "all")
     
-    estimation_type_vec <- c("within_country_cv",
-                             "global_country_pred",
+    estimation_type_vec <- c("global_country_pred",
+                             "within_country_cv",
                              "continent_africa_country_pred",
                              "continent_americas_country_pred",
                              "continent_eurasia_country_pred", 
@@ -526,6 +554,47 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
     target_vars_vec <- c("pca_allvars_mr") 
     
     countries_vec <- c("all", unique(df$country_code)) 
+  }
+  
+  # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  if(level_change %in% c("levels_changevars_ng")){
+    
+    #### Load data
+    df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
+                            "survey_alldata_clean.Rds"))
+    
+    df <- df %>%
+      dplyr::filter(most_recent_survey %in% T)
+    
+    # #### Define parameters
+    # feature_types_indiv <- c("viirs",
+    #                          "cnn_viirs_s2_rgb", 
+    #                          "cnn_viirs_s2_ndvi", 
+    #                          "cnn_viirs_s2_bu", 
+    #                          "cnn_viirs_s2",
+    #                          "l7",
+    #                          "fb",
+    #                          "osm",
+    #                          "pollution",
+    #                          "s1_sar",
+    #                          "mosaik",
+    #                          
+    #                          # Groupings
+    #                          "landcover",
+    #                          "weatherclimate",
+    #                          "satellites") 
+    # 
+    # feature_types_all_but_indiv <- paste0("all_not_", 
+    #                                       c(feature_types_indiv, "viirs")) 
+    
+    feature_types <- c("all_changes")
+    
+    estimation_type_vec <- c("global_country_pred",
+                             "within_country_cv")
+    
+    target_vars_vec <- c("pca_allvars") 
+    
+    countries_vec <- c("all", "NG") 
   }
   
   # Changes - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -568,26 +637,26 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
     countries_vec <- c("all", unique(df$country_code)) 
   } 
   
-  for(estimation_type_i in estimation_type_vec){
+  for(estimation_type_i in rev(estimation_type_vec)){
     for(target_var_i in target_vars_vec){
-      for(feature_type_i in feature_types){
+      for(feature_type_i in rev(feature_types)){
         for(country_i in countries_vec){
           
           ## XG Boost Parameters
-          if(level_change == "levels"){
-            xg_max.depth_params <- c(2, 5) 
-            xg_eta_params <- c(0.3)
-            xg_nrounds_params <- c(50)
-            xg_subsample_params <- c(0.3)
-            xg_objective_params <- c("reg:squarederror")
-            xg_min_child_weight_params <- c(1)
-            
-            # xg_max.depth_params <- c(2, 5, 6, 10) %>% rev()
-            # xg_eta_params <- c(0.3) %>% rev()
-            # xg_nrounds_params <- c(50) %>% rev()
-            # xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+          if(level_change %in% c("levels", "levels_changevars_ng")){
+            # xg_max.depth_params <- c(2, 5, 10) 
+            # xg_eta_params <- c(0.3)
+            # xg_nrounds_params <- c(50)
+            # xg_subsample_params <- c(0.3)
             # xg_objective_params <- c("reg:squarederror")
             # xg_min_child_weight_params <- c(1)
+            
+            xg_max.depth_params <- c(2, 5, 6, 10) 
+            xg_eta_params <- c(0.3) 
+            xg_nrounds_params <- c(50) 
+            xg_subsample_params <- c(0.3, 0.6, 1) 
+            xg_objective_params <- c("reg:squarederror")
+            xg_min_child_weight_params <- c(1)
             
             # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
             # xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
@@ -598,17 +667,24 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
           }
           
           if(level_change == "changes"){
-            xg_max.depth_params <- c(2, 5) 
-            xg_eta_params <- c(0.3)
-            xg_nrounds_params <- c(50)
-            xg_subsample_params <- c(0.3)
+            # xg_max.depth_params <- c(2, 5) 
+            # xg_eta_params <- c(0.3)
+            # xg_nrounds_params <- c(50)
+            # xg_subsample_params <- c(0.3)
+            # xg_objective_params <- c("reg:squarederror")
+            # xg_min_child_weight_params <- c(1)
+            
+            xg_max.depth_params <- c(2, 5, 6, 10)
+            xg_eta_params <- c(0.3) 
+            xg_nrounds_params <- c(50) 
+            xg_subsample_params <- c(0.3, 0.6, 1) 
             xg_objective_params <- c("reg:squarederror")
             xg_min_child_weight_params <- c(1)
             
-            # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
-            # xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
-            # xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
-            # xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
+            # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) 
+            # xg_eta_params <- c(0.3, 0.6, 0.9) 
+            # xg_nrounds_params <- c(50, 100, 200, 300) 
+            # xg_subsample_params <- c(0.3, 0.6, 1) 
             # xg_objective_params <- c("reg:squarederror")
             # xg_min_child_weight_params <- c(1)
           }
@@ -654,7 +730,7 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
           }
           
           # Loop through XG boost ----------------------------------------------
-          for(ml_model_type in c("glmnet", "xgboost")){ # "glmnet", "xgboost"
+          for(ml_model_type in c("svm", "xgboost", "glmnet")){ # "glmnet", "xgboost"
             
             ## xgboost parameter
             for(xg_max.depth in xg_max.depth_params){ # 2,5,6,10
@@ -669,8 +745,8 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
                           for(glmnet_alpha in c(0, 1)){
                             
                             ## svm paremeters
-                            for(svm_kernel in c("linear")){
-                              for(svm_cost in c(1)){
+                            for(svm_svr_eps in c(0.1)){
+                              for(svm_cost in c(1, 5, 10)){
                                 
                                 # Define Out Paths -----------------------------------------------------
                                 if(ml_model_type == "xgboost"){
@@ -709,7 +785,7 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
                                                              target_var_i,"_",
                                                              feature_type_i, "_",
                                                              ml_model_type, "_",
-                                                             svm_kernel, "_",
+                                                             svm_svr_eps %>% str_replace_all("[:punct:]", "_"), "_",
                                                              svm_cost,
                                                              ".Rds")
                                 }
@@ -829,7 +905,7 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
                                                                      target_var_i = target_var_i,
                                                                      country_i = country_i,
                                                                      ml_model_type = ml_model_type,
-                                                                     svm_kernel = svm_kernel,
+                                                                     svm_svr_eps = svm_svr_eps,
                                                                      svm_cost = svm_cost)
                                     
                                     results_df_i <- xg_results_list$results_df
@@ -875,6 +951,8 @@ for(level_change in c("levels", "changes")){ # "changes", "levels"
                                                   xg_objective = xg_objective,
                                                   xg_min_child_weight = xg_min_child_weight,
                                                   glmnet_alpha = glmnet_alpha,
+                                                  svm_svr_eps,
+                                                  svm_cost,
                                                   n = nrow(df_traintest))
                                   
                                   # Export Results -----------------------------------------------------

@@ -3,7 +3,10 @@
 # DHS
 # PAK_POINTS
 # PAK_CITY_POINTS
-SURVEY_NAME <- "DHS"
+# DHS_policy_experiment
+# DHS_all_policy_experiment
+# DHS
+SURVEY_NAME <- "DHS_nga_policy_experiment"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -39,6 +42,8 @@ opm_dir          <- file.path(data_dir, "OPM")
 osm_dir          <- file.path(data_dir, "OSM")
 dhs_dir          <- file.path(data_dir, "DHS")
 dhs_exp_dir      <- file.path(data_dir, "DHS_policy_experiment")
+dhs_nga_exp_dir  <- file.path(data_dir, "DHS_nga_policy_experiment")
+dhs_all_exp_dir  <- file.path(data_dir, "DHS_all_policy_experiment")
 gadm_dir         <- file.path(data_dir, "GADM")
 ntl_harmon_dir   <- file.path(data_dir, "DMSPOLS_VIIRS_Harmonized")
 ntl_bm_dir       <- file.path(data_dir, "NTL Black Marble")
@@ -66,7 +71,7 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 # Create Directory Structure for Survey Data -----------------------------------
 survey_name_i <- "DHS"
 
-for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS", "LAGOS_POINTS")){
+for(survey_name_i in c("DHS", "DHS_all_policy_experiment",  "DHS_policy_experiment", "DHS_nga_policy_experiment", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS", "LAGOS_POINTS")){
   
   ### DROPBOX
   file.path(data_dir, survey_name_i) %>% dir.create()
@@ -85,7 +90,8 @@ for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "worldclim") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "cnn_features") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "ntl_harmonized") %>% dir.create()
-
+  file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "blackmarble") %>% dir.create()
+  
   # FinalData/Individual Datasets/osm
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "poi") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "roads_density") %>% dir.create()
@@ -106,6 +112,8 @@ for(survey_name_i in c("DHS", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_
   file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "cnn_predictions") %>% dir.create()
   file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "Individual Datasets") %>% dir.create()
   
+  file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "cnn_features", "split_into_data_subsets") %>% dir.create()
+  
   # FinalData/Individual Datasets/
   file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "Individual Datasets", 
             paste0("satellite_data_from_gee_", tolower(survey_name_i))) %>% dir.create()
@@ -119,7 +127,7 @@ PAK_UTM_PROJ <- "+init=epsg:24313"
 PK_UTM_PROJ <- PAK_UTM_PROJ
 
 #### Buffers
-if(SURVEY_NAME %in% "DHS"){
+if(SURVEY_NAME %>% str_detect("DHS")){
   BUFFER_OSM       <- 5000
   BUFFER_SATELLITE <- 2500
 } 
@@ -213,8 +221,8 @@ library(scales)
 library(ggExtra)
 library(gghalves)
 library(exactextractr)
-library(e1071)
 library(ggsignif)
+library(LiblineaR)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/download_blackmarble/main/R/download_blackmarble.R")
@@ -379,7 +387,7 @@ if(F){
   
   # ** 2.1 Sentinel 5P Pollution -----------------------------------------------
   # Extracts Sentinel 5P Data
-
+  
   source(file.path(anc_s5p_dir, "extract_s5p.R"))
   
   # ** 2.1 DMSP -----------------------------------------------

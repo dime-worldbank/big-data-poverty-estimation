@@ -4,7 +4,7 @@
 set.seed(42)
 
 # Load data --------------------------------------------------------------------
-dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", 
+dhs_all_df <- readRDS(file.path(dhs_all_exp_dir, "FinalData", "Individual Datasets", 
                                 "survey_socioeconomic_hhlevel.Rds"))
 
 # Subset data ------------------------------------------------------------------
@@ -23,9 +23,9 @@ dhs_all_df <- dhs_all_df %>%
                 oldest_survey = survey_year_min == year) %>%
   dplyr::select(-c(survey_year_min, survey_year_max))
 
-## Subset to recent + oldest survey
-dhs_all_df <- dhs_all_df %>%
-  dplyr::filter(most_recent_survey | oldest_survey)
+# ## Subset to recent + oldest survey
+# dhs_all_df <- dhs_all_df %>%
+#   dplyr::filter(most_recent_survey | oldest_survey)
 
 # Cleanup wealth index ---------------------------------------------------------
 dhs_all_df <- dhs_all_df %>%
@@ -424,7 +424,7 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
   dplyr::mutate(uid = uid %>% as.character())
 
 # Export -----------------------------------------------------------------------
-saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", 
+saveRDS(dhs_all_df_coll, file.path(dhs_all_exp_dir, "FinalData", "Individual Datasets", 
                                    "survey_socioeconomic_varconstructed_tmp.Rds"))
 
 

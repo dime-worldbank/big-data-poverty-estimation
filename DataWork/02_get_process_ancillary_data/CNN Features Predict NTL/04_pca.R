@@ -1,7 +1,7 @@
 # PCA on CNN Features
 
-DTL_SATELLITE <- "s2"
-SATELLITE <- 'viirs'
+DTL_SATELLITE <- "landsat"
+SATELLITE <- 'ntlharmon'
 UNDER_IA <- "True"
 BANDS <- "rgb"
 
@@ -18,6 +18,9 @@ for(DTL_SATELLITE in c("landsat", "s2")){
         
         if((DTL_SATELLITE == "landsat") & (SATELLITE == "viirs"))     next
         if((DTL_SATELLITE == "s2")      & (SATELLITE == "ntlharmon")) next
+        
+        if((SURVEY_NAME %in% "DHS_policy_experiment") & (DTL_SATELLITE == "s2")) next
+        if((SURVEY_NAME %in% "DHS_policy_experiment") & (DTL_SATELLITE == "viirs")) next
         
         # Load data --------------------------------------------------------------------
         cnn_features_df <- file.path(data_dir,

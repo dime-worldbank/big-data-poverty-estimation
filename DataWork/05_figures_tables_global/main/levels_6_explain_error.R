@@ -4,14 +4,12 @@
 level_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
                               "survey_alldata_clean_predictions.Rds"))
 
-changes_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
-                                "survey_alldata_clean_changes_cluster_predictions.Rds"))
-
 wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 
 y_max <- 10
 bb_step <- 0.22
-in_plot_txt_size <- 4
+in_plot_txt_size <- 3
+in_plot_text_color <- "red"
 
 # Prep data --------------------------------------------------------------------
 #### WDI
@@ -31,33 +29,8 @@ level_df <- level_df %>%
     urban_rural == "R" ~ "Rural"
   ) %>% as.factor())
 
-#### Changes
-changes_df <- changes_df %>%
-  left_join(wdi_df, by = "iso2") %>%
-  mutate(error = abs(pca_allvars - predict_pca_allvars_best),
-         error_log = log(error+1),
-         error_a2 = error >= 2) %>%
-  mutate(urban_rural_yr1 = case_when(
-    urban_rural_yr1 == "U" ~ "Urban",
-    urban_rural_yr1 == "R" ~ "Rural"
-  ) %>% as.factor()) %>%
-  mutate(urban_rural_yr2 = case_when(
-    urban_rural_yr2 == "U" ~ "Urban",
-    urban_rural_yr2 == "R" ~ "Rural"
-  ) %>% as.factor())
+# Figures ----------------------------------------------------------------------
 
-# Levels -----------------------------------------------------------------------
-
-#### Regression
-lm(error ~ pca_allvars_mr + 
-     urban_rural + 
-     viirs_avg_rad +
-     wdi_gdp_pc + 
-     factor(wdi_income),
-   data = level_df) %>%
-  summary()
-
-#### Figures
 p_viirs <- level_df %>%
   ggplot(aes(x = viirs_avg_rad,
              y = error)) +
@@ -66,7 +39,7 @@ p_viirs <- level_df %>%
   stat_cor(aes(label = paste(gsub("R", "r", ..rr.label..), ..p.label.., sep = "*`,`~")),
            label.x.npc = "left",
            size = in_plot_txt_size,
-           color = "firebrick3") +
+           color = in_plot_text_color) +
   geom_smooth(method = lm, se = F, color = "darkorange", size = 0.5) +
   labs(x = "Average Nighttime Lights",
        y = "Error",
@@ -85,9 +58,10 @@ p_ur <- level_df %>%
                outlier.size = 0.2) +
   geom_text(data = med_df,
             aes(urban_rural, error, label = error),
-            color = "firebrick3",
+            color = in_plot_text_color,
             position = position_dodge(width = 0.8), size = in_plot_txt_size, vjust = -0.2) +
   geom_signif(comparisons = list(c("Urban", "Rural")), 
+              textsize = 3,
               map_signif_level=TRUE) +
   labs(x = NULL,
        y = "Error",
@@ -101,18 +75,13 @@ med_df <- level_df %>%
   summarise(error = median(error) %>% round(2))
 
 p_income <- level_df %>%
-  # mutate(wdi_income = case_when(
-  #   wdi_income == "Low income" ~ "Low\nincome",
-  #   wdi_income == "Lower middle income" ~ "Lower middle\nincome",
-  #   wdi_income == "Upper middle income" ~ "Upper middle\nincome"
-  # ))
   ggplot(aes(x = wdi_income,
              y = error)) +
   geom_boxplot(size = 0.2,
                outlier.size = 0.2) +
   geom_text(data = med_df,
             aes(wdi_income, error, label = error),
-            color = "firebrick3",
+            color = in_plot_text_color,
             position = position_dodge(width = 0.8), size = in_plot_txt_size, vjust = -0.2) +
   geom_signif(comparisons = list(c("Low income", 
                                    "Lower middle income"),
@@ -121,10 +90,11 @@ p_income <- level_df %>%
                                  c("Lower middle income", 
                                    "Upper middle income")), 
               map_signif_level=T,
+              textsize = 3,
               step_increase = bb_step) +
   labs(x = NULL,
        y = "Error",
-       title = "Model Error vs Urban or Rural") +
+       title = "Model Error vs Country Income Level") +
   theme_classic() +
   scale_y_continuous(limits = c(0, y_max))
 
@@ -140,7 +110,7 @@ p_continent <- level_df %>%
                outlier.size = 0.2) +
   geom_text(data = med_df,
             aes(continent_adj, error, label = error),
-            color = "firebrick3",
+            color = in_plot_text_color,
             position = position_dodge(width = 0.8), size = in_plot_txt_size, vjust = -0.2) +
   geom_signif(comparisons = list(c("Africa", 
                                    "Americas"),
@@ -149,14 +119,13 @@ p_continent <- level_df %>%
                                  c("Americas", 
                                    "Eurasia")), 
               map_signif_level=T,
+              textsize = 3,
               step_increase = bb_step) +
   labs(x = NULL,
        y = "Error",
        title = "Model Error vs Continent") +
   theme_classic() +
   scale_y_continuous(limits = c(0, y_max))
-
-
 
 # Arrange ----------------------------------------------------------------------
 fig_theme <- theme(plot.title = element_text(face = "bold", size = 9),
@@ -173,10 +142,11 @@ p_income    <- p_income + fig_theme
 
 p <- ggarrange(p_viirs, p_ur,
                p_continent, p_income)
-ggsave(p, filename = "~/Desktop/test.png",
-       height = 4, width = 8)
 
-
+ggsave(p,
+       filename = file.path(figures_global_dir, "explain_error_levels.png"),
+       height = 4,
+       width = 8)
 
 
 

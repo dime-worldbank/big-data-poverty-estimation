@@ -4,7 +4,7 @@
 set.seed(42)
 
 # Load data --------------------------------------------------------------------
-dhs_all_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", 
+dhs_all_df <- readRDS(file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", 
                                 "survey_socioeconomic_hhlevel.Rds"))
 
 # Subset data ------------------------------------------------------------------
@@ -22,27 +22,16 @@ dhs_all_df <- dhs_all_df %>%
   dplyr::mutate(most_recent_survey = survey_year_max == year,
                 oldest_survey = survey_year_min == year) %>%
   dplyr::select(-c(survey_year_min, survey_year_max))
-
-## Subset to recent + oldest survey
-dhs_all_df <- dhs_all_df %>%
-  dplyr::filter(most_recent_survey | oldest_survey)
+# 
+# ## Subset to recent + oldest survey
+# dhs_all_df <- dhs_all_df %>%
+#   dplyr::filter(most_recent_survey | oldest_survey)
 
 # Cleanup wealth index ---------------------------------------------------------
 dhs_all_df <- dhs_all_df %>%
   
   # Wealth Index Category
-  dplyr::mutate(wealth_index = wealth_index %>% as.numeric(),
-                wlthind5 = wlthind5 %>% as.numeric()) %>%
-  dplyr::mutate(wealth_index = case_when(
-    is.na(wealth_index) ~ wlthind5,
-    TRUE ~ wealth_index
-  )) %>%
-  
-  # Wealth Index Score
-  dplyr::mutate(wealth_index_score = case_when(
-    is.na(wealth_index_score) ~ wlthindf,
-    TRUE ~ wealth_index_score
-  )) %>%
+  dplyr::mutate(wealth_index = wealth_index %>% as.numeric()) %>%
   
   # Standardize Wealth Score
   # Some countries had wealth score scaled differently; rescale so that, for all
@@ -266,10 +255,7 @@ pca_nonphysicalvars <- c("has_tv",
 # Compute PCAs -----------------------------------------------------------------
 dhs_all_df$ind_id <- 1:nrow(dhs_all_df)
 
-compute_pca_impute_missing <- function(pca_vars, 
-                                       dhs_all_df,
-                                       save_model = F,
-                                       model_path = NULL){
+compute_pca_impute_missing <- function(pca_vars, dhs_all_df){
   
   pca_df <- dhs_all_df %>%
     dplyr::select(all_of(pca_vars)) %>%
@@ -289,10 +275,6 @@ compute_pca_impute_missing <- function(pca_vars,
   res.imp <- imputePCA(pca_df, ncp = ncomp$ncp)
   res.pca <- prcomp(res.imp$completeObs, scale = T)
   out <- res.pca$x[,1]*(-1)
-  
-  if(save_model){
-    saveRDS(res.pca, model_path)
-  }
   
   return(out)
 }
@@ -335,36 +317,53 @@ compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
 
 #### PCA - Imputing Missing NAs
 # Subset to most recent
-dhs_all_df_mr <- dhs_all_df %>%
-  dplyr::filter(most_recent_survey %in% T)
+if(T){
+  dhs_all_df_mr <- dhs_all_df %>%
+    dplyr::filter(most_recent_survey %in% T)
+  
+  # Compute PCA
+  dhs_all_df_mr$pca_allvars_mr             <- compute_pca_impute_missing(pca_allvars, dhs_all_df_mr)
+  dhs_all_df_mr$pca_allvars_noroof_mr      <- compute_pca_impute_missing(pca_allvars_noroof, dhs_all_df_mr)
+  dhs_all_df_mr$pca_physicalvars_mr        <- compute_pca_impute_missing(pca_physicalvars, dhs_all_df_mr)
+  dhs_all_df_mr$pca_physicalvars_noroof_mr <- compute_pca_impute_missing(pca_physicalvars_noroof, dhs_all_df_mr)
+  dhs_all_df_mr$pca_nonphysicalvars_mr     <- compute_pca_impute_missing(pca_nonphysicalvars, dhs_all_df_mr)
+  
+  # Merge PCA variables back into main survey
+  dhs_all_df_mr <- dhs_all_df_mr %>%
+    dplyr::select(ind_id,
+                  pca_allvars_mr,
+                  pca_allvars_noroof_mr,
+                  pca_physicalvars_mr,
+                  pca_physicalvars_noroof_mr,
+                  pca_nonphysicalvars_mr)
+  
+  dhs_all_df <- dhs_all_df %>%
+    left_join(dhs_all_df_mr, by = "ind_id")
+  
+  #### All Data
+  dhs_all_df$pca_allvars <- compute_pca_impute_missing(pca_allvars_alltime, dhs_all_df)
+}
 
-# Compute PCA
-dhs_all_df_mr$pca_allvars_mr             <- compute_pca_impute_missing(pca_allvars, dhs_all_df_mr)
-dhs_all_df_mr$pca_allvars_noroof_mr      <- compute_pca_impute_missing(pca_allvars_noroof, dhs_all_df_mr)
-dhs_all_df_mr$pca_physicalvars_mr        <- compute_pca_impute_missing(pca_physicalvars, dhs_all_df_mr)
-dhs_all_df_mr$pca_physicalvars_noroof_mr <- compute_pca_impute_missing(pca_physicalvars_noroof, dhs_all_df_mr)
-dhs_all_df_mr$pca_nonphysicalvars_mr     <- compute_pca_impute_missing(pca_nonphysicalvars, dhs_all_df_mr)
-
-# Merge PCA variables back into main survey
-dhs_all_df_mr <- dhs_all_df_mr %>%
-  dplyr::select(ind_id,
-                pca_allvars_mr,
-                pca_allvars_noroof_mr,
-                pca_physicalvars_mr,
-                pca_physicalvars_noroof_mr,
-                pca_nonphysicalvars_mr)
-
-dhs_all_df <- dhs_all_df %>%
-  left_join(dhs_all_df_mr, by = "ind_id")
-
-#### All Data
-dhs_all_df$pca_allvars <- compute_pca_impute_missing(pca_allvars_alltime, 
-                                                     dhs_all_df,
-                                                     save_model = T,
-                                                     model_path = file.path(dhs_dir,
-                                                                            "FinalData",
-                                                                            "wealth_index_pca_model",
-                                                                            "pca_allvars_alltime.Rds"))
+# pca_model <- readRDS(file.path(dhs_dir, "FinalData", "wealth_index_pca_model", "pca_allvars_alltime.Rds"))
+# 
+# pca_allvars_alltime <- c("has_electricity",
+#                          "has_radio",
+#                          "has_tv",
+#                          "has_fridge",
+#                          "has_motorbike", # a lot missing
+#                          "has_car", # a lot missing
+#                          "floor_material_cat",
+#                          "water_source_piped_dwelling",
+#                          "educ_years_hh_max_scale",
+#                          "flush_toilet_sewer")
+# 
+# pca_df <- dhs_all_df %>%
+#   dplyr::select(all_of(pca_allvars_alltime)) %>%
+#   mutate_all(as.numeric) %>%
+#   mutate_all(. %>% scales::rescale(to = c(0,1)))
+# 
+# res.pca <- predict(pca_model, dhs_all_df)
+# dhs_all_df$pca_allvars <- res.pca[,1]*(-1)
 
 # Construct additional variables -----------------------------------------------
 dhs_all_df <- dhs_all_df %>%
@@ -403,7 +402,7 @@ dhs_all_df_coll_sum <- dhs_all_df %>%
 ## Standard Deviation
 dhs_all_df_coll_stddev <- dhs_all_df %>%
   group_by(uid) %>%
-  summarise_at(vars(pca_allvars, pca_allvars_mr), sd, na.rm=T) %>%
+  summarise_at(vars(pca_allvars), sd, na.rm=T) %>%
   ungroup() %>%
   rename_with(~paste0(., "_stddev"), -c("uid"))
 
@@ -424,7 +423,7 @@ dhs_all_df_coll <- dhs_all_df_coll %>%
   dplyr::mutate(uid = uid %>% as.character())
 
 # Export -----------------------------------------------------------------------
-saveRDS(dhs_all_df_coll, file.path(dhs_dir, "FinalData", "Individual Datasets", 
+saveRDS(dhs_all_df_coll, file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", 
                                    "survey_socioeconomic_varconstructed_tmp.Rds"))
 
 

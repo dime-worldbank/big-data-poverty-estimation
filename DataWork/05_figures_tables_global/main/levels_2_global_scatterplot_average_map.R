@@ -86,6 +86,10 @@ for(aggregate_district in c(F, T)){
   # Aggregate --------------------------------------------------------------------
   if(aggregate_district){
     survey_df <- survey_df %>%
+      
+      dplyr::filter(!is.na(predict_pca_allvars_mr_best)) %>%
+      dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+      
       dplyr::mutate(gadm_uid = paste(gadm_uid, country_code)) %>%
       group_by(gadm_uid, country_code, country_name, continent_adj) %>%
       dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
@@ -158,6 +162,8 @@ for(aggregate_district in c(F, T)){
       scale_y_continuous(limits = c(min(values), max(values)))
     
   } else{
+    pred_global_df <- pred_global_df[!is.na(pred_global_df$prediction),]
+    
     pred_df_u <- pred_global_df[pred_global_df$urban_rural %in% "U",]
     pred_df_r <- pred_global_df[pred_global_df$urban_rural %in% "R",]
     

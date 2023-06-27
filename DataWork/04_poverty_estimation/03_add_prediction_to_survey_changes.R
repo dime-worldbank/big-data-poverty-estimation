@@ -41,6 +41,10 @@ pred_df <- pred_df %>%
                                             estimation_type,
                                             target_var,
                                             feature_type,
+                                            ml_model_type,
+                                            glmnet_alpha,
+                                            svm_svr_eps, 
+                                            svm_cost,
                                             xg_max.depth,
                                             xg_eta,
                                             xg_nthread,
@@ -86,6 +90,7 @@ pred_wide_df <- pred_long_df %>%
               names_from = pred_var,
               values_from = prediction)
 
+
 # Merge back to survey ---------------------------------------------------------
 survey_df <- survey_df %>%
   left_join(pred_wide_best_df, by = "uid") %>%
@@ -115,3 +120,4 @@ survey_df$predict_pca_allvars_best[survey_df$country_code %in% "TL"] <-
 
 saveRDS(survey_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
+

@@ -506,7 +506,7 @@ run_model_svm <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes", "levels"
+for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels", "changes", "levels_changevars_ng"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% c("levels")){
@@ -549,7 +549,6 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
                              "continent_americas_country_pred",
                              "continent_eurasia_country_pred", 
                              "continent") # "continent" means "other continents"
-    
     
     target_vars_vec <- c("pca_allvars_mr") 
     
@@ -636,13 +635,29 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
     countries_vec <- c("all", unique(df$country_code)) 
   } 
   
-  for(estimation_type_i in rev(estimation_type_vec)){
+  for(estimation_type_i in estimation_type_vec){
     for(target_var_i in target_vars_vec){
-      for(feature_type_i in rev(feature_types)){
+      for(feature_type_i in feature_types){
         for(country_i in countries_vec){
           
           ## XG Boost Parameters
           if(level_change %in% c("levels", "levels_changevars_ng")){
+            
+            # xgboost defauls
+            xg_max.depth_params <- 6
+            xg_eta_params <- 0.3
+            xg_nrounds_params <- 50
+            xg_subsample_params <- 1 
+            xg_objective_params <- c("reg:squarederror")
+            xg_min_child_weight_params <- 1
+            
+            # xg_max.depth_params <- c(2, 5, 6, 10) 
+            # xg_eta_params <- c(0.3) 
+            # xg_nrounds_params <- c(50) 
+            # xg_subsample_params <- c(0.3, 0.6, 1) 
+            # xg_objective_params <- c("reg:squarederror")
+            # xg_min_child_weight_params <- c(1)
+            
             # xg_max.depth_params <- c(2, 5, 10) 
             # xg_eta_params <- c(0.3)
             # xg_nrounds_params <- c(50)
@@ -650,12 +665,7 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
             # xg_objective_params <- c("reg:squarederror")
             # xg_min_child_weight_params <- c(1)
             
-            xg_max.depth_params <- c(2, 5, 6, 10) 
-            xg_eta_params <- c(0.3) 
-            xg_nrounds_params <- c(50) 
-            xg_subsample_params <- c(0.3, 0.6, 1) 
-            xg_objective_params <- c("reg:squarederror")
-            xg_min_child_weight_params <- c(1)
+            
             
             # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
             # xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
@@ -666,6 +676,22 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
           }
           
           if(level_change == "changes"){
+            
+            # xgboost defauls
+            xg_max.depth_params <- 6
+            xg_eta_params <- 0.3
+            xg_nrounds_params <- 50
+            xg_subsample_params <- 1 
+            xg_objective_params <- c("reg:squarederror")
+            xg_min_child_weight_params <- 1
+            
+            # xg_max.depth_params <- c(2, 5, 6, 10)
+            # xg_eta_params <- c(0.3) 
+            # xg_nrounds_params <- c(50) 
+            # xg_subsample_params <- c(0.3, 0.6, 1) 
+            # xg_objective_params <- c("reg:squarederror")
+            # xg_min_child_weight_params <- c(1)
+            
             # xg_max.depth_params <- c(2, 5) 
             # xg_eta_params <- c(0.3)
             # xg_nrounds_params <- c(50)
@@ -673,12 +699,7 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
             # xg_objective_params <- c("reg:squarederror")
             # xg_min_child_weight_params <- c(1)
             
-            xg_max.depth_params <- c(2, 5, 6, 10)
-            xg_eta_params <- c(0.3) 
-            xg_nrounds_params <- c(50) 
-            xg_subsample_params <- c(0.3, 0.6, 1) 
-            xg_objective_params <- c("reg:squarederror")
-            xg_min_child_weight_params <- c(1)
+            
             
             # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) 
             # xg_eta_params <- c(0.3, 0.6, 0.9) 
@@ -745,7 +766,7 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "changes"
                             
                             ## svm paremeters
                             for(svm_svr_eps in c(0.1)){
-                              for(svm_cost in c(1, 5, 10)){
+                              for(svm_cost in c(10)){
                                 
                                 # Define Out Paths -----------------------------------------------------
                                 if(ml_model_type == "xgboost"){

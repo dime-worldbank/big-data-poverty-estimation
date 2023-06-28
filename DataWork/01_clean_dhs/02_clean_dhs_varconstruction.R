@@ -172,7 +172,7 @@ pca_allvars <- c("has_electricity",
                  "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 "educ_years_hh_max_scale",
+                 #"educ_years_hh_max_scale",
                  "n_sleeping_rooms_pp_cat")
 
 # dhs_all_df %>%
@@ -213,7 +213,7 @@ pca_allvars_alltime <- c("has_electricity",
                          "has_car", # a lot missing
                          "floor_material_cat",
                          "water_source_piped_dwelling",
-                         "educ_years_hh_max_scale",
+                        # "educ_years_hh_max_scale",
                          "flush_toilet_sewer")
 
 # Version without roof_material due to high number of missing values
@@ -228,7 +228,7 @@ pca_allvars <- c("has_electricity",
                  "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 "educ_years_hh_max_scale",
+                 #"educ_years_hh_max_scale",
                  "n_sleeping_rooms_pp_cat")
 
 pca_allvars_noroof <- c("has_electricity",
@@ -241,7 +241,7 @@ pca_allvars_noroof <- c("has_electricity",
                         "water_time_to_get_cat",
                         "water_source_piped_dwelling",
                         "flush_toilet_sewer",
-                        "educ_years_hh_max_scale",
+                        #"educ_years_hh_max_scale",
                         "n_sleeping_rooms_pp_cat")
 
 pca_physicalvars <- c("has_electricity",
@@ -260,7 +260,7 @@ pca_nonphysicalvars <- c("has_tv",
                          "water_time_to_get_cat",
                          "water_source_piped_dwelling",
                          "flush_toilet_sewer",
-                         "educ_years_hh_max_scale",
+                         #"educ_years_hh_max_scale",
                          "n_sleeping_rooms_pp_cat")
 
 # Compute PCAs -----------------------------------------------------------------

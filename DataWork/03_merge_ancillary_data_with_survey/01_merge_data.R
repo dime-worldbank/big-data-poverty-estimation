@@ -370,5 +370,5 @@ if(SURVEY_NAME %in% "PAK_CITY_POINTS"){
 
 # [Export] Data ----------------------------------------------------------------
 saveRDS(survey_ancdata_df, 
-        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
+        file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata.Rds"))
 

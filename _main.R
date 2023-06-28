@@ -5,8 +5,9 @@
 # PAK_CITY_POINTS
 # DHS_policy_experiment
 # DHS_all_policy_experiment
+# DHS_nga_policy_experiment
 # DHS
-SURVEY_NAME <- "DHS_nga_policy_experiment"
+SURVEY_NAME <- "DHS"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths

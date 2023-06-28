@@ -1,57 +1,71 @@
 # Policy Experiment 2: Nigeria
 
 # Load data --------------------------------------------------------------------
-dhs_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
+dhs_df <- readRDS(file.path(data_dir, "DHS_nga_policy_experiment", "FinalData", "Merged Datasets", "survey_alldata.Rds"))
 dhs_df$GID_1 <- dhs_df$GID_2
 
 # Predict Wealth ---------------------------------------------------------------
 #### Check Results
-models_all <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models") %>%
-  list.files() %>% str_subset("levels_changevars_ng")
+# models_all <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models") %>%
+#   list.files() %>% str_subset("levels_changevars_ng")
+# 
+# result_df <- map_df(models_all, function(model_i){
+#   print(model_i)
+#   ml_model <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models",
+#                                 model_i))
+#   
+#   X <- dhs_df %>%
+#     dplyr::select_at(vars(starts_with("ntlharmon_"),
+#                           starts_with("cnn_ntlharmon_landsat_"),
+#                           starts_with("l7_"),
+#                           starts_with("gc_"),
+#                           starts_with("weather_"),
+#                           starts_with("pollution_aod_"))) %>%
+#     as.matrix()
+#   
+#   if(model_i %>% str_detect("_svm_")){
+#     dhs_df$pca_allvars_predict <- predict(ml_model, X)[[1]]
+#   } else if(model_i %>% str_detect("_glmnet_")){
+#     dhs_df$pca_allvars_predict <- predict(ml_model$cv_model, 
+#                                           s = ml_model$optimal_lambda, 
+#                                           newx = X) %>% as.numeric()
+#   } else{
+#     dhs_df$pca_allvars_predict <- predict(ml_model, X)
+#   }
+# 
+#   pca_cor <- cor(dhs_df$pca_allvars_predict, dhs_df$pca_allvars)
+#   
+#   dhs_sum_df <- dhs_df %>%
+#     group_by(year) %>%
+#     dplyr::summarise(pca_allvars_predict = mean(pca_allvars_predict),
+#                      pca_allvars = mean(pca_allvars)) %>%
+#     ungroup()
+#   
+#   gadm_cor <- cor(dhs_sum_df$pca_allvars_predict, dhs_sum_df$pca_allvars)
+#   
+#   data.frame(pca_cor = pca_cor,
+#              gadm_cor = gadm_cor,
+#              model = model_i)
+# })
+# 
+# #### Predict with Best Model
+# model_best <- result_df %>%
+#   dplyr::filter(!is.na(pca_cor)) %>%
+#   arrange(-pca_cor) %>%
+#   head(1) %>%
+#   pull(model)
+# 
+# ml_model <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models",
+#                               model_best))
 
-result_df <- map_df(models_all, function(model_i){
-  ml_model <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models",
-                                model_i))
-  
-  X <- dhs_df %>%
-    dplyr::select_at(vars(starts_with("ntlharmon_"),
-                          starts_with("cnn_ntlharmon_landsat_"),
-                          starts_with("l7_"),
-                          starts_with("gc_"),
-                          starts_with("weather_"),
-                          starts_with("pollution_aod_"))) %>%
-    as.matrix()
-  
-  if(model_i %>% str_detect("_svm_")){
-    dhs_df$pca_allvars_predict <- predict(ml_model, X)[[1]]
-  } else{
-    dhs_df$pca_allvars_predict <- predict(ml_model, X)
-  }
-  
-  pca_cor <- cor(dhs_df$pca_allvars_predict, dhs_df$pca_allvars)
-  
-  dhs_sum_df <- dhs_df %>%
-    group_by(year) %>%
-    dplyr::summarise(pca_allvars_predict = mean(pca_allvars_predict),
-                     pca_allvars = mean(pca_allvars)) %>%
-    ungroup()
-  
-  gadm_cor <- cor(dhs_sum_df$pca_allvars_predict, dhs_sum_df$pca_allvars)
-  
-  data.frame(pca_cor = pca_cor,
-             gadm_cor = gadm_cor,
-             model = model_i)
-})
-
-#### Predict with Best Model
-model_best <- result_df %>%
-  dplyr::filter(!is.na(pca_cor)) %>%
-  arrange(-gadm_cor) %>%
-  head(1) %>%
-  pull(model)
+model_use <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models") %>%
+   list.files() %>% 
+  str_subset("levels_changevars_ng") %>%
+  str_subset("xgboost") %>%
+  str_subset("global_country")
 
 ml_model <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models",
-                              model_best))
+                              model_use))
 
 X <- dhs_df %>%
   dplyr::select_at(vars(starts_with("ntlharmon_"),
@@ -62,14 +76,17 @@ X <- dhs_df %>%
                         starts_with("pollution_aod_"))) %>%
   as.matrix()
 
-if(model_i %>% str_detect("_svm_")){
+if(model_use %>% str_detect("_svm_")){
   dhs_df$pca_allvars_predict <- predict(ml_model, X)[[1]]
+} else if(model_use %>% str_detect("_glmnet_")){
+  dhs_df$pca_allvars_predict <- predict(ml_model$cv_model, 
+                                        s = ml_model$optimal_lambda, 
+                                        newx = X) %>% as.numeric()
 } else{
   dhs_df$pca_allvars_predict <- predict(ml_model, X)
 }
 
 pca_cor <- cor(dhs_df$pca_allvars_predict, dhs_df$pca_allvars)
-
 
 # OOS Estimates ----------------------------------------------------------------
 gadm_long_df <- dhs_df %>%
@@ -118,6 +135,8 @@ gadm_oos_long_df <- gadm_wide_df %>%
   )) %>%
   dplyr::rename(pca_allvars_oos = value) %>%
   dplyr::select(GID_1, pca_allvars_oos, year)
+
+# NTL Estimates ----------------------------------------------------------------
 
 # Analysis Datasets ------------------------------------------------------------
 gadm_yr_df <- dhs_df %>%
@@ -169,7 +188,7 @@ p_trends <- yr_long_df %>%
   scale_color_manual(values = c("dodgerblue2", "darkorange")) +
   scale_x_continuous(breaks = c(2003, 2008, 2013, 2018)) +
   theme_classic2() +
-  theme(plot.title = element_text(face = "bold")) +
+  theme(plot.title = element_text(face = "bold", size = 10)) +
   labs(x = NULL,
        y = "Wealth",
        color = "Wealth",
@@ -196,7 +215,7 @@ p_scatter <- gadm_yr_long_df %>%
   theme_classic() +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
-        plot.title = element_text(face = "bold")) +
+        plot.title = element_text(face = "bold", size = 10)) +
   scale_x_continuous(limits = c(-5, 5)) +
   scale_y_continuous(limits = c(-5, 5)) +
   labs(x = "Estimated Wealth",

@@ -1,7 +1,7 @@
 # Explain Error
 
 # Load data --------------------------------------------------------------------
-changes_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+changes_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
 wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))

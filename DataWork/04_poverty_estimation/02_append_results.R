@@ -5,7 +5,8 @@ acc_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results"
                     "accuracy") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
-  map_df(readRDS)
+  map_df(readRDS) %>%
+  dplyr::filter(level_change != "levels_changevars_ng")
 
 # Adjust model params ----------------------------------------------------------
 acc_df$xg_max.depth[acc_df$ml_model_type %in% c("glmnet", "svm")]        <- NA
@@ -136,6 +137,7 @@ acc_df <- acc_df %>%
 # - cor_all only different than cor_country for other continents estimation
 
 acc_all_df <- acc_df %>%
+  ungroup() %>%
   group_by(level_change,
            n,
            estimation_type, estimation_type_clean,
@@ -148,6 +150,7 @@ acc_all_df <- acc_df %>%
            country_predict_group, country) %>%
   dplyr::summarise(N = sum(N_fold),
                    cor = cor_country[1]) %>% # This repeats across folds
+  ungroup() %>%
   dplyr::mutate(r2 = cor^2)
 
 # Add rows for best estimation type WITHIN each set of parameters --------------
@@ -164,6 +167,7 @@ acc_all_df <- acc_df %>%
 #   mutate(est_cat = "Best")
 
 acc_all_best_df <- acc_all_df %>%
+  dplyr::filter(ml_model_type == "xgboost") %>%
   ungroup() %>%
   group_by(country,
            #N,
@@ -191,7 +195,8 @@ acc_all_best_df <- bind_rows(acc_all_best_df, acc_all_best_across_est_type_df)
 
 acc_all_df <- bind_rows(
   acc_all_df,
-  acc_all_best_rn_df
+  acc_all_best_across_est_type_df
+  #acc_all_best_rn_df
 )
 
 # Merge with select survey/other variables -------------------------------------

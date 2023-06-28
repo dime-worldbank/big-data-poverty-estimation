@@ -449,11 +449,17 @@ if(F){
   source(file.path(figures_tables_global_dir, "main", "levels_3_avg_performance_by_type.R"))
   source(file.path(figures_tables_global_dir, "main", "levels_4_determinants_of_model_performance.R"))
   source(file.path(figures_tables_global_dir, "main", "levels_5_feature_importance.R"))
+  source(file.path(figures_tables_global_dir, "main", "levels_6_explain_error.R"))
   
   source(file.path(figures_tables_global_dir, "main", "changes_1_correlations.R"))
   source(file.path(figures_tables_global_dir, "main", "changes_2_main_results.R"))
   source(file.path(figures_tables_global_dir, "main", "changes_3_scatter_countries.R"))
   source(file.path(figures_tables_global_dir, "main", "changes_4_explain_variation.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_5_feature_importance.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_6_explain_error.R"))
+  
+  source(file.path(figures_tables_global_dir, "main", "policyexp_1_all.R"))
+  source(file.path(figures_tables_global_dir, "main", "policyexp_2_nga.R"))
   
   source(file.path(figures_tables_global_dir, "main_stats.R"))
   

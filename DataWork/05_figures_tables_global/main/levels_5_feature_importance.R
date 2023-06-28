@@ -9,6 +9,7 @@ xg_param_set_use <- acc_df %>%
   dplyr::filter(estimation_type == "within_country_cv",
                 feature_type == "all",
                 target_var == "pca_allvars_mr",
+                ml_model_type == "xgboost",
                 level_change == "levels") %>%
   
   dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
@@ -40,7 +41,9 @@ fi_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "feat
   str_subset("_levels_") %>%
   str_subset("pca_allvars_mr") %>%
   str_subset("within_country_cv") %>%
-  str_subset(paste0("all",xg_param_set_use)) %>% # (1) Using all features and (2) Best Parameter type
+  str_subset("xgboost") %>%
+  str_subset("_all_") %>%
+  #str_subset(paste0("all",xg_param_set_use)) %>% # (1) Using all features and (2) Best Parameter type
   map_df(readRDS) %>%
   as.data.frame() %>%
   dplyr::rename(variable = Feature) 

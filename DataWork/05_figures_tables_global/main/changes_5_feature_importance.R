@@ -7,6 +7,7 @@ acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_
 xg_param_set_use <- acc_df %>%
   dplyr::filter(estimation_type == "within_country_cv",
                 feature_type == "all",
+                ml_model_type == "xgboost",
                 target_var == "pca_allvars_mr",
                 level_change == "changes") %>%
   
@@ -39,7 +40,9 @@ fi_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "feat
   str_subset("_changes_") %>%
   str_subset("pca_allvars") %>%
   str_subset("within_country_cv") %>%
-  str_subset(paste0("all_changes",xg_param_set_use)) %>% # (1) Using all features and (2) Best Parameter type
+  str_subset("_all_") %>%
+  str_subset("xgboost") %>%
+  #str_subset(paste0("all_changes",xg_param_set_use)) %>% # (1) Using all features and (2) Best Parameter type
   map_df(readRDS) %>%
   as.data.frame() %>%
   dplyr::rename(variable = Feature) 

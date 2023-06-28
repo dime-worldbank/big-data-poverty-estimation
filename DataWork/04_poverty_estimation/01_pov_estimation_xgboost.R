@@ -635,10 +635,10 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels",
     countries_vec <- c("all", unique(df$country_code)) 
   } 
   
-  for(estimation_type_i in estimation_type_vec){
+  for(estimation_type_i in rev(estimation_type_vec)){
     for(target_var_i in target_vars_vec){
-      for(feature_type_i in feature_types){
-        for(country_i in countries_vec){
+      for(feature_type_i in rev(feature_types)){
+        for(country_i in rev(countries_vec)){
           
           ## XG Boost Parameters
           if(level_change %in% c("levels", "levels_changevars_ng")){

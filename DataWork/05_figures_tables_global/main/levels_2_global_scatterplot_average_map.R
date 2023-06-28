@@ -94,7 +94,9 @@ for(aggregate_district in c(F, T)){
       group_by(gadm_uid, country_code, country_name, continent_adj) %>%
       dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
                        predict_pca_allvars_mr_best = mean(predict_pca_allvars_mr_best),
-                       predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all))
+                       predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all)) %>%
+      ungroup()
+  
   }
   
   # One dataset per estimation type --------------------------------------------

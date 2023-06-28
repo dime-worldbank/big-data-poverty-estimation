@@ -9,7 +9,8 @@ acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_
                             "accuracy_appended_bestparam.Rds"))
 
 acc_df <- acc_df %>%
-  dplyr::filter(level_change %in% "changes")
+  dplyr::filter(level_change %in% "changes",
+                ml_model_type %in% "xgboost")
 
 #### Load Predictions
 read_add_file <- function(path){
@@ -21,7 +22,8 @@ pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("changes") %>%
-  map_df(read_add_file) 
+  map_df(read_add_file) %>%
+  dplyr::filter(level_change != "levels_changevars_ng") 
 
 pred_df <- pred_df %>%
   dplyr::mutate(estimation_type = case_when(
@@ -71,7 +73,7 @@ cor_df <- pred_long_df %>%
   dplyr::summarise(cor = cor(truth, prediction)) %>%
   
   group_by(country_code, target_var) %>% 
-  slice_max(order_by = cor, n = 1) %>%
+  slice_max(order_by = cor, n = 1, with_ties = F) %>%
   ungroup()
 
 pred_long_best_df <- pred_long_df[pred_long_df$country_est_id %in% cor_df$country_est_id,]
@@ -119,5 +121,6 @@ survey_df$predict_pca_allvars_best[survey_df$country_code %in% "TL"] <-
   survey_df$predict_pca_allvars_best[survey_df$country_code %in% "TL"] / 100
 
 saveRDS(survey_df,
-        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
+        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+                  "survey_alldata_clean_changes_cluster_predictions.Rds"))
 

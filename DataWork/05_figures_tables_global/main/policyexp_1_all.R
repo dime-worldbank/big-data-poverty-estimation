@@ -72,6 +72,7 @@ adm_df <- map_df(unique(adm_df$country_code), function(cc){
   adm_df_i <- adm_df[adm_df$country_code %in% cc,]
   
   ntl_lm <- lm(pca_allvars ~ ntl_harmon, data = adm_df_i[adm_df_i$yr_id %in% 1:2,])
+  #ntl_lm <- lm(pca_allvars ~ ntl_harmon, data = adm_df[adm_df$country_code != cc,])
   
   adm_df_i$pca_ntl_predict <- predict(ntl_lm, adm_df_i) %>% as.numeric()
   

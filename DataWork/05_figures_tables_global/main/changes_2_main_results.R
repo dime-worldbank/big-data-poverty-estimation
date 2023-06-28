@@ -157,7 +157,7 @@ p_cluster_adm <- best_clean_df %>%
   scale_fill_manual(values = c("lightblue1",
                                "tan1"),
                     guide = guide_legend(reverse = TRUE)) +
-  xlim(0, 26) +
+  xlim(0, 32) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.title.y = element_text(angle = 0, vjust = 0.5),

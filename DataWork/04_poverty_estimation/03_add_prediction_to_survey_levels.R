@@ -9,14 +9,18 @@ acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_
                             "accuracy_appended_bestparam.Rds"))
 
 acc_df <- acc_df %>%
-  dplyr::filter(level_change %in% "levels")
+  dplyr::filter(level_change %in% "levels",
+                ml_model_type %in% "xgboost")
 
 #### Load Predictions Data
 pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "predictions") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("levels") %>%
-  map_df(readRDS) 
+  map_df(readRDS) %>%
+  dplyr::filter(level_change != "levels_changevars_ng")
+
+
 
 # Cleanup prediction data ------------------------------------------------------
 pred_df <- pred_df %>%

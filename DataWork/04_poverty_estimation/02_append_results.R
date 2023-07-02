@@ -48,6 +48,10 @@ acc_df <- acc_df %>%
     estimation_type == "continent" ~ cor_fold,
     TRUE ~ cor_all
   )) %>%
+  dplyr::mutate(coef_det_country = case_when(
+    estimation_type == "continent" ~ coef_det_fold,
+    TRUE ~ coef_det_all
+  )) %>%
   dplyr::mutate(country_code = country_code %>% as.character()) %>%
   
   # Retains original value of country; for "continent" (predict on other continents), 
@@ -149,7 +153,8 @@ acc_all_df <- acc_df %>%
            xg_max.depth, xg_eta, xg_nthread, xg_nrounds, xg_subsample, xg_objective, xg_min_child_weight,
            country_predict_group, country) %>%
   dplyr::summarise(N = sum(N_fold),
-                   cor = cor_country[1]) %>% # This repeats across folds
+                   cor = cor_country[1],
+                   coef_det = coef_det_country[1]) %>% # This repeats across folds
   ungroup() %>%
   dplyr::mutate(r2 = cor^2)
 
@@ -168,6 +173,8 @@ acc_all_df <- acc_df %>%
 
 acc_all_best_df <- acc_all_df %>%
   dplyr::filter(ml_model_type == "xgboost") %>%
+  # dplyr::filter(((ml_model_type == "xgboost") & (level_change == "levels")) |
+  #                 ( (ml_model_type == "glmnet") & (glmnet_alpha %in% 1) & (level_change == "changes"))) %>%
   ungroup() %>%
   group_by(country,
            #N,

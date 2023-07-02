@@ -22,7 +22,7 @@ if(REPLACE_IF_EXTRACTED){
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
   
-  files_to_rm <- files_to_rm %>% str_subset("levels_changevars_ng")
+  files_to_rm <- files_to_rm %>% str_subset("lsms")
   
   for(file_i in files_to_rm){
     file.remove(file_i)
@@ -67,6 +67,24 @@ grab_x_features <- function(df,
     }
     
     X <- X %>%
+      as.matrix()
+    
+  } else if(feature_type_i %in% "all_lsms"){
+    
+    X <- df %>%
+      dplyr::select_at(vars(starts_with("viirs_"),
+                            starts_with("s1_sar_"),
+                            #starts_with("cnn_viirs_s2_"),
+                            #starts_with("fb_prop_"),
+                            #starts_with("fb_wp_prop"),
+                            starts_with("osm_"),
+                            starts_with("gc_"),
+                            starts_with("l7_"),
+                            starts_with("elevslope_"),
+                            starts_with("weather_"),
+                            starts_with("worldclim_"),
+                            starts_with("pollution_"),
+                            starts_with("mosaik_"))) %>%
       as.matrix()
     
   } else if(feature_type_i %in% "all_except_cnn"){
@@ -506,7 +524,10 @@ run_model_svm <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels", "changes", "levels_changevars_ng"
+for(level_change in rev(c("levels", 
+                          "changes", 
+                          "lsms",
+                          "levels_changevars_ng"))){ # "levels", "changes", "levels_changevars_ng"
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% c("levels")){
@@ -551,6 +572,43 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels",
                              "continent") # "continent" means "other continents"
     
     target_vars_vec <- c("pca_allvars_mr") 
+    
+    countries_vec <- c("all", unique(df$country_code)) 
+  }
+  
+  # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  if(level_change %in% "lsms"){
+    
+    #### Load data
+    df <- readRDS(file.path(data_dir, "LSMS", "FinalData", "Merged Datasets", 
+                            "survey_alldata_clean.Rds"))
+    
+    #### Define parameters
+    feature_types_indiv <- c("viirs",
+                             # "cnn_viirs_s2_rgb", 
+                             # "cnn_viirs_s2_ndvi", 
+                             # "cnn_viirs_s2_bu", 
+                             # "cnn_viirs_s2",
+                             "l7",
+                             #"fb",
+                             "osm",
+                             "pollution",
+                             "s1_sar",
+                             "mosaik",
+                             
+                             # Groupings
+                             "landcover",
+                             "weatherclimate",
+                             "satellites") 
+    
+    feature_types <- c(feature_types_indiv,
+                       #feature_types_all_but_indiv,
+                       "all_lsms")
+    
+    estimation_type_vec <- c("within_country_cv",
+                             "global_country_pred") 
+    
+    target_vars_vec <- c("pca_allvars_mr", "poverty_measure") 
     
     countries_vec <- c("all", unique(df$country_code)) 
   }
@@ -635,81 +693,19 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels",
     countries_vec <- c("all", unique(df$country_code)) 
   } 
   
-  for(estimation_type_i in rev(estimation_type_vec)){
+  for(estimation_type_i in estimation_type_vec){
     for(target_var_i in target_vars_vec){
-      for(feature_type_i in rev(feature_types)){
-        for(country_i in rev(countries_vec)){
+      for(feature_type_i in feature_types){
+        for(country_i in countries_vec){
           
-          ## XG Boost Parameters
-          if(level_change %in% c("levels", "levels_changevars_ng")){
-            
-            # xgboost defauls
-            xg_max.depth_params <- 6
-            xg_eta_params <- 0.3
-            xg_nrounds_params <- 50
-            xg_subsample_params <- 1 
-            xg_objective_params <- c("reg:squarederror")
-            xg_min_child_weight_params <- 1
-            
-            # xg_max.depth_params <- c(2, 5, 6, 10) 
-            # xg_eta_params <- c(0.3) 
-            # xg_nrounds_params <- c(50) 
-            # xg_subsample_params <- c(0.3, 0.6, 1) 
-            # xg_objective_params <- c("reg:squarederror")
-            # xg_min_child_weight_params <- c(1)
-            
-            # xg_max.depth_params <- c(2, 5, 10) 
-            # xg_eta_params <- c(0.3)
-            # xg_nrounds_params <- c(50)
-            # xg_subsample_params <- c(0.3)
-            # xg_objective_params <- c("reg:squarederror")
-            # xg_min_child_weight_params <- c(1)
-            
-            
-            
-            # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) %>% rev()
-            # xg_eta_params <- c(0.3, 0.6, 0.9) %>% rev()
-            # xg_nrounds_params <- c(50, 100, 200, 300) %>% rev()
-            # xg_subsample_params <- c(0.3, 0.6, 1) %>% rev()
-            # xg_objective_params <- c("reg:squarederror")
-            # xg_min_child_weight_params <- c(1)
-          }
+          # xgboost defauls
+          xg_max.depth_params <- 6
+          xg_eta_params <- 0.3
+          xg_nrounds_params <- 50
+          xg_subsample_params <- 1 
+          xg_objective_params <- c("reg:squarederror")
+          xg_min_child_weight_params <- 1
           
-          if(level_change == "changes"){
-            
-            # xgboost defauls
-            xg_max.depth_params <- 6
-            xg_eta_params <- 0.3
-            xg_nrounds_params <- 50
-            xg_subsample_params <- 1 
-            xg_objective_params <- c("reg:squarederror")
-            xg_min_child_weight_params <- 1
-            
-            # xg_max.depth_params <- c(2, 5, 6, 10)
-            # xg_eta_params <- c(0.3) 
-            # xg_nrounds_params <- c(50) 
-            # xg_subsample_params <- c(0.3, 0.6, 1) 
-            # xg_objective_params <- c("reg:squarederror")
-            # xg_min_child_weight_params <- c(1)
-            
-            # xg_max.depth_params <- c(2, 5) 
-            # xg_eta_params <- c(0.3)
-            # xg_nrounds_params <- c(50)
-            # xg_subsample_params <- c(0.3)
-            # xg_objective_params <- c("reg:squarederror")
-            # xg_min_child_weight_params <- c(1)
-            
-            
-            
-            # xg_max.depth_params <- c(2, 5, 6, 10, 15, 20) 
-            # xg_eta_params <- c(0.3, 0.6, 0.9) 
-            # xg_nrounds_params <- c(50, 100, 200, 300) 
-            # xg_subsample_params <- c(0.3, 0.6, 1) 
-            # xg_objective_params <- c("reg:squarederror")
-            # xg_min_child_weight_params <- c(1)
-          }
-          
-          # Skip -----------------------------------------------------------------
           # Only implement within country on individual countries
           if((estimation_type_i == "within_country_cv") & (country_i == "all")) next
           
@@ -743,14 +739,20 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels",
           # Skip: Results that dont analyze ----------------------
           # We only look at each feature type for "within_country_cv
           # (Maybe also include: global_country_pred)
-          if(!(estimation_type_i %in% c("within_country_cv"))){
-            if(!(feature_type_i %in% c("all_changes", "all"))){
-              next
+          if(level_change != "lsms"){
+            if(!(estimation_type_i %in% c("within_country_cv"))){
+              if(!(feature_type_i %in% c("all_changes", "all"))){
+                next
+              }
             }
           }
           
           # Loop through XG boost ----------------------------------------------
-          for(ml_model_type in c("svm", "xgboost", "glmnet")){ # "glmnet", "xgboost"
+          for(ml_model_type in c("svm", "xgboost", "glmnet")){ 
+            
+            # Skip -----------------------------------------------------------------
+            if( (level_change == "lsms") & (ml_model_type == "svm")) next
+            if( (level_change == "lsms") & (ml_model_type == "glmnet")) next
             
             ## xgboost parameter
             for(xg_max.depth in xg_max.depth_params){ # 2,5,6,10
@@ -938,14 +940,14 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels",
                                     acc_fold_df <- results_df_i %>%
                                       dplyr::group_by(country_code, fold) %>%
                                       dplyr::summarise(cor_fold = cor(truth, prediction),
-                                                       coef_det_fold = coef_of_det(truth, prediction),
+                                                       coef_det_fold = R2(prediction, truth, form = "traditional"),
                                                        N_fold = n()) %>%
                                       ungroup()
                                   } else{
                                     acc_fold_df <- results_df_i %>%
                                       dplyr::group_by(fold) %>%
                                       dplyr::summarise(cor_fold = cor(truth, prediction),
-                                                       coef_det_fold = coef_of_det(truth, prediction),
+                                                       coef_det_fold = R2(prediction, truth, form = "traditional"),
                                                        N_fold = n()) %>%
                                       ungroup()
                                   }
@@ -953,8 +955,9 @@ for(level_change in c("levels", "changes", "levels_changevars_ng")){ # "levels",
                                   acc_fold_df$cor_all <- cor(results_df_i$truth,
                                                              results_df_i$prediction)
                                   
-                                  acc_fold_df$coef_det_all <- coef_of_det(results_df_i$truth,
-                                                                          results_df_i$prediction)
+                                  acc_fold_df$coef_det_all <- R2(results_df_i$prediction,
+                                                                 results_df_i$truth,
+                                                                 form = "traditional")
                                   
                                   acc_fold_df <- acc_fold_df %>%
                                     dplyr::mutate(level_change = level_change,

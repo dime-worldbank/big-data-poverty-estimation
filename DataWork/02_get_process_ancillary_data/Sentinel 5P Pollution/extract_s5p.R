@@ -32,10 +32,3 @@ dhs_sat_df <- lapply(sat_vars, function(var_i){
 saveRDS(dhs_sat_df, file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets", 
                               "sentinel5p.Rds"))
 
-# for(var in names(dhs_sat_df)){
-#   print("-------")
-#   print(var)
-#   print(dhs_sat_df[[var]] %>% is.na %>% table)
-# }
-
-

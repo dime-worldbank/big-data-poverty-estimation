@@ -1,7 +1,8 @@
 # Policy Experiment 2: Nigeria
 
 # Load data --------------------------------------------------------------------
-dhs_df <- readRDS(file.path(data_dir, "DHS_nga_policy_experiment", "FinalData", "Merged Datasets", "survey_alldata.Rds"))
+dhs_df <- readRDS(file.path(data_dir, "DHS_nga_policy_experiment", "FinalData", 
+                            "Merged Datasets", "survey_alldata.Rds"))
 
 # Predict Wealth ---------------------------------------------------------------
 #### Check Results
@@ -191,6 +192,7 @@ gadm_yr_df <- dhs_df %>%
   left_join(gadm_long_ntl_df, by = c("GID_2", "year"))  
 
 gadm_yr_long_df <- gadm_yr_df %>%
+  dplyr::filter(!is.na(pca_allvars_oos)) %>%
   pivot_longer(cols = -c(GID_2, year, pca_allvars))
 
 yr_est_df <- gadm_yr_df %>%
@@ -278,7 +280,7 @@ p_scatter <- gadm_yr_long_df %>%
   scale_y_continuous(limits = c(-5, 5)) +
   labs(x = "Estimated Wealth",
        y = "True Wealth",
-       title = "B. Comparison of ML model estimate and\nsurvey interpolation/extrapolation")
+       title = "B. Comparison of ML model estimate and survey\ninterpolation/extrapolation")
 
 # Arrange/Export ---------------------------------------------------------------
 p_all <- ggarrange(p_trends, 
@@ -288,6 +290,5 @@ p_all <- ggarrange(p_trends,
 
 ggsave(p_all,
        filename = file.path(figures_global_dir, "policy_exp_nga.png"),
-       height = 6.25,
-       width = 4.2)
-
+       height = 7.5,
+       width = 5.6)

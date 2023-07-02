@@ -11,7 +11,14 @@ pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("changes") %>%
-  map_df(read_add_file) 
+  map_df(read_add_file) %>%
+  # dplyr::filter(level_change != "levels_changevars_ng",
+  #               ml_model_type == "svm") 
+  # dplyr::filter(level_change != "levels_changevars_ng",
+  #               ml_model_type == "glmnet",
+  #               glmnet_alpha == 1)
+  dplyr::filter(level_change != "levels_changevars_ng",
+                ml_model_type == "xgboost")
 
 #### Survey
 survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
@@ -25,12 +32,6 @@ pred_df <- pred_df %>%
     estimation_type %in% "continent" ~ "other_continents",
     TRUE ~ estimation_type
   )) 
-
-# continent_df <- survey_df %>%
-#   distinct(continent_adj, country_code)
-# 
-# pred_df <- pred_df %>%
-#   left_join(continent_df, by = "country_code")
 
 pred_df <- pred_df %>%
   dplyr::mutate(country_model_param = paste(country_code,
@@ -51,10 +52,12 @@ pred_df <- pred_df %>%
                                             sep = "_")) 
 
 pred_df <- pred_df %>%
-  left_join(survey_df, by = c("uid", "country_code"))
+  dplyr::select(-country_code) %>%
+  left_join(survey_df, by = c("uid"))
 
 # Aggregate to district --------------------------------------------------------
 pred_district_df <- pred_df %>%
+  dplyr::filter(feature_type == "all_changes") %>%
   group_by(country_code, country_name, iso2, continent_adj, gadm_uid, country_model_param) %>%
   dplyr::summarise(prediction = mean(prediction),
                    truth = mean(truth)) %>%
@@ -65,12 +68,12 @@ pred_district_df <- pred_district_df %>%
   dplyr::mutate(cor = cor(prediction, truth),
                 r2 = cor^2) %>%
   ungroup()
-  
+
 pred_district_best_sum_df <- pred_district_df %>%
   group_by(country_code) %>%
   slice_max(n = 1, order_by = cor, with_ties = FALSE) %>%
   ungroup()
-  
+
 pred_district_best_df <- pred_district_df[pred_district_df$country_model_param %in% pred_district_best_sum_df$country_model_param,]
 
 # Merge WDI Indicators ---------------------------------------------------------

@@ -38,14 +38,23 @@ district_df <- district_df %>%
 ## Add correlation
 cluster_df <- cluster_df %>%
   group_by(country_name) %>%
+  
   mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2,
          r2_round = round(r2, 2) %>% as.character() %>% paste0("r2 = ",.),
          r2_round = case_when(
-           r2_round == "R2=0" ~ "R2<0.01",
+           r2_round == "r2=0" ~ "r2<0.01",
            TRUE ~ r2_round
          )) %>%
+  
+  mutate(R2 = R2(predict_pca_allvars_best, pca_allvars, form = "traditional"),
+         R2_round = round(R2, 2) %>% as.character() %>% paste0("R2 = ",.),
+         R2_round = case_when(
+           R2_round == "R2=0" ~ "R2<0.01",
+           TRUE ~ R2_round
+         )) %>%
+  
   ungroup() %>%
-  mutate(country_name_r2 = paste0(country_name, "\n", r2_round)) %>%
+  mutate(country_name_r2 = paste0(country_name, "\n", r2_round, "\n", R2_round)) %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2),
                 country_name_r2 = fct_reorder(country_name_r2, -r2)) 
 
@@ -54,11 +63,18 @@ district_df <- district_df %>%
   mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2,
          r2_round = round(r2, 2) %>% as.character() %>% paste0("r2 = ",.),
          r2_round = case_when(
-           r2_round == "R2=0" ~ "R2<0.01",
+           r2_round == "r2=0" ~ "r2<0.01",
            TRUE ~ r2_round
          )) %>%
+  
+  mutate(R2 = R2(predict_pca_allvars_best, pca_allvars, form = "traditional"),
+         R2_round = round(R2, 2) %>% as.character() %>% paste0("R2 = ",.),
+         R2_round = case_when(
+           R2_round == "R2=0" ~ "R2<0.01",
+           TRUE ~ R2_round
+         )) %>%
   ungroup() %>%
-  mutate(country_name_r2 = paste0(country_name, "\n", r2_round)) %>%
+  mutate(country_name_r2 = paste0(country_name, "\n", r2_round, "\n", R2_round)) %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2),
                 country_name_r2 = fct_reorder(country_name_r2, -r2)) 
 

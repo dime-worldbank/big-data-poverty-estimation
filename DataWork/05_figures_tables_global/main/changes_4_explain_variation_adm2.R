@@ -3,7 +3,7 @@
 
 # Load data --------------------------------------------------------------------
 accu_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                        "accuracy_appended_bestparam.Rds"))
+                             "accuracy_appended_bestparam.Rds"))
 
 accu_df <- accu_df %>%
   dplyr::filter(level_change %in% "changes")
@@ -14,15 +14,33 @@ cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Data
 district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                  "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
 
+ancillary_df <- accu_df %>%
+  dplyr::select(iso2,
+                wdi_population, 
+                wdi_gdp_pc,
+                year_diff,
+                pca_allvars_sd_change,
+                ntlharmon_avg_sd_change,
+                wdi_gdp_pc,
+                pca_allvars_avg_change,
+                ntlharmon_avg_change) %>%
+  distinct()
+
+district_r2_df <- district_df %>%
+  group_by(iso2) %>%
+  dplyr::summarise(r2 = cor(prediction, truth)^2) %>%
+  ungroup() %>%
+  left_join(ancillary_df, by = "iso2")
+
 # Explain variation: scatter plots ---------------------------------------------
 line_color <- "darkorange"
 accu_sum_df <- accu_df %>%
   ungroup() %>%
   dplyr::filter(feature_type %in% "all_changes",
-                estimation_type %in% "best", # best "within_country_cv", global_country_pred,
+                estimation_type %in% "best", # best "within_country_cv",
                 target_var %in% "pca_allvars")
 
-p_scatter <- accu_sum_df %>%
+p_scatter <- district_r2_df %>%
   dplyr::mutate(wdi_population = log(wdi_population),
                 wdi_gdp_pc     = log(wdi_gdp_pc)) %>%
   dplyr::select(r2, 
@@ -86,10 +104,6 @@ cluster_sum_df <- cluster_df %>%
 #   mutate(unit = "District") %>%
 #   mutate(r2 = cor^2)
 
-# district_sum_df <- district_df %>%
-#   distinct(country_code, income, r2) %>%
-#   dplyr::mutate(unit = "District")
-
 district_sum_df <- district_df %>%
   distinct(country_code, income, r2) %>%
   dplyr::mutate(unit = "District")
@@ -110,8 +124,8 @@ p_bar <- cor_df %>%
        fill = "Unit",
        title = "G. Model performance by income group and unit") +
   scale_fill_manual(values = c("lightblue1",
-                                "tan1"),
-                     guide = guide_legend(reverse = T)) +
+                               "tan1"),
+                    guide = guide_legend(reverse = T)) +
   theme_minimal() +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
@@ -122,7 +136,7 @@ p_bar <- cor_df %>%
         plot.title.position = "plot",
         axis.text.x = element_text(color = "black"),
         axis.text.y = element_text(color = "black", face = "bold", size = 12)) #+
-  #coord_flip()
+#coord_flip()
 
 # Arrange/export ---------------------------------------------------------------
 p <- ggarrange(p_scatter,
@@ -136,6 +150,10 @@ ggsave(p,
        width = 14)
 
 # Stats ------------------------------------------------------------------------
+
+
+
+
 
 ## Average
 cluster_sum_df %>%

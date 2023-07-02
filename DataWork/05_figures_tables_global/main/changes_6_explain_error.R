@@ -6,7 +6,7 @@ changes_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
 
 wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 
-y_max <- 14
+y_max <- 7
 bb_step <- 0.22
 in_plot_txt_size <- 3
 in_plot_text_color <- "red"

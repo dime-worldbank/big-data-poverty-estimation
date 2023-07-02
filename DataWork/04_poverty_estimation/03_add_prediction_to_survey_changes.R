@@ -8,9 +8,15 @@ survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datas
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
                             "accuracy_appended_bestparam.Rds"))
 
+# acc_df <- acc_df %>%
+#   dplyr::filter(level_change %in% "changes",
+#                 ml_model_type %in% "glmnet",
+#                 glmnet_alpha %in% 1)
+
 acc_df <- acc_df %>%
   dplyr::filter(level_change %in% "changes",
                 ml_model_type %in% "xgboost")
+
 
 #### Load Predictions
 read_add_file <- function(path){
@@ -123,4 +129,22 @@ survey_df$predict_pca_allvars_best[survey_df$country_code %in% "TL"] <-
 saveRDS(survey_df,
         file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
                   "survey_alldata_clean_changes_cluster_predictions.Rds"))
+
+
+
+# df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+#                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
+# 
+# a <- df %>%
+#   group_by(country_code, gadm_uid) %>%
+#   dplyr::summarise(pca_allvars = mean(pca_allvars),
+#                    predict_pca_allvars_best = mean(predict_pca_allvars_best)) %>%
+#   ungroup() %>%
+# 
+#   group_by(country_code) %>%
+#   dplyr::summarise(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
+#   ungroup()
+# 
+# a$r2 %>% hist()
+
 

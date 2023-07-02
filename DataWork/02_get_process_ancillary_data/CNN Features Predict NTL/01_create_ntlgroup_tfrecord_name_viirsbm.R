@@ -40,7 +40,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       dplyr::filter(!is.na(viirs_bm)) %>%
       dplyr::arrange(runif(n()))
     
-    if(SURVEY_NAME %in% c("DHS", "DHS_policy_experiment", "DHS_nga_policy_experiment")){
+    if(SURVEY_NAME %in% c("DHS", "LSMS", "DHS_policy_experiment", "DHS_nga_policy_experiment")){
       years <- "all"
     } else if(SURVEY_NAME %in% "OPM"){
       years <- unique(survey_all_df$year)

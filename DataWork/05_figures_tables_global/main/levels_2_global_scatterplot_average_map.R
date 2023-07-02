@@ -64,7 +64,7 @@ for(aggregate_district in c(F, T)){
   #pred_df <- pred_df[pred_df$estimation_type %in% "continent",]
   
   # Merge with select survey variables -------------------------------------------
-  survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+  survey_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                  "survey_alldata_clean_predictions.Rds"))
   
   survey_df <- survey_df %>%
@@ -96,7 +96,7 @@ for(aggregate_district in c(F, T)){
                        predict_pca_allvars_mr_best = mean(predict_pca_allvars_mr_best),
                        predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all)) %>%
       ungroup()
-  
+    
   }
   
   # One dataset per estimation type --------------------------------------------
@@ -121,9 +121,10 @@ for(aggregate_district in c(F, T)){
   if(aggregate_district){
     
     r2_all_d   <- cor(pred_global_df$truth,   pred_global_df$prediction)^2
+    R2_all_d   <- R2(pred_global_df$prediction, pred_global_df$truth, form = "traditional")
     
-    TEXT_X <- -4
-    TEXT_Y_TOP <- 4
+    TEXT_X <- -3.75
+    TEXT_Y_TOP <- 3
     TEXT_Y_INCR <- 0.45
     FONT_SIZE <- 4.5
     
@@ -136,7 +137,7 @@ for(aggregate_district in c(F, T)){
                  color = "black",
                  size = 0.3,
                  alpha = 0.8) +
-      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(r2_all_d,2)),
+      geom_richtext(aes(label = paste0("r<sup>2</sup>: ", round(r2_all_d,2), "; R<sup>2</sup>: ", round(R2_all_d,2)),
                         x = TEXT_X,
                         y = TEXT_Y_TOP),
                     color = "black",
@@ -173,8 +174,12 @@ for(aggregate_district in c(F, T)){
     r2_urban <- cor(pred_df_u$truth, pred_df_u$prediction)^2
     r2_rural <- cor(pred_df_r$truth, pred_df_r$prediction)^2
     
-    TEXT_X <- -4
-    TEXT_Y_TOP <- 4
+    R2_all   <- R2(pred_global_df$prediction,   pred_global_df$truth, form = "traditional")
+    R2_urban <- R2(pred_df_u$prediction, pred_df_u$truth, form = "traditional")
+    R2_rural <- R2(pred_df_r$prediction, pred_df_r$truth, form = "traditional")
+    
+    TEXT_X <- -3.75
+    TEXT_Y_TOP <- 3
     TEXT_Y_INCR <- 0.45
     FONT_SIZE <- 4.5
     
@@ -187,25 +192,25 @@ for(aggregate_district in c(F, T)){
                  data = pred_global_df,
                  size = 0.25,
                  alpha = 0.3) +
-      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(r2_all,2)),
-                        x = TEXT_X,
-                        y = TEXT_Y_TOP),
+      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(r2_all,2), "; R<sup>2</sup>: ", round(R2_all, 2)),
+                        x = -4.2,
+                        y = 3.9),
                     color = "black",
                     hjust = 0,
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Urban r<sup>2</sup>: ", round(r2_urban,2)),
-                        x = TEXT_X,
-                        y = TEXT_Y_TOP - TEXT_Y_INCR),
+      geom_richtext(aes(label = paste0("Urban r<sup>2</sup>: ", round(r2_urban,2), "; R<sup>2</sup>: ", round(R2_urban,2)),
+                        x = -4.2,
+                        y = 3.9 - TEXT_Y_INCR),
                     color = "chocolate2",
                     hjust = 0,
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) + 
-      geom_richtext(aes(label = paste0("Rural r<sup>2</sup>: ", round(r2_rural,2)),
-                        x = TEXT_X,
-                        y = TEXT_Y_TOP - TEXT_Y_INCR*2),
+      geom_richtext(aes(label = paste0("Rural r<sup>2</sup>: ", round(r2_rural,2), "; R<sup>2</sup>: ", round(R2_rural,2)),
+                        x = -4.2,
+                        y = 3.9 - TEXT_Y_INCR*2),
                     color = "chartreuse4",
                     hjust = 0,
                     fill = NA, 
@@ -235,7 +240,8 @@ for(aggregate_district in c(F, T)){
   # To Long (for map) ------------------------------------------------------------
   cor_df <- pred_best_df %>%
     group_by(country_code, country_name, continent_adj) %>%
-    dplyr::summarise(cor = cor(truth, prediction)) %>%
+    dplyr::summarise(cor = cor(prediction, truth),
+                     R2 = R2(prediction, truth, form = "traditional")) %>%
     
     # Change name to match with world shapefile
     dplyr::mutate(country_name = case_when(
@@ -254,11 +260,21 @@ for(aggregate_district in c(F, T)){
     cor_mean_africa_district <- mean(cor_df$r2[cor_df$continent_adj %in% "Africa"])
     cor_mean_americas_district <- mean(cor_df$r2[cor_df$continent_adj %in% "Americas"])
     cor_mean_eurasia_district <- mean(cor_df$r2[cor_df$continent_adj %in% "Eurasia"])
+    
+    R2_mean_all_district <- mean(cor_df$R2)
+    R2_mean_africa_district <- mean(cor_df$R2[cor_df$continent_adj %in% "Africa"])
+    R2_mean_americas_district <- mean(cor_df$R2[cor_df$continent_adj %in% "Americas"])
+    R2_mean_eurasia_district <- mean(cor_df$R2[cor_df$continent_adj %in% "Eurasia"])
   } else{
     cor_mean_all <- mean(cor_df$r2)
     cor_mean_africa <- mean(cor_df$r2[cor_df$continent_adj %in% "Africa"])
     cor_mean_americas <- mean(cor_df$r2[cor_df$continent_adj %in% "Americas"])
     cor_mean_eurasia <- mean(cor_df$r2[cor_df$continent_adj %in% "Eurasia"])
+    
+    R2_mean_all <- mean(cor_df$R2)
+    R2_mean_africa <- mean(cor_df$R2[cor_df$continent_adj %in% "Africa"])
+    R2_mean_americas <- mean(cor_df$R2[cor_df$continent_adj %in% "Americas"])
+    R2_mean_eurasia <- mean(cor_df$R2[cor_df$continent_adj %in% "Eurasia"])
   }
   
   cor_df$r2[cor_df$r2 <= 0.3] <- 0.3
@@ -310,7 +326,7 @@ for(aggregate_district in c(F, T)){
                    aes(x = long, y = lat, group = group,
                        fill = r2),
                    color = "black") +
-      geom_richtext(aes(label = paste0("All - Avg r<sup>2</sup>: ", round(cor_mean_all_district,2)),
+      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(cor_mean_all_district,2), "; R<sup>2</sup>: ", round(R2_mean_all_district,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP),
                     color = "black",
@@ -318,7 +334,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Africa - Avg r<sup>2</sup>: ", round(cor_mean_africa_district,2)),
+      geom_richtext(aes(label = paste0("Africa r<sup>2</sup>: ", round(cor_mean_africa_district,2), "; R<sup>2</sup>: ", round(R2_mean_africa_district,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
                     color = "black",
@@ -326,7 +342,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Americas - Avg r<sup>2</sup>: ", round(cor_mean_americas_district,2)),
+      geom_richtext(aes(label = paste0("Americas r<sup>2</sup>: ", round(cor_mean_americas_district,2), "; R<sup>2</sup>: ", round(R2_mean_americas_district,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
                     color = "black",
@@ -334,7 +350,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Eurasia - Avg r<sup>2</sup>: ", round(cor_mean_eurasia_district,2)),
+      geom_richtext(aes(label = paste0("Eurasia r<sup>2</sup>: ", round(cor_mean_eurasia_district,2), "; R<sup>2</sup>: ", round(R2_mean_eurasia_district,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
                     color = "black",
@@ -375,7 +391,7 @@ for(aggregate_district in c(F, T)){
                    aes(x = long, y = lat, group = group,
                        fill = r2),
                    color = "black") +
-      geom_richtext(aes(label = paste0("All - Avg r<sup>2</sup>: ", round(cor_mean_all,2)),
+      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(cor_mean_all,2), "; r<sup>2</sup>: ", round(R2_mean_all,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP),
                     color = "black",
@@ -383,7 +399,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Africa - Avg r<sup>2</sup>: ", round(cor_mean_africa,2)),
+      geom_richtext(aes(label = paste0("Africa r<sup>2</sup>: ", round(cor_mean_africa,2), "; r<sup>2</sup>: ", round(R2_mean_africa,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
                     color = "black",
@@ -391,7 +407,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Americas - Avg r<sup>2</sup>: ", round(cor_mean_americas,2)),
+      geom_richtext(aes(label = paste0("Americas r<sup>2</sup>: ", round(cor_mean_americas,2), "; r<sup>2</sup>: ", round(R2_mean_americas,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
                     color = "black",
@@ -399,7 +415,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Eurasia - Avg r<sup>2</sup>: ", round(cor_mean_eurasia,2)),
+      geom_richtext(aes(label = paste0("Eurasia r<sup>2</sup>: ", round(cor_mean_eurasia,2), "; r<sup>2</sup>: ", round(R2_mean_eurasia,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
                     color = "black",
@@ -432,9 +448,16 @@ for(aggregate_district in c(F, T)){
     
     p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
-      dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
-      dplyr::mutate(country_name = paste0(country_name, "\nr2: ", 
-                                          round(cor_val, 2))) %>%
+      # dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
+      # dplyr::mutate(country_name = paste0(country_name, "\nr2: ", 
+      #                                     round(cor_val, 2))) %>%
+      
+      dplyr::mutate(cor_val = cor(truth, prediction)^2,
+                    coef_det_val = R2(prediction, truth, form = "traditional")) %>%
+      dplyr::mutate(country_name = paste0(country_name, 
+                                          "\nr2: ", round(cor_val, 2),
+                                          "\nR2: ", round(coef_det_val, 2))) %>%
+      
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
                       fct_rev()) %>%
@@ -467,9 +490,11 @@ for(aggregate_district in c(F, T)){
   } else{
     p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
-      dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
-      dplyr::mutate(country_name = paste0(country_name, "\nr2: ", 
-                                          round(cor_val, 2))) %>%
+      dplyr::mutate(cor_val = cor(truth, prediction)^2,
+                    coef_det_val = R2(prediction, truth, form = "traditional")) %>%
+      dplyr::mutate(country_name = paste0(country_name, 
+                                          "\nr2: ", round(cor_val, 2),
+                                          "\nR2: ", round(coef_det_val, 2))) %>%
       ungroup() %>%
       dplyr::mutate(country_name = reorder(country_name, cor_val, FUN = median, .desc =T) %>%
                       fct_rev()) %>%

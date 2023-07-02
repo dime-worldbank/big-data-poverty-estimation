@@ -21,8 +21,6 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       survey_all_df$within_country_fold <- "fold1"
     }
     
-    dhs_all_df_coll$within_country_fold
-    
     if(DTL_SATELLITE %in% "s2"){
       # For s2, we always just extract 2018 - 2020 data
       ntl_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Individual Datasets",
@@ -39,7 +37,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
       dplyr::filter(!is.na(avg_rad)) %>%
       arrange(runif(n()))
     
-    if(SURVEY_NAME %in% c("DHS", "LAGOS_POINTS", "DHS_nga_policy_experiment", "DHS_policy_experiment")){
+    if(SURVEY_NAME %in% c("DHS", "LSMS", "LAGOS_POINTS", "DHS_nga_policy_experiment", "DHS_policy_experiment")){
       years <- "all"
     } else if(SURVEY_NAME %in% "OPM"){
       years <- unique(survey_all_df$year)

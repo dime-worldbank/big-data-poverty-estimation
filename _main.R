@@ -7,7 +7,8 @@
 # DHS_all_policy_experiment
 # DHS_nga_policy_experiment
 # DHS
-SURVEY_NAME <- "DHS"
+# LSMS
+SURVEY_NAME <- "LSMS"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -42,6 +43,7 @@ data_dir         <- file.path(dropbox_dir, "Data")
 opm_dir          <- file.path(data_dir, "OPM")
 osm_dir          <- file.path(data_dir, "OSM")
 dhs_dir          <- file.path(data_dir, "DHS")
+lsms_dir         <- file.path(data_dir, "LSMS")
 dhs_exp_dir      <- file.path(data_dir, "DHS_policy_experiment")
 dhs_nga_exp_dir  <- file.path(data_dir, "DHS_nga_policy_experiment")
 dhs_all_exp_dir  <- file.path(data_dir, "DHS_all_policy_experiment")
@@ -72,7 +74,7 @@ gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
 # Create Directory Structure for Survey Data -----------------------------------
 survey_name_i <- "DHS"
 
-for(survey_name_i in c("DHS", "DHS_all_policy_experiment",  "DHS_policy_experiment", "DHS_nga_policy_experiment", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS", "LAGOS_POINTS")){
+for(survey_name_i in c("DHS", "LSMS", "DHS_all_policy_experiment",  "DHS_policy_experiment", "DHS_nga_policy_experiment", "OPM", "OPM_GPSDISP_DHS", "PAK_POINTS", "PAK_CITY_POINTS", "LAGOS_POINTS")){
   
   ### DROPBOX
   file.path(data_dir, survey_name_i) %>% dir.create()
@@ -131,6 +133,11 @@ PK_UTM_PROJ <- PAK_UTM_PROJ
 
 #### Buffers
 if(SURVEY_NAME %>% str_detect("DHS")){
+  BUFFER_OSM       <- 5000
+  BUFFER_SATELLITE <- 2500
+} 
+
+if(SURVEY_NAME %>% str_detect("LSMS")){
   BUFFER_OSM       <- 5000
   BUFFER_SATELLITE <- 2500
 } 
@@ -226,6 +233,7 @@ library(gghalves)
 library(exactextractr)
 library(ggsignif)
 library(LiblineaR)
+library(caret)
 source(file.path(github_dir, "Functions", "functions.R"))
 
 source("https://raw.githubusercontent.com/ramarty/download_blackmarble/main/R/download_blackmarble.R")
@@ -472,12 +480,14 @@ if(F){
   ## SI
   source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_both_years.R"))
   source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_most_recent.R"))
+  source(file.path(figures_tables_global_dir, "si", "table_wealth_sd_within_across"))
   source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_levels_cor.R"))
   #source(file.path(figures_tables_global_dir, "si", "figure_dhsindex_globalindex_changes_cor.R")) # CHECK? VALID TO DO CHANGES???
   source(file.path(figures_tables_global_dir, "si", "figure_fb_features_cor_each_country.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_accuracy_featuretype_targetvar.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_country_featureset_r2_levels.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_educ_fb_dhs.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_ml_type_comparison.R"))
   
 }
 

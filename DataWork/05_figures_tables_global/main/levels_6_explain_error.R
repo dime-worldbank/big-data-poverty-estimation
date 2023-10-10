@@ -1,7 +1,7 @@
 # Explain Error
 
 # Load data --------------------------------------------------------------------
-level_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+level_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                               "survey_alldata_clean_predictions.Rds"))
 
 wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
@@ -30,7 +30,6 @@ level_df <- level_df %>%
   ) %>% as.factor())
 
 # Figures ----------------------------------------------------------------------
-
 p_viirs <- level_df %>%
   ggplot(aes(x = viirs_avg_rad,
              y = error)) +
@@ -147,6 +146,29 @@ ggsave(p,
        filename = file.path(figures_global_dir, "explain_error_levels.png"),
        height = 4,
        width = 8)
+
+# Regression -------------------------------------------------------------------
+lm1 <- lm(error ~ viirs_avg_rad + urban_rural + wdi_income + continent_adj, data = level_df)
+
+stargazer(lm1,
+          covariate.labels = c("Nighttime lights",
+                               "Urban",
+                               "Lower middle income",
+                               "Upper middle income",
+                               "Americas",
+                               "Eurasia"),
+          dep.var.labels = "Absolute value of difference in true and predicted wealth",
+          omit.stat = c("f", "ser"),
+          float = F,
+          out = file.path(tables_global_dir, "explain_error_levels_lm.tex"))
+
+# Explain Model Error ----------------------------------------------------------
+level_df$error_predict <- predict(lm1, level_df) %>% as.numeric()
+
+lm(error_predict ~ error, data = level_df) %>%
+  summary()
+
+
 
 
 

@@ -204,6 +204,29 @@ survey_chn_df %>%
   paste0("\\%") %>%
   write(file.path(stats_global_dir, "changes_village_r2.txt")) 
 
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  median() %>%
+  round(2) %>%
+  write(file.path(stats_global_dir, "changes_village_r2_median_no_perc.txt")) 
+
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_village_r2_max.txt")) 
+
+
 # survey_chn_df %>%
 #   dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
 #   group_by(country_code, gadm_uid) %>%

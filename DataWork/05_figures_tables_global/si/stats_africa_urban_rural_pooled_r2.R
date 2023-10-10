@@ -2,19 +2,32 @@
 
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
-                        "survey_alldata_clean.Rds"))
-
-df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                         "survey_alldata_clean_predictions.Rds"))
 
+# All
+df %>%
+  dplyr::filter(most_recent_survey == T) %>%
+  dplyr::summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2)
 
+# By continent
+df %>%
+  dplyr::filter(most_recent_survey == T) %>%
+  group_by(continent_adj) %>%
+  dplyr::summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2)
+
+# By continent & urban/rural
 df %>%
   dplyr::filter(most_recent_survey == T) %>%
   group_by(continent_adj, urban_rural) %>%
   dplyr::summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2)
 
+# District, by continent
 df %>%
   dplyr::filter(most_recent_survey == T) %>%
+  group_by(continent_adj, country_name, gadm_uid) %>%
+  dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
+                   predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  ungroup() %>%
   group_by(continent_adj) %>%
   dplyr::summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2)
 

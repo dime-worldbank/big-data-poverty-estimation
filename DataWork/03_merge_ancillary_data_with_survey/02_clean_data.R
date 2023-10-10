@@ -181,6 +181,7 @@ if(F){
 }
 
 # Export Data ------------------------------------------------------------------
+df$fb_prop_radius <- NULL
 saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 

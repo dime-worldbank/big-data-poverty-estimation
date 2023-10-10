@@ -8,7 +8,7 @@
 # DHS_nga_policy_experiment
 # DHS
 # LSMS
-SURVEY_NAME <- "LSMS"
+SURVEY_NAME <- "DHS"
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -165,6 +165,7 @@ library(dplyr)
 library(data.table)
 library(raster)
 library(leaflet)
+library(stargazer)
 library(rgdal)
 library(dplyr)
 library(raster)

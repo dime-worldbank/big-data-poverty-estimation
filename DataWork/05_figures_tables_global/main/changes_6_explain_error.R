@@ -157,6 +157,27 @@ ggsave(p,
        height = 4,
        width = 8)
 
+# Regression -------------------------------------------------------------------
+lm1 <- lm(error ~ abs(ntlharmon_avg) + urban_rural_yr1 + wdi_income + continent_adj, data = changes_df)
+
+stargazer(lm1,
+          covariate.labels = c("Change in nighttime lights, absolute value",
+                               "Urban (baseline)",
+                               "Lower middle income",
+                               "Upper middle income",
+                               "Americas",
+                               "Eurasia"),
+          omit.stat = c("f", "ser"),
+          dep.var.labels = "Absolute value of difference in change in true and predicted wealth",
+          float = F,
+          out = file.path(tables_global_dir, "explain_error_changes_lm.tex"))
+
+# Explain Model Error ----------------------------------------------------------
+changes_df$error_predict <- predict(lm1, changes_df) %>% as.numeric()
+
+lm(error_predict ~ error, data = changes_df) %>%
+  summary()
+
 
 
 

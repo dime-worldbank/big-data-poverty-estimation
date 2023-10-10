@@ -56,7 +56,7 @@ api_keys <- read.csv(file.path(api_key_dir, "api_keys.csv"), stringsAsFactors=F)
 
 api_keys <- api_keys[api_keys$Working %in% "yes",]
 
-api_keys <- api_keys[!(api_keys$Details %in% c("robertandrewmarty3@gmail.com")),]
+api_keys <- api_keys[(api_keys$Details %in% c("robmarty3@gmail.com")),]
 
 KEYS_ACCOUNTS <- api_keys$Details %>% unique()
 N_KEYS <- length(KEYS_ACCOUNTS)

@@ -8,11 +8,11 @@ survey_df <- readRDS(file.path(INV_DATA_DIR, "survey_socioeconomic.Rds"))
 #INV_DATA_DIR <- file.path(data_dir, "DHS_OLD", "FinalData", "Individual Datasets")
 
 # [Load] Facebook --------------------------------------------------------------
-# fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
-# 
-# fb_df <- fb_df %>%
-#   dplyr::select(uid, radius, contains("estimate_mau_upper_bound_")) %>%
-#   rename_at(vars(-uid), ~ paste0("fb_", .))
+fb_df <- readRDS(file.path(INV_DATA_DIR, "facebook_marketing_dau_mau.Rds"))
+
+fb_df <- fb_df %>%
+  dplyr::select(uid, radius, contains("estimate_mau_upper_bound_")) %>%
+  rename_at(vars(-uid), ~ paste0("fb_", .))
 
 # [Load] Facebook RWI ----------------------------------------------------------
 #fb_rwi_df <- readRDS(file.path(INV_DATA_DIR, "fb_relative_wealth.Rds"))
@@ -43,14 +43,14 @@ mosaik_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData",
 #                                        "cnn_features_landsat_ntlharmon_underiaTrue_b_bu_pca.Rds"))
 # 
 # ## Sentinel
-# cnn_sentinel_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-#                                          "cnn_features_s2_viirs_underiaTrue_b_rgb_pca.Rds"))
-# 
-# cnn_sentinel_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-#                                           "cnn_features_s2_viirs_underiaTrue_b_ndvi_pca.Rds"))
-# 
-# cnn_sentinel_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features", 
-#                                         "cnn_features_s2_viirs_underiaTrue_b_bu_pca.Rds"))
+cnn_sentinel_rgb_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features",
+                                         "cnn_features_s2_viirs_underiaTrue_b_rgb_pca.Rds"))
+
+cnn_sentinel_ndvi_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features",
+                                          "cnn_features_s2_viirs_underiaTrue_b_ndvi_pca.Rds"))
+
+cnn_sentinel_bu_df <- readRDS(file.path(INV_DATA_DIR, "cnn_features",
+                                        "cnn_features_s2_viirs_underiaTrue_b_bu_pca.Rds"))
 
 # [Load] Globcover -------------------------------------------------------------
 gc_df <- readRDS(file.path(INV_DATA_DIR, "globcover.Rds"))
@@ -311,16 +311,16 @@ s1_df <- s1_df %>%
 
 # [Merge] Datasets -------------------------------------------------------------
 survey_ancdata_df <- list(survey_df, 
-                          #fb_df, 
+                          fb_df, 
                           #fb_prop_df, 
                           s5p_df,
                           #fb_rwi_df,
                           # cnn_landsat_rgb_df,
                           # cnn_landsat_ndvi_df,
                           # cnn_landsat_bu_df,
-                          # cnn_sentinel_rgb_df,
-                          # cnn_sentinel_ndvi_df,
-                          # cnn_sentinel_bu_df,
+                          cnn_sentinel_rgb_df,
+                          cnn_sentinel_ndvi_df,
+                          cnn_sentinel_bu_df,
                           osm_poi_df, 
                           osm_road_df,
                           mosaik_df,

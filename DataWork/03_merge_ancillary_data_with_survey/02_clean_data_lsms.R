@@ -23,70 +23,66 @@ df <- df %>%
     iso2 == "TG" ~ "Togo"
   ))
 
-# Remove Guyana (no OSM data)
-# df <- df %>%
-#   dplyr::filter(country_code != "GY")
-
 # Facebook - Cleanup -----------------------------------------------------------
 # For all Facebook variables except total users, if 1000, make 0
-if(F){
-  if_1000_make_0 <- function(x){
-    x[x %in% 1000] <- 0
-    return(x)
-  }
-  
-  df$fb_estimate_mau_upper_bound_1[is.na(df$fb_estimate_mau_upper_bound_1)] <- 0
-  
-  df <- df %>%
-    dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), if_1000_make_0)
-  
-  # Facebook - Proportion --------------------------------------------------------
-  # Create variables of the proportion of Facebook users within each category
-  truncate_1 <- function(x){
-    x[x > 1] <- 1
-    return(x)
-  }
-  
-  df_fb_prop <- df %>%
-    dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), ~(. / fb_estimate_mau_upper_bound_1)) %>%
-    dplyr::select(-c(fb_estimate_mau_upper_bound_1)) %>%
-    dplyr::select(uid, contains("fb_"), -contains("fb_rwi")) %>%
-    dplyr::mutate_at(vars(contains("fb_")), truncate_1) %>%
-    rename_at(vars(-uid), ~ str_replace_all(., "fb_", "fb_prop_")) 
-  
-  df <- df %>%
-    left_join(df_fb_prop, by = "uid")
-  
-  # Facebook - Divide by World Pop -----------------------------------------------
-  # Calculate proportion of population is on Facebook
-  
-  # Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
-  inf_to_zero <- function(x){
-    x[x == Inf] <- 0
-    return(x)
-  }
-  
-  df_fb_wp <- df %>% 
-    ## Divide by World Pop population, depending on Facebook radius used
-    mutate(across(contains('fb_estimate_'), 
-                  ~ case_when(fb_radius %in% 2 ~ . / worldpop_2km, 
-                              fb_radius %in% 5 ~ . / worldpop_5km, 
-                              fb_radius %in% 10 ~ . / worldpop_10km))) %>%
-    
-    ## Select specific variables and rename
-    dplyr::select(uid, contains("fb_estimate_")) %>%
-    rename_at(vars(-uid), ~ str_replace_all(., "fb_estimate", "fb_wp_prop_estimate")) %>%
-    
-    ## Cleanup values
-    dplyr::mutate_at(vars(contains("fb_wp")), inf_to_zero) %>%
-    dplyr::mutate_at(vars(contains("fb_wp")), truncate_1) %>%
-    
-    ## Only keep % of population on Facebook
-    dplyr::select(uid, fb_wp_prop_estimate_mau_upper_bound_1)
-  
-  df <- df %>%
-    left_join(df_fb_wp, by = c("uid"))
+
+if_1000_make_0 <- function(x){
+  x[x %in% 1000] <- 0
+  return(x)
 }
+
+df$fb_estimate_mau_upper_bound_1[is.na(df$fb_estimate_mau_upper_bound_1)] <- 0
+
+df <- df %>%
+  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), if_1000_make_0)
+
+# Facebook - Proportion --------------------------------------------------------
+# Create variables of the proportion of Facebook users within each category
+truncate_1 <- function(x){
+  x[x > 1] <- 1
+  return(x)
+}
+
+df_fb_prop <- df %>%
+  dplyr::mutate_at(vars(contains("mau"), -fb_estimate_mau_upper_bound_1), ~(. / fb_estimate_mau_upper_bound_1)) %>%
+  dplyr::select(-c(fb_estimate_mau_upper_bound_1)) %>%
+  dplyr::select(uid, contains("fb_"), -contains("fb_rwi")) %>%
+  dplyr::mutate_at(vars(contains("fb_")), truncate_1) %>%
+  rename_at(vars(-uid), ~ str_replace_all(., "fb_", "fb_prop_")) 
+
+df <- df %>%
+  left_join(df_fb_prop, by = "uid")
+
+# Facebook - Divide by World Pop -----------------------------------------------
+# Calculate proportion of population is on Facebook
+
+# Sometimes WP is zero but have a value for facebook, where [value]/0 turns to Inf
+inf_to_zero <- function(x){
+  x[x == Inf] <- 0
+  return(x)
+}
+
+df_fb_wp <- df %>% 
+  ## Divide by World Pop population, depending on Facebook radius used
+  mutate(across(contains('fb_estimate_'), 
+                ~ case_when(fb_radius %in% 2 ~ . / worldpop_2km, 
+                            fb_radius %in% 5 ~ . / worldpop_5km, 
+                            fb_radius %in% 10 ~ . / worldpop_10km))) %>%
+  
+  ## Select specific variables and rename
+  dplyr::select(uid, contains("fb_estimate_")) %>%
+  rename_at(vars(-uid), ~ str_replace_all(., "fb_estimate", "fb_wp_prop_estimate")) %>%
+  
+  ## Cleanup values
+  dplyr::mutate_at(vars(contains("fb_wp")), inf_to_zero) %>%
+  dplyr::mutate_at(vars(contains("fb_wp")), truncate_1) %>%
+  
+  ## Only keep % of population on Facebook
+  dplyr::select(uid, fb_wp_prop_estimate_mau_upper_bound_1)
+
+df <- df %>%
+  left_join(df_fb_wp, by = c("uid"))
+
 # Log Values -------------------------------------------------------------------
 log_p1 <- function(x){
   log(x + 1)
@@ -107,7 +103,7 @@ df <- df %>%
     "continent_adj", "within_country_fold",
     "latitude", "longitude", "gadm_uid", "GID_1", "GID_2",
     "most_recent_survey",
-  
+    
     # Target variables
     "poverty_measure",
     "pca_allvars_mr",
@@ -139,7 +135,7 @@ df <- df %>%
     
     starts_with("pollution_"))
   ) #%>%
-  #dplyr::select(-c(fb_prop_radius))
+#dplyr::select(-c(fb_prop_radius))
 
 # Remove Observations ----------------------------------------------------------
 #TODO: Do later? Or just for most_recent?
@@ -170,7 +166,8 @@ if(F){
 }
 
 # Export Data ------------------------------------------------------------------
-saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df$fb_prop_radius <- NULL
+saveRDS(df, file.path(data_dir, "LSMS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 
 

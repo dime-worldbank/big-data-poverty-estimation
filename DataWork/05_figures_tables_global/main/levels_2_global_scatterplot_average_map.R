@@ -488,6 +488,11 @@ for(aggregate_district in c(F, T)){
     
     
   } else{
+    # pred_best_df %>%
+    #   dplyr::filter(country_name == "Sierra Leone") %>%
+    #   dplyr::summarise(truth = mean(truth),
+    #                    prediction = mean(prediction))
+    
     p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2,

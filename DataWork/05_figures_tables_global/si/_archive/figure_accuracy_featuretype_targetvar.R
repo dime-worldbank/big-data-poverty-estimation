@@ -3,15 +3,13 @@
 FILL_COLOR <- "gray80"
 
 # Load data --------------------------------------------------------------------
-# results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-#                                 "accuracy_appended.Rds"))
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended_bestparam.Rds"))
+                                "accuracy_appended.Rds"))
 
 results_df <- results_df %>%
   dplyr::filter(level_change %in% "levels",
                 estimation_type %in% "within_country_cv",
-                target_var != "pca_allvars") %>%
+                target_var_dep != "pca_allvars") %>%
   mutate(target_var_clean = target_var_clean %>% as.character()) %>%
   mutate(target_var_clean = case_when(
     target_var_clean == "Asset Index - All Periods" ~ "Asset Index",

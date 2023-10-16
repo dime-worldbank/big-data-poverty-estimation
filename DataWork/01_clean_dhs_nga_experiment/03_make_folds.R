@@ -129,18 +129,6 @@ dhs_all_df_coll_folds <- map_df(unique(dhs_all_df_coll$country_code), function(c
   return(df_out)
 }) 
 
-# # Select variables -------------------------------------------------------------
-# dhs_all_df_coll_folds <- dhs_all_df_coll_folds %>%
-#   dplyr::select(uid, 
-#                 GID_0,
-#                 GID_1,
-#                 GID_2,
-#                 NAME_0,
-#                 NAME_1,
-#                 NAME_2,
-#                 within_country_fold,
-#                 gadm_uid)
-
 # Export -----------------------------------------------------------------------
 #### All Years
 saveRDS(dhs_all_df_coll_folds, file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
@@ -148,46 +136,4 @@ saveRDS(dhs_all_df_coll_folds, file.path(dhs_nga_exp_dir, "FinalData", "Individu
 write.csv(dhs_all_df_coll_folds,
           file.path(dhs_nga_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
           row.names = F)
-
-# #### Only for predictions
-# saveRDS(dhs_all_df_coll_folds[dhs_all_df_coll_folds$year %in% 2013,], 
-#         file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-# 
-# write.csv(dhs_all_df_coll_folds[dhs_all_df_coll_folds$year %in% 2013,],
-#           file.path(dhs_exp_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.csv"),
-#           row.names = F)
-
-
-
-#### CHECK PCA
-dhs_df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
-dhs_df <- dhs_df %>%
-  dplyr::select(uid, pca_allvars)
-
-dhs_df <- dhs_df %>%
-  left_join(dhs_all_df_coll_folds %>% 
-              dplyr::rename(pca_allvars_new = pca_allvars),
-            by = "uid")
-
-cor.test(dhs_df$pca_allvars, dhs_df$pca_allvars_new)
-plot(dhs_df$pca_allvars, dhs_df$pca_allvars_new)
-
-
-
-
-
-df <- dhs_all_df_coll_folds %>%
-  group_by(NAME_1, year) %>%
-  dplyr::summarise(pca_allvars = mean(pca_allvars)) %>%
-  dplyr::mutate(year = paste0("yr", year)) %>%
-  pivot_wider(id_cols = NAME_1, values_from = pca_allvars, names_from = year) %>%
-  
-  dplyr::mutate(yr2013_est = (yr2008 - yr2003) + yr2008)
-
-cor.test(df$yr2013, df$yr2013_est)
-df %>%
-  ggplot() +
-  geom_point(aes(x = yr2013,
-                 y = yr2013_est))
-
 

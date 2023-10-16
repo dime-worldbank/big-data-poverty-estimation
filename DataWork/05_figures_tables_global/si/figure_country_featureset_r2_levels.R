@@ -4,13 +4,13 @@ pad0 <- function(x) ifelse(x <= 9, paste0("0", x), paste0(x))
 
 # Load data --------------------------------------------------------------------
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended_bestparam.Rds"))
+                                "accuracy_appended.Rds"))
 
 # Prep data --------------------------------------------------------------------
 results_sub_df <- results_df %>%
-  dplyr::filter(estimation_type %in% "best",
-                target_var %in% "pca_allvars_mr") %>%
-  dplyr::filter(!(feature_type %in% c("all")))
+  dplyr::filter(estimation_type %in% "global_country_pred",
+                target_var_dep %in% "pca_allvars_mr") %>%
+  dplyr::filter(feature_type != "all")
 
 results_sub_df <- results_sub_df %>%
   arrange(-r2) %>%

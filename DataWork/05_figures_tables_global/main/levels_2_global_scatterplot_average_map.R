@@ -236,11 +236,6 @@ for(aggregate_district in c(F, T)){
                    aes(x = long, y = lat, group = group),
                    fill = "gray50",
                    color = "white") +
-      #geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
-      #             aes(x = long, y = lat, group = group),
-      #             color = "black",
-      #             fill = "black",
-      #             size = 1) +
       geom_polygon(data = world_sp_tidy[!is.na(world_sp_tidy$cor),],
                    aes(x = long, y = lat, group = group,
                        fill = r2),
@@ -367,10 +362,7 @@ for(aggregate_district in c(F, T)){
     
     p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
-      # dplyr::mutate(cor_val = cor(truth, prediction)^2) %>%
-      # dplyr::mutate(country_name = paste0(country_name, "\nr2: ", 
-      #                                     round(cor_val, 2))) %>%
-      
+
       dplyr::mutate(cor_val = cor(truth, prediction)^2,
                     coef_det_val = R2(prediction, truth, form = "traditional")) %>%
       dplyr::mutate(country_name = paste0(country_name, 
@@ -407,11 +399,7 @@ for(aggregate_district in c(F, T)){
     
     
   } else{
-    # pred_best_df %>%
-    #   dplyr::filter(country_name == "Sierra Leone") %>%
-    #   dplyr::summarise(truth = mean(truth),
-    #                    prediction = mean(prediction))
-    
+
     p_scatter_country <- pred_best_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2,

@@ -1,26 +1,21 @@
 # LSMS Results
 
 # Load data --------------------------------------------------------------------
-acc_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
-                    "accuracy") %>%
+pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", 
+                     "prediction") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("lsms") %>%
-  map_df(readRDS)
+  str_subset("xgboost") %>%
+  map_df(readRDS) 
 
-# Clean data -------------------------------------------------------------------
-acc_df <- acc_df %>%
-  dplyr::select(-c(fold, cor_fold, coef_det_fold, N_fold)) %>%
-  distinct() %>%
-  mutate(r2 = cor_all^2) %>%
-  dplyr::mutate(country_name = case_when(
-    country == "BF" ~ "Burkina Faso",
-    country == "BJ" ~ "Benin",
-    country == "CI" ~ "Cote d'Ivoire",
-    country == "ET" ~ "Ethiopia",
-    country == "MW" ~ "Malawi",
-    country == "TG" ~ "Togo"
-  )) %>%
+# Make accuracy dataset --------------------------------------------------------
+acc_df <- pred_df %>%
+  group_by(country_code, country_name, estimation_type, feature_type, target_var_dep) %>%
+  dplyr::summarise(r2 = cor(target_var, prediction)^2,
+                   R2 = R2(pred = prediction, obs = target_var, form = "traditional"),
+                   n = n()) %>%
+  ungroup() %>%
   dplyr::mutate(feature_type_clean = case_when(
     feature_type == "all" ~ "All Features",
     feature_type == "all_changes" ~ "All Features",
@@ -60,32 +55,24 @@ acc_df <- acc_df %>%
     feature_type == "pollution_aod" ~ "Pollution",
     feature_type == "satellites_changes" ~ "Day/Night Satellites",
     feature_type == "s1_sar" ~ "SAR",
-    feature_type == "mosaik" ~ "MOSAIK",
+    feature_type == "mosaik" ~ "MOSAIKS",
     TRUE ~ feature_type
   ))
 
-acc_df <- acc_df %>%
-  filter(ml_model_type %in% "xgboost")
-
-# Main results -----------------------------------------------------------------
+# Figure -----------------------------------------------------------------------
 p_pca <- acc_df %>%
   filter(estimation_type %in% "within_country_cv",
-         target_var == "pca_allvars_mr") %>%
+         acc_df$target_var_dep == "pca_allvars_mr") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_point(aes(fill = country_name),
              pch = 21) +
   stat_summary(fun = median, geom = "text", col = "black",     
                vjust = -0.4, aes(label = paste(round(..y.., digits = 2)))) +
-  # stat_summary(fun = max, geom = "text", col = "firebrick3",    
-  #              vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
-  # stat_summary(fun = min, geom = "text", col = "firebrick3",    
-  #              vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
        fill = "Country",
        title = "A. Predicting Wealth Index") +
-  #scale_y_continuous(limits = c(0,1)) +
   theme_classic() +
   theme(axis.text.y = element_text(face = "bold"),
         plot.title = element_text(face = "bold"),
@@ -94,22 +81,17 @@ p_pca <- acc_df %>%
 
 p_cons <- acc_df %>%
   filter(estimation_type %in% "within_country_cv",
-         target_var == "poverty_measure") %>%
+         target_var_dep == "poverty_measure") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_point(aes(fill = country_name),
              pch = 21) +
   stat_summary(fun = median, geom = "text", col = "black",     
                vjust = -0.4, aes(label = paste(round(..y.., digits = 2)))) +
-  # stat_summary(fun = max, geom = "text", col = "firebrick3",    
-  #              vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
-  # stat_summary(fun = min, geom = "text", col = "firebrick3",    
-  #              vjust = -0.2, aes(label = paste(round(..y.., digits = 2)))) +
   labs(x = NULL,
        y = expression(r^2),
        fill = "Country",
        title = "B. Predicting Consumption") +
-  #scale_y_continuous(limits = c(0,1)) +
   theme_classic() +
   theme(axis.text.y = element_text(face = "bold"),
         plot.title = element_text(face = "bold"),

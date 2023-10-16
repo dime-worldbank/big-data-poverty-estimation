@@ -4,8 +4,6 @@
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-# district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-#                                  "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
 district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                  "predictions_changes_district_appended.Rds"))
 district_df <- district_df %>%

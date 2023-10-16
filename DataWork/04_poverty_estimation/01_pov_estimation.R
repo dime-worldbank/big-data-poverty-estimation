@@ -35,14 +35,25 @@ if(REPLACE_IF_EXTRACTED){
 }
 
 # Make parameter grid ----------------------------------------------------------
+# xgb_grid = expand.grid(
+#   model = "xgboost",
+#   nrounds = c(50, 100), ## 50
+#   max_depth = c(6,2), ## 6
+#   eta = c(0.3), ## 0.3
+#   gamma = c(0), ##
+#   colsample_bytree = 1, ##
+#   min_child_weight = c(1), ## 1
+#   subsample = c(1, 0.5) ## 1
+# )
+
 xgb_grid = expand.grid(
   model = "xgboost",
-  nrounds = c(50, 100), ## 50
-  max_depth = c(6,2), ## 6
+  nrounds = c(100, 500), ## 50
+  max_depth = c(1,3,5,7,9), ## 6
   eta = c(0.3), ## 0.3
-  gamma = c(0), ##
+  gamma = c(0, 1), ##
   colsample_bytree = 1, ##
-  min_child_weight = c(1), ## 1
+  min_child_weight = c(1, 10), ## 1
   subsample = c(1, 0.5) ## 1
 )
 
@@ -84,6 +95,7 @@ run_model <- function(param_i,
                      tree_method = "hist",
                      max_bin = 256,
                      min_child_weight = param_i$min_child_weight,
+                     early_stopping_rounds = 50,
                      print_every_n = 10)
     
     pred <- predict(model, X_test)

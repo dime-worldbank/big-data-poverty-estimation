@@ -10,10 +10,8 @@ set.seed(42)
 R2_SCATTER_TEXT_SIZE <- 3
 
 # Load data --------------------------------------------------------------------
-#results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-#                                "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
 results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                "accuracy_appended_bestparam.Rds"))
+                                "accuracy_appended.Rds"))
 
 results_df <- results_df %>%
   dplyr::filter(level_change == "levels") %>%
@@ -65,13 +63,13 @@ results_df <- results_df %>%
 #### Dataset subsets for analysis
 results_fb_sum_df <- results_df %>%
   dplyr::filter(feature_type %in% "fb",
-                estimation_type %in% "best",
-                target_var %in% "pca_allvars_mr")
+                estimation_type %in% "global_country_pred",
+                target_var_dep %in% "pca_allvars_mr")
 
 results_all_sum_df <- results_df %>%
   dplyr::filter(feature_type %in% "all",
-                estimation_type %in% "best",
-                target_var %in% "pca_allvars_mr")
+                estimation_type %in% "global_country_pred",
+                target_var_dep %in% "pca_allvars_mr")
 
 # Scatterplots -----------------------------------------------------------------
 r2_all_min <- results_all_sum_df$r2 %>% min()
@@ -162,8 +160,8 @@ p_fb_propfb_scatter <- results_fb_sum_df %>%
 
 # Boxplots across all feature types --------------------------------------------
 results_best_df <- results_df %>%
-  dplyr::filter(estimation_type %in% "best",
-                target_var %in% "pca_allvars_mr") %>%
+  dplyr::filter(estimation_type %in% "global_country_pred",
+                target_var_dep %in% "pca_allvars_mr") %>%
   dplyr::mutate(feature_type_clean = feature_type_clean %>% 
                   as.character()) 
 

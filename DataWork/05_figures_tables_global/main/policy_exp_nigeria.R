@@ -1,5 +1,7 @@
 # Policy Experiment: Nigeria
 
+gadm <- "gadm_2"
+
 for(gadm in c("gadm_1", "gadm_2")){
   
   # Load data ------------------------------------------------------------------
@@ -9,13 +11,13 @@ for(gadm in c("gadm_1", "gadm_2")){
   if(gadm == "gadm_1") dhs_df$GID_2 <- dhs_df$GID_1
   
   # Add wealth estimate ----------------------------------------------------------
-  model_use <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models") %>%
+  model_use <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "model") %>%
     list.files() %>% 
-    str_subset("levels_changevars_ng") %>%
+    str_subset("nigeriaapplication") %>%
     str_subset("xgboost") %>%
     str_subset("global_country")
   
-  ml_model <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "models",
+  ml_model <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "model",
                                 model_use))
   
   X <- dhs_df %>%
@@ -111,7 +113,7 @@ for(gadm in c("gadm_1", "gadm_2")){
   r2_R2_df <- oos_long_df %>%
     group_by(year, name) %>%
     dplyr::summarise(r2 = cor(value, pca_true)^2,
-                     R2 = R2(value, pca_true, form = "traditional")) %>%
+                     R2 = R2(pred = value, obs = pca_true, form = "traditional")) %>%
     ungroup() %>%
     mutate(label = paste0("r<sup>2</sup>: ", round(r2, 2), "<br>R<sup>2</sup>: ", round(R2, 2)))
   

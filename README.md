@@ -1,4 +1,4 @@
-# Poverty Estimation
+# Replication Package for: Global poverty estimation using private and public sector big data sources
 
 ## High-Level Folders
 

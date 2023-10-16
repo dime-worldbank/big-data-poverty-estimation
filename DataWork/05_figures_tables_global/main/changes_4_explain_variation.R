@@ -3,7 +3,7 @@
 
 # Load data --------------------------------------------------------------------
 accu_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                        "accuracy_appended_bestparam.Rds"))
+                        "accuracy_appended.Rds"))
 
 accu_df <- accu_df %>%
   dplyr::filter(level_change %in% "changes")
@@ -11,8 +11,12 @@ accu_df <- accu_df %>%
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
+#district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+#                                 "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
 district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-                                 "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+                                 "predictions_changes_district_appended.Rds"))
+district_df <- district_df %>%
+  dplyr::filter(estimation_type %in% "best")
 
 # Explain variation: scatter plots ---------------------------------------------
 line_color <- "darkorange"
@@ -20,7 +24,7 @@ accu_sum_df <- accu_df %>%
   ungroup() %>%
   dplyr::filter(feature_type %in% "all_changes",
                 estimation_type %in% "best", # best "within_country_cv", global_country_pred,
-                target_var %in% "pca_allvars")
+                target_var_dep %in% "pca_allvars")
 
 p_scatter <- accu_sum_df %>%
   dplyr::mutate(wdi_population = log(wdi_population),
@@ -68,29 +72,14 @@ p_scatter <- accu_sum_df %>%
 # Boxplot by income and unit ---------------------------------------------------
 cluster_sum_df <- cluster_df %>%
   group_by(country_code, income) %>%
-  dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_best)) %>%
+  dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_best_all_changes)) %>%
   ungroup() %>%
-  mutate(unit = "Village") %>%
+  mutate(unit = "Cluster") %>%
   mutate(r2 = cor^2)
 
-# district_sum_df <- cluster_df %>%
-#   
-#   group_by(country_code, income, gadm_uid) %>%
-#   dplyr::summarise(pca_allvars = mean(pca_allvars),
-#                    predict_pca_allvars_best = mean(predict_pca_allvars_best)) %>%
-#   
-#   group_by(country_code, income) %>%
-#   dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_best)) %>%
-#   
-#   ungroup() %>%
-#   mutate(unit = "District") %>%
-#   mutate(r2 = cor^2)
-
-# district_sum_df <- district_df %>%
-#   distinct(country_code, income, r2) %>%
-#   dplyr::mutate(unit = "District")
-
 district_sum_df <- district_df %>%
+  group_by(country_code) %>%
+  dplyr::mutate(r2 = cor(truth, prediction)^2) %>%
   distinct(country_code, income, r2) %>%
   dplyr::mutate(unit = "District")
 

@@ -1,5 +1,8 @@
 # Poverty Estimation Using XGBoost
 
+### TODO
+# 1. For OUT_MODEL, has "prediction" instead of "model"
+
 ### Parameters
 
 # For each model / time xgBoost is run, implement a grid search to determine the
@@ -12,7 +15,7 @@ grid_search <- F
 REPLACE_IF_EXTRACTED <- F
 
 # Define out path --------------------------------------------------------------
-OUT_PATH <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results_v3")
+OUT_PATH <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results")
 
 # Delete existing files --------------------------------------------------------
 if(REPLACE_IF_EXTRACTED){
@@ -22,7 +25,7 @@ if(REPLACE_IF_EXTRACTED){
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
   
-  #files_to_rm <- files_to_rm %>% str_subset("continent")
+  files_to_rm <- files_to_rm %>% str_subset("nigeriaapplication")
   
   for(file_i in files_to_rm){
     file.remove(file_i)
@@ -43,15 +46,23 @@ xgb_grid = expand.grid(
   subsample = c(1, 0.5) ## 1
 )
 
+lambda_max <- 5
+lambda_min <- 0.000001
+K = 10
+lambda_seq <- round(exp(seq(log(lambda_max),
+                            log(lambda_min),
+                            length.out = K)),
+                    digits = 10)
+
 glmnet_grid = expand.grid(
   model = "glmnet",
   glmnet_alpha = c(0, 0.5, 1),
-  glmnet_nfolds = 5
+  glmnet_lambda = lambda_seq
 )
 
 svm_grid <- expand.grid(
   model = "svm",
-  svm_cost = c(5, 10),
+  svm_cost = c(1, 5, 10),
   svm_svr_eps = 0.1
 )
 
@@ -80,19 +91,34 @@ run_model <- function(param_i,
   
   ## Glmnet
   if(param_i$model == "glmnet"){
-    ## Run model
-    cv_model <- cv.glmnet(X_train, y_train, 
-                          alpha = param_i$glmnet_alpha, 
-                          nfolds = param_i$glmnet_nfolds)
     
-    # summarize chosen configuration 
-    optimal_lambda <- cv_model$lambda.min
+    glmnet_train_lambda <- F
+    if(glmnet_train_lambda %in% T){
+      
+      ## Run model
+      cv_model <- cv.glmnet(X_train, y_train, 
+                            alpha = param_i$glmnet_alpha,
+                            nfolds = 5)
+      
+      # Summarize chosen configuration 
+      glmnet_best_lambda <- cv_model$lambda.min
+      
+      # Predictions
+      pred <- predict(cv_model, s = glmnet_best_lambda, newx = X_test) %>% as.numeric()
+      
+      model <- list(cv_model = cv_model,
+                    glmnet_best_lambda = glmnet_best_lambda)
+      
+    } else{
+      ## Run model
+      model <- glmnet(X_train, y_train, 
+                      alpha = param_i$glmnet_alpha, 
+                      lambda = param_i$glmnet_lambda)
+      
+      # Predictions
+      pred <- predict(model, newx = X_test) %>% as.numeric()
+    }
     
-    # Predictions
-    pred <- predict(cv_model, s = optimal_lambda, newx = X_test) %>% as.numeric()
-    
-    model <- list(cv_model = cv_model,
-                  optimal_lambda = optimal_lambda)
   }
   
   ## SVM
@@ -225,13 +251,7 @@ grab_x_features <- function(df,
 }
 
 # Implement --------------------------------------------------------------------
-# c("levels", 
-# "changes",
-# "lsms",
-# "levels_changevars_ng")
-
-for(level_change in c("levels", 
-                      "changes")){ 
+for(level_change in c("levels", "changes", "nigeriaapplication", "lsms")){ 
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(level_change %in% c("levels")){
@@ -270,8 +290,6 @@ for(level_change in c("levels",
                              "other_continent")  
     
     target_vars_vec <- c("pca_allvars_mr") 
-    
-    countries_vec <- c("all", unique(df$country_code)) 
   }
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -300,19 +318,16 @@ for(level_change in c("levels",
                              "satellites") 
     
     feature_types <- c(feature_types_indiv,
-                       #feature_types_all_but_indiv,
                        "all_lsms")
     
     estimation_type_vec <- c("within_country_cv",
                              "global_country_pred") 
     
     target_vars_vec <- c("pca_allvars_mr", "poverty_measure") 
-    
-    countries_vec <- c("all", unique(df$country_code)) 
   }
   
   # Levels - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  if(level_change %in% c("levels_changevars_ng")){
+  if(level_change %in% c("nigeriaapplication")){
     
     #### Load data
     df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
@@ -321,34 +336,11 @@ for(level_change in c("levels",
     df <- df %>%
       dplyr::filter(most_recent_survey %in% T)
     
-    # #### Define parameters
-    # feature_types_indiv <- c("viirs",
-    #                          "cnn_viirs_s2_rgb", 
-    #                          "cnn_viirs_s2_ndvi", 
-    #                          "cnn_viirs_s2_bu", 
-    #                          "cnn_viirs_s2",
-    #                          "l7",
-    #                          "fb",
-    #                          "osm",
-    #                          "pollution",
-    #                          "s1_sar",
-    #                          "mosaik",
-    #                          
-    #                          # Groupings
-    #                          "landcover",
-    #                          "weatherclimate",
-    #                          "satellites") 
-    # 
-    # feature_types_all_but_indiv <- paste0("all_not_", 
-    #                                       c(feature_types_indiv, "viirs")) 
-    
     feature_types <- c("all_changes")
     
-    estimation_type_vec <- c("global_country_pred", "continent_africa_country_pred")
+    estimation_type_vec <- c("global_country_pred", "continent")
     
     target_vars_vec <- c("pca_allvars") 
-    
-    countries_vec <- c("NG") 
   }
   
   # Changes - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -385,8 +377,6 @@ for(level_change in c("levels",
                              "other_continent")  
     
     target_vars_vec <- c("pca_allvars") 
-    
-    countries_vec <- c("all", unique(df$country_code)) 
   } 
   
   for(estimation_type_i in estimation_type_vec){
@@ -394,20 +384,36 @@ for(level_change in c("levels",
     if(estimation_type_i %in% c("global_country_pred", 
                                 "within_country_cv", 
                                 "continent")){
-      countries_vec <- unique(df$country_code)
+      
+      if(level_change %in% "nigeriaapplication"){
+        countries_vec <- "NG"
+      } else{
+        countries_vec <- unique(df$country_code)
+      }
+      
     } else{
       countries_vec <- c("Africa", "Americas", "Eurasia")
     }
     
-    for(target_var_i in target_vars_vec){
-      for(feature_type_i in rev(feature_types)){
-        for(country_i in countries_vec){
-          for(model_type in c("xgboost", "glmnet")){ # c("xgboost", "glmnet", "svm")
+    for(model_type in c("xgboost", "glmnet", "svm")){ 
+      for(target_var_i in rev(target_vars_vec)){
+        for(feature_type_i in feature_types){
+          for(country_i in rev(countries_vec)){
             
             # Skips ------------------------------------------------------------
             # Only train on individual feature types for global. So:
             # If not global and not "all" features, skip.
-            if( (estimation_type_i != "global_country_pred") & (!(feature_type_i %in% c("all", "all_changes"))) ){
+            if(level_change %in% c("levels", "changes")){
+              if( (estimation_type_i != "global_country_pred") & (!(feature_type_i %in% c("all", "all_changes"))) ){
+                next
+              }
+            }
+            
+            if( (level_change == "nigeriaapplication") & (model_type != "xgboost") ){
+              next
+            }
+            
+            if( (level_change == "lsms") & (model_type != "xgboost") ){
               next
             }
             
@@ -419,7 +425,7 @@ for(level_change in c("levels",
             # Define test folds to loop through ----------------------------------
             # For within country, we loop through folds; for others, we create
             # a dummy "folds_all" variable that is ignored.
-
+            
             if(estimation_type_i %in% c("global_country_pred",
                                         "continent",
                                         "other_continent")){
@@ -481,6 +487,38 @@ for(level_change in c("levels",
                   df_test  <- df_sub[df_sub$within_country_fold == fold_i,]
                 }
                 
+                # Check NA Values: Train ---------------------------------------
+                # Remove rows that are all NA; not needed for XGboost
+                if(model_type %in% c("glmnet", "svm")){
+                  X_train_all_obs <- grab_x_features(df_train, feature_type_i)
+                  has_non_na <- apply(X_train_all_obs, 1, function(x) T %in% !is.na(x) )
+                  df_train <- df_train[has_non_na,]
+                }
+                
+                # Remove rows with ANY NA
+                if(model_type %in% c("svm")){
+                  
+                  X_train_all_obs <- grab_x_features(df_train, feature_type_i)
+                  any_na_in_row <- apply(X_train_all_obs, 1, function(x) T %in% is.na(x)) %>% as.vector()
+                  df_train <- df_train[!any_na_in_row,]
+                }
+                
+                # Check NA Values: Test ---------------------------------------
+                # Remove rows that are all NA; not needed for XGboost
+                if(model_type %in% c("glmnet", "svm")){
+                  X_train_all_obs <- grab_x_features(df_test, feature_type_i)
+                  has_non_na <- apply(X_train_all_obs, 1, function(x) T %in% !is.na(x) )
+                  df_test <- df_test[has_non_na,]
+                }
+                
+                # Remove rows with ANY NA
+                if(model_type %in% c("svm")){
+                  
+                  X_train_all_obs <- grab_x_features(df_test, feature_type_i)
+                  any_na_in_row <- apply(X_train_all_obs, 1, function(x) T %in% is.na(x)) %>% as.vector()
+                  df_test <- df_test[!any_na_in_row,]
+                }
+                
                 # Prep folds -----------------------------------------------------
                 if(estimation_type_i %in% c("global_country_pred",
                                             "continent",
@@ -509,8 +547,46 @@ for(level_change in c("levels",
                 # Choose Best Parameters -----------------------------------------
                 
                 ## Loop through parameters
+                # param_grid_results_df <- map_df(1:nrow(param_grid), function(i){
+                #   
+                #   param_i <- param_grid[i,]
+                #   
+                #   ## Loop through folds, and take average R2 across folds
+                #   param_grid_tmp_df <- map_df(unique(df_train$fold), function(fold_i){
+                #     
+                #     df_train_i <- df_train[df_train$fold != fold_i,]
+                #     df_test_i  <- df_train[df_train$fold == fold_i,]
+                #     
+                #     X_train <- grab_x_features(df_train_i, feature_type_i)
+                #     X_test  <- grab_x_features(df_test_i,  feature_type_i)
+                #     
+                #     y_train <- df_train_i$target_var
+                #     y_test  <- df_test_i$target_var
+                #     
+                #     pred_df <- run_model(param_i,
+                #                          X_train,
+                #                          y_train,
+                #                          X_test,
+                #                          glmnet_train_lambda = T)
+                #     
+                #     R2_fold <- R2(pred_df$pred, y_test, form = "traditional")
+                #     
+                #     data.frame(R2_fold = R2_fold,
+                #                glmnet_best_lambda = pred_df$glmnet_best_lambda)
+                #     
+                #   }) 
+                #   
+                #   data.frame(R2 = mean(param_grid_tmp_df$R2_fold),
+                #              glmnet_best_lambda = mean(param_grid_tmp_df$glmnet_best_lambda)) 
+                # 
+                # }) 
+                # 
+                # param_grid$R2                 <- param_grid_results_df$R2
+                # param_grid$glmnet_best_lambda <- param_grid_results_df$glmnet_best_lambda
+                
+                ## Loop through parameters
                 param_grid$R2 <- lapply(1:nrow(param_grid), function(i){
-  
+                  
                   param_i <- param_grid[i,]
                   
                   ## Loop through folds, and take average R2 across folds
@@ -533,6 +609,7 @@ for(level_change in c("levels",
                     R2_fold <- R2(pred, y_test, form = "traditional")
                     
                     R2_fold
+                    
                   }) %>%
                     unlist() %>%
                     mean()

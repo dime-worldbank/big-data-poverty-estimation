@@ -1,101 +1,83 @@
 # District Level Changes
 
-# Load Predictions  survey  ----------------------------------------------------
-#### Predictions
-read_add_file <- function(path){
-  df <- readRDS(path)
-  df$path <- path
-  return(df)
-}
-pred_df <- file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results", "predictions") %>%
-  list.files(pattern = "*.Rds",
-             full.names = T) %>%
-  str_subset("changes") %>%
-  map_df(read_add_file) %>%
-  # dplyr::filter(level_change != "levels_changevars_ng",
-  #               ml_model_type == "svm") 
-  # dplyr::filter(level_change != "levels_changevars_ng",
-  #               ml_model_type == "glmnet",
-  #               glmnet_alpha == 1)
-  dplyr::filter(level_change != "levels_changevars_ng",
-                ml_model_type == "xgboost")
+# Load data --------------------------------------------------------------------
+survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+                               "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-#### Survey
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
-survey_df <- survey_df %>%
-  dplyr::select(uid, gadm_uid, continent_adj, country_code, country_name, iso2)
+df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                             "predictions_appended.Rds")) %>%
+  dplyr::filter(level_change %in% "changes",
+                estimation_type != "best")
 
-# Cleanup ----------------------------------------------------------------------
-pred_df <- pred_df %>%
-  dplyr::mutate(estimation_type = case_when(
-    estimation_type %>% str_detect("continent_") & estimation_type %>% str_detect("country_pred") ~ "same_continent",
-    estimation_type %in% "continent" ~ "other_continents",
-    TRUE ~ estimation_type
-  )) 
+# Add GADM and ISO -------------------------------------------------------------
+gadm_df <- survey_df %>%
+  dplyr::select(uid, gadm_uid, iso2, continent_adj)
 
-pred_df <- pred_df %>%
-  dplyr::mutate(country_model_param = paste(country_code,
-                                            estimation_type,
-                                            target_var,
-                                            feature_type,
-                                            ml_model_type,
-                                            glmnet_alpha,
-                                            svm_svr_eps, 
-                                            svm_cost,
-                                            xg_max.depth,
-                                            xg_eta,
-                                            xg_nthread,
-                                            xg_nrounds,
-                                            xg_subsample,
-                                            xg_objective,
-                                            xg_min_child_weight,
-                                            sep = "_")) 
+df <- df %>%
+  left_join(gadm_df, by = "uid")
 
-pred_df <- pred_df %>%
-  dplyr::select(-country_code) %>%
-  left_join(survey_df, by = c("uid"))
+# Aggregate --------------------------------------------------------------------
+df <- df %>%
+  
+  group_by(gadm_uid, country_code, iso2, country_name, continent_adj, estimation_type, feature_type, target_var_dep) %>%
+  dplyr::summarise(target_var = mean(target_var, na.rm=T),
+                   prediction = mean(prediction, na.rm=T)) %>%
+  ungroup() 
 
-# Aggregate to district --------------------------------------------------------
-pred_district_df <- pred_df %>%
-  dplyr::filter(feature_type == "all_changes") %>%
-  group_by(country_code, country_name, iso2, continent_adj, gadm_uid, country_model_param) %>%
-  dplyr::summarise(prediction = mean(prediction),
-                   truth = mean(truth)) %>%
+sum_df <- df %>%
+  group_by(country_code, iso2, country_name, continent_adj, estimation_type, feature_type, target_var_dep) %>%
+  dplyr::summarise(r2 = cor(target_var, prediction)^2,
+                   R2 = R2(target_var, prediction, form = "traditional"),
+                   n = n()) %>%
   ungroup()
 
-pred_district_df <- pred_district_df %>%
-  group_by(country_model_param) %>%
-  dplyr::mutate(cor = cor(prediction, truth),
-                r2 = cor^2) %>%
-  ungroup()
+# Add best estimation ----------------------------------------------------------
+#### Determine best est type
+best_sum_df <- sum_df %>%
+  dplyr::filter(feature_type %in% "all_changes") %>%
+  arrange(-R2) %>%
+  group_by(country_code, iso2) %>%
+  slice_max(R2, n = 1) %>%
+  ungroup() %>%
+  dplyr::rename(estimation_type_orig = estimation_type) %>%
+  dplyr::mutate(estimation_type = "best",
+                est_cnty = paste(estimation_type_orig, country_code))
 
-pred_district_best_sum_df <- pred_district_df %>%
-  group_by(country_code) %>%
-  slice_max(n = 1, order_by = cor, with_ties = FALSE) %>%
-  ungroup()
+best_df <- df %>%
+  dplyr::filter(feature_type %in% "all_changes") %>%
+  dplyr::mutate(est_cnty = paste(estimation_type, country_code))
 
-pred_district_best_df <- pred_district_df[pred_district_df$country_model_param %in% pred_district_best_sum_df$country_model_param,]
+best_df <- best_df[best_df$est_cnty %in% best_sum_df$est_cnty,] %>%
+  dplyr::rename(estimation_type_orig = estimation_type) %>%
+  dplyr::mutate(estimation_type = "best")
+
+#### Add best estimation type to dataframes
+df     <- bind_rows(df, best_df)
+sum_df <- bind_rows(sum_df, best_sum_df)
 
 # Merge WDI Indicators ---------------------------------------------------------
+## Prep WDI
 wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
 
 wdi_df <- wdi_df %>%
   dplyr::select(-c(iso3c, country, year, capital, longitude, latitude))
 
-pred_district_best_df <- pred_district_best_df %>%
+## Merge
+df <- df %>%
   left_join(wdi_df, by = "iso2") 
 
+sum_df <- sum_df %>%
+  left_join(wdi_df, by = "iso2") 
+
+# Cleanup ----------------------------------------------------------------------
+df <- df %>%
+  dplyr::rename(truth = target_var)
+
 # Export -----------------------------------------------------------------------
-saveRDS(pred_district_best_df,
-        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+saveRDS(df, 
+        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+                  "predictions_changes_district_appended.Rds"))
 
-
-# 
-# 
-# pred_district_best_df %>%
-#   ggplot(aes(x = truth, y = prediction)) +
-#   geom_point() +
-#   facet_wrap(~country_code,
-#              scales = "free")
-# 
-
+saveRDS(sum_df, 
+        file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                  "accuracy_changes_district_appended.Rds"))

@@ -2,10 +2,11 @@
 
 # Load data --------------------------------------------------------------------
 pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", 
-                     "predictions") %>%
+                     "prediction") %>%
   list.files(pattern = "*.Rds",
              full.names = T) %>%
   str_subset("lsms") %>%
+  str_subset("xgboost") %>%
   map_df(readRDS) 
 
 pred_df <- pred_df %>%
@@ -19,8 +20,7 @@ pred_df <- pred_df %>%
   ))
 
 pred_df <- pred_df %>%
-  filter(ml_model_type %in% "xgboost",
-         estimation_type %in% "within_country_cv") # global_country_pred, within_country_cv
+  filter(estimation_type %in% "within_country_cv") # global_country_pred, within_country_cv
 
 # Main results -----------------------------------------------------------------
 #### PCA

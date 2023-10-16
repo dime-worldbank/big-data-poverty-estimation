@@ -20,7 +20,7 @@ wdi_df <- wdi_df %>%
 #### Changes
 changes_df <- changes_df %>%
   left_join(wdi_df, by = "iso2") %>%
-  mutate(error = abs(pca_allvars - predict_pca_allvars_best),
+  mutate(error = abs(pca_allvars - predict_pca_allvars_best_all_changes),
          error_log = log(error+1),
          error_a2 = error >= 2) %>%
   mutate(urban_rural_yr1 = case_when(

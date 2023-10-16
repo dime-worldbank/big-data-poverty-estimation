@@ -33,7 +33,7 @@ clean_varnames <- function(df){
       variable %>% str_detect("pollution_s5p") ~ "Pollution - Sentinel-5P",
       variable %>% str_detect("weather") ~ "Weather",
       variable %>% str_detect("s1_sar") ~ "SAR",
-      variable %>% str_detect("mosaik") ~ "MOSAIK",
+      variable %>% str_detect("mosaik") ~ "MOSAIKS",
       TRUE ~ variable
     ))
   
@@ -175,7 +175,7 @@ clean_varnames <- function(df){
       
       variable_clean %>% str_detect("mosaik_pca") ~ str_replace_all(variable_clean, 
                                                                            "mosaik_pca_",
-                                                                           "MOSAIK Feature "),
+                                                                           "MOSAIKS Feature "),
       
       
       

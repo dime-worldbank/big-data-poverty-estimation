@@ -4,23 +4,19 @@
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
+# district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+#                                  "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
 district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-                                 "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+                                 "predictions_changes_district_appended.Rds"))
+district_df <- district_df %>%
+  dplyr::filter(estimation_type %in% "best")
 
 # Prep data --------------------------------------------------------------------
 cluster_all_df <- cluster_df %>%
-  dplyr::mutate(continent_adj = "All") #%>%
-# group_by(continent_adj) %>%
-# mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
-# ungroup() %>%
-# mutate(continent_adj = paste0(continent_adj, ": r2 = ", round(r2, 2)))
+  dplyr::mutate(continent_adj = "All") 
 
 district_all_df <- district_df %>%
-  dplyr::mutate(continent_adj = "All") #%>%
-# group_by(continent_adj) %>%
-# mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
-# ungroup() %>%
-# mutate(continent_adj = paste0(continent_adj, ": r2 = ", round(r2, 2)))
+  dplyr::mutate(continent_adj = "All") 
 
 cluster_clean_df <- bind_rows(cluster_df,
                               cluster_all_df) %>%
@@ -40,17 +36,17 @@ district_clean_df <- district_clean_df %>%
 
 # Figures ----------------------------------------------------------------------
 #### Cluster
-v <- c(cluster_clean_df$predict_pca_allvars_best, cluster_clean_df$pca_allvars)
+v <- c(cluster_clean_df$predict_pca_allvars_best_all_changes, cluster_clean_df$pca_allvars)
 
 r2_R2_df <- cluster_clean_df %>%
   group_by(continent_adj) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2,
-                   R2 = R2(predict_pca_allvars_best, pca_allvars, form = "traditional")) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2,
+                   R2 = R2(predict_pca_allvars_best_all_changes, pca_allvars, form = "traditional")) %>%
   ungroup() %>%
   mutate(label = paste0("r<sup>2</sup>: ", round(r2, 2), "<br>R<sup>2</sup>: ", round(R2, 2)))
 
 p1 <- cluster_clean_df %>%
-  ggplot(aes(x = predict_pca_allvars_best,
+  ggplot(aes(x = predict_pca_allvars_best_all_changes,
              y = pca_allvars)) +
   geom_point(size = 0.1) +
   #stat_poly_eq(color = "red", small.r=T) +

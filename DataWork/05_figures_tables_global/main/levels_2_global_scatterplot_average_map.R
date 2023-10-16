@@ -1,67 +1,8 @@
 # Global Scatterplot - Predicted vs True
 
-# TODO:
-# (1) Global correlation using globally best parameters
-# (2) Individual country correlation using globally best parameters
-# (3) Individual country correlation using country-specific best parmeters
-# ------For this, can load all predictions, compute correlations, and take
-# ------best across countries. In this figure (or table), report estimation type
-
 p_list_i <- 1
 p_list <- list()
 for(aggregate_district in c(F, T)){
-  
-  # # Load Data --------------------------------------------------------------------
-  # ## Grab best parameters
-  # acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-  #                             "accuracy_appended_bestparam_within_country_cv_levels.Rds"))
-  # 
-  # xg_param_set_use <- acc_df %>%
-  #   head(1) %>%
-  #   dplyr::mutate(xg_eta = xg_eta %>% str_replace_all("[:punct:]", ""),
-  #                 xg_subsample = xg_subsample %>% str_replace_all("[:punct:]", "")) %>%
-  #   dplyr::mutate(xg_param_set = paste(xg_max.depth,
-  #                                      xg_eta,
-  #                                      xg_nthread,
-  #                                      xg_nrounds,
-  #                                      xg_subsample,
-  #                                      xg_objective,
-  #                                      xg_min_child_weight,
-  #                                      sep = "_")) %>%
-  #   pull(xg_param_set) %>%
-  #   str_replace_all(":", "") %>%
-  #   str_replace_all("error_", "error")
-  # 
-  # ## Load predictions
-  # pred_df <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results", "predictions") %>%
-  #   #list.files(pattern = "predictions_within_country_cv_", # predictions_global_country_pred_ ""
-  #   #           full.names = T) %>%
-  #   list.files(pattern = "*.Rds",
-  #              full.names = T) %>%
-  #   str_subset("_levels_") %>%
-  #   str_subset("pca_allvars_mr") %>%
-  #   str_subset(xg_param_set_use) %>% # Parameter type
-  #   map_df(readRDS)
-  # 
-  # pred_df <- pred_df %>%
-  #   dplyr::filter(feature_type %in% "all")
-  
-  # Select best estimation type for each country ---------------------------------
-  # pred_df <- pred_df %>%
-  #   mutate(country_est_id = paste(estimation_type, country_code))
-  # 
-  # cor_df <- pred_df %>%
-  #   group_by(country_est_id, estimation_type, country_code) %>%
-  #   dplyr::summarise(cor = cor(truth, prediction)) %>%
-  #   
-  #   group_by(country_code) %>% 
-  #   slice_max(order_by = cor, n = 1) %>%
-  #   
-  #   mutate(r2 = cor^2)
-  # 
-  # pred_df <- pred_df[pred_df$country_est_id %in% cor_df$country_est_id,]
-  
-  #pred_df <- pred_df[pred_df$estimation_type %in% "continent",]
   
   # Merge with select survey variables -------------------------------------------
   survey_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
@@ -70,48 +11,26 @@ for(aggregate_district in c(F, T)){
   survey_df <- survey_df %>%
     filter(most_recent_survey %in% T)
   
-  # survey_df <- survey_df %>%
-  #   dplyr::select(uid, latitude, longitude, continent_adj, urban_rural,
-  #                 country_name, gadm_uid)
-  # 
-  # pred_df <- pred_df %>%
-  #   dplyr::left_join(survey_df, by = "uid")
-  # 
-  # pred_df <- pred_df %>%
-  #   dplyr::mutate(urban_rural = case_when(
-  #     urban_rural == "U" ~ "Urban",
-  #     urban_rural == "R" ~ "Rural"
-  #   ))
-  
   # Aggregate --------------------------------------------------------------------
   if(aggregate_district){
     survey_df <- survey_df %>%
       
-      dplyr::filter(!is.na(predict_pca_allvars_mr_best)) %>%
+      dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
       dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
       
       dplyr::mutate(gadm_uid = paste(gadm_uid, country_code)) %>%
       group_by(gadm_uid, country_code, country_name, continent_adj) %>%
       dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
-                       predict_pca_allvars_mr_best = mean(predict_pca_allvars_mr_best),
+                       predict_pca_allvars_mr_best_all = mean(predict_pca_allvars_mr_best_all),
                        predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all)) %>%
       ungroup()
     
   }
   
   # One dataset per estimation type --------------------------------------------
-  # pred_wthn_cntry_cv_df = pred_df %>%
-  #   dplyr::filter(estimation_type %in% "within_country_cv")
-  
-  # pred_best_df = pred_df %>%
-  #   dplyr::filter(estimation_type %in% "best")
-  # 
-  # pred_global_df = pred_df %>%
-  #   dplyr::filter(estimation_type %in% "global_country_pred") 
-  
   pred_best_df <- survey_df %>%
     dplyr::rename(truth = pca_allvars_mr,
-                  prediction = predict_pca_allvars_mr_best)
+                  prediction = predict_pca_allvars_mr_best_all)
   
   pred_global_df <- survey_df %>%
     dplyr::rename(truth = pca_allvars_mr,
@@ -391,7 +310,7 @@ for(aggregate_district in c(F, T)){
                    aes(x = long, y = lat, group = group,
                        fill = r2),
                    color = "black") +
-      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(cor_mean_all,2), "; r<sup>2</sup>: ", round(R2_mean_all,2)),
+      geom_richtext(aes(label = paste0("All r<sup>2</sup>: ", round(cor_mean_all,2), "; R<sup>2</sup>: ", round(R2_mean_all,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP),
                     color = "black",
@@ -399,7 +318,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Africa r<sup>2</sup>: ", round(cor_mean_africa,2), "; r<sup>2</sup>: ", round(R2_mean_africa,2)),
+      geom_richtext(aes(label = paste0("Africa r<sup>2</sup>: ", round(cor_mean_africa,2), "; R<sup>2</sup>: ", round(R2_mean_africa,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP),
                     color = "black",
@@ -407,7 +326,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Americas r<sup>2</sup>: ", round(cor_mean_americas,2), "; r<sup>2</sup>: ", round(R2_mean_americas,2)),
+      geom_richtext(aes(label = paste0("Americas r<sup>2</sup>: ", round(cor_mean_americas,2), "; R<sup>2</sup>: ", round(R2_mean_americas,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*2),
                     color = "black",
@@ -415,7 +334,7 @@ for(aggregate_district in c(F, T)){
                     fill = NA, 
                     label.color = NA,
                     size = FONT_SIZE) +
-      geom_richtext(aes(label = paste0("Eurasia r<sup>2</sup>: ", round(cor_mean_eurasia,2), "; r<sup>2</sup>: ", round(R2_mean_eurasia,2)),
+      geom_richtext(aes(label = paste0("Eurasia r<sup>2</sup>: ", round(cor_mean_eurasia,2), "; R<sup>2</sup>: ", round(R2_mean_eurasia,2)),
                         x = TEXT_X_MAP,
                         y = TEXT_Y_TOP_MAP - TEXT_Y_INC_MAP*3),
                     color = "black",

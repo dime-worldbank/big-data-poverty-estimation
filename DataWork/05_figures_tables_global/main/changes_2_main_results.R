@@ -9,31 +9,31 @@ p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
+#district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+#                                "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
 district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-                                "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
-
-# district_df <- cluster_df %>%
-#   group_by(continent_adj, country_code, country_name, gadm_uid) %>%
-#   summarise_if(is.numeric, mean) %>%
-#   ungroup()
+                                 "predictions_changes_district_appended.Rds"))
+district_df <- district_df %>%
+  dplyr::filter(estimation_type %in% "best")
 
 ## Add correlation
 cluster_df <- cluster_df %>%
   ungroup() %>%
   group_by(country_name) %>%
-  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
+  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_best_all_changes)^2) %>%
   ungroup() %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2)) 
 
 district_df <- district_df %>%
-  #group_by(country_name) %>%
-  #mutate(r2 = cor(pca_allvars, predict_pca_allvars_best)^2) %>%
-  #ungroup() %>%
+  ungroup() %>%
+  group_by(country_name) %>%
+  dplyr::mutate(r2 = cor(truth, prediction)^2) %>%
+  ungroup() %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2))
 
 # Load/prep accuracy data ------------------------------------------------------
 acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                            "accuracy_appended_bestparam.Rds"))
+                            "accuracy_appended.Rds"))
 
 acc_df <- acc_df %>%
   dplyr::filter(level_change %in% "changes") %>%
@@ -41,46 +41,10 @@ acc_df <- acc_df %>%
            str_replace_all("Daytime Imagery: Avg. & Std. Dev.",
                            "Daytime Imagery:\nAvg. & Std. Dev."))
 
-file_name_suffix <- paste0("changes","_",
-                           "continent_africa_country_pred","_",
-                           "AO","_",
-                           "pca_allvars","_",
-                           "all_changes",
-                           5 %>% str_replace_all("[:punct:]", ""), "_",
-                           0.9 %>% str_replace_all("[:punct:]", ""), "_",
-                           4 %>% str_replace_all("[:punct:]", ""), "_",
-                           100 %>% str_replace_all("[:punct:]", ""), "_",
-                           0.3 %>% str_replace_all("[:punct:]", ""), "_",
-                           "reg:squarederror" %>% str_replace_all("[:punct:]", ""), 
-                           1 %>% str_replace_all("[:punct:]", ""), 
-                           ".Rds")
-
-# Global Scatter ---------------------------------------------------------------
-# table(district_df$continent_adj)
-# a <- district_df[district_df$continent_adj == "Eurasia",]
-# 
-# cor(a$truth, a$prediction)^2
-# 
-# district_df %>%
-#   ggplot() +
-#   geom_point(aes(x = truth,
-#                  y = prediction)) +
-#   facet_wrap(~income)
-# 
-# 
-# 
-# cluster_df %>%
-#   ggplot() +
-#   geom_point(aes(x = pca_allvars, 
-#                  y = predict_pca_allvars_best)) +
-#   facet_wrap(~continent_adj)
-
-#district_df cluster_df
-
 # Boxplots: By Training Sample -------------------------------------------------
 p_boxplot_tsample <- acc_df %>%
   dplyr::filter(feature_type %in% "all_changes",
-                target_var %in% "pca_allvars") %>%
+                target_var_dep %in% "pca_allvars") %>%
   ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,
@@ -113,11 +77,6 @@ best_df <- bind_rows(
     distinct(country_name, .keep_all = T) %>%
     dplyr::mutate(type = "District")
 )
-
-# best_df %>%
-#   ggplot(aes(x = r2,
-#              y = type)) +
-#   geom_boxplot()
 
 best_clean_df <- best_df %>%
   dplyr::mutate(r2_cat = case_when(
@@ -167,8 +126,8 @@ p_cluster_adm <- best_clean_df %>%
 
 # Boxplots: By Feature Set -----------------------------------------------------
 p_boxplot_feature <- acc_df %>%
-  dplyr::filter(estimation_type %in% "best",
-                target_var %in% "pca_allvars") %>%
+  dplyr::filter(estimation_type %in% "global_country_pred",
+                target_var_dep %in% "pca_allvars") %>%
   ggplot(aes(x = reorder(feature_type_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,

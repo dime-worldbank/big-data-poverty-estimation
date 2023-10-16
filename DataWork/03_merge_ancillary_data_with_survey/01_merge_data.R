@@ -77,7 +77,6 @@ s5p_df <- s5p_df %>%
                 pollution_s5p_O3_column_number_density,
                 pollution_s5p_SO2_column_number_density)
 
-
 ## OLD
 if(F){
   poll_prefix <- c("CH4", "CO", "HCHO", "NO2", "ozone", "SO2", "uv_aer") %>%

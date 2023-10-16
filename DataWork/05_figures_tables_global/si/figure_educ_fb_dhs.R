@@ -1,13 +1,8 @@
 # DHS / Facebook Eduction Variable Comparson
 # Check association of DHS Education Variables with FB Education Variables
 
-# TODO:
-# 1. Could check if this correlation works better in countries with more Facebook penetration
-
-library(DescTools)
-
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, "DHS_OLD", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
 wdi_df      <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
@@ -193,3 +188,4 @@ ggsave(p,
        filename = file.path(figures_global_dir, "educ_fb_dhs_explain.png"),
        height = 6,
        width = 6)
+

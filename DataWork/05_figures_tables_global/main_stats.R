@@ -4,40 +4,40 @@
 survey_chn_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
 survey_df     <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
 acc_df        <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
-                                   "accuracy_appended_bestparam.Rds"))
+                                   "accuracy_appended.Rds"))
 
 acc_levels_best_df <- acc_df %>%
   dplyr::filter(feature_type %in% "all",
                 estimation_type %in% "best",
-                target_var %in% "pca_allvars_mr",
+                target_var_dep %in% "pca_allvars_mr",
                 level_change %in% "levels")
 
 acc_changes_best_df <- acc_df %>%
   dplyr::filter(feature_type %in% "all_changes",
                 estimation_type %in% "best",
-                target_var %in% "pca_allvars",
+                target_var_dep %in% "pca_allvars",
                 level_change %in% "changes")
 
 # Create datasets --------------------------------------------------------------
 survey_chn_dist_df <- survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
   group_by(country_code, gadm_uid) %>%
-  dplyr::summarise(predict_pca_allvars_best = mean(predict_pca_allvars_best),
+  dplyr::summarise(predict_pca_allvars_best_all_changes = mean(predict_pca_allvars_best_all_changes),
                    pca_allvars = mean(pca_allvars)) %>%
   group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2)
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2)
 
 # Stats: Levels Results --------------------------------------------------------
 #### N Clusters
 survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
   nrow() %>%
   prettyNum(big.mark=",",scientific=FALSE) %>%
   write(file.path(stats_global_dir, "n_villages_levels.txt"))
 
 #### N Countries
 survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
   pull(country_code) %>%
   unique() %>%
   length() %>%
@@ -48,9 +48,9 @@ survey_df %>%
 
 #### Overall r2
 survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
   group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_best, pca_allvars_mr)^2) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_best_all, pca_allvars_mr)^2) %>%
   ungroup() %>%
   pull(r2) %>%
   mean() %>%
@@ -60,12 +60,12 @@ survey_df %>%
   write(file.path(stats_global_dir, "levels_village_r2.txt")) 
 
 survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
   group_by(country_code, gadm_uid) %>%
-  dplyr::summarise(predict_pca_allvars_mr_best = mean(predict_pca_allvars_mr_best),
+  dplyr::summarise(predict_pca_allvars_mr_best_all = mean(predict_pca_allvars_mr_best_all),
                    pca_allvars_mr = mean(pca_allvars_mr)) %>%
   group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_best, pca_allvars_mr)^2) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_best_all, pca_allvars_mr)^2) %>%
   ungroup() %>%
   pull(r2) %>%
   mean() %>%
@@ -179,13 +179,13 @@ est_type_best_df %>%
 # Stats: Results Changes ------------------------------------------------
 #### N Obs Changes, Villages
 survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
   nrow() %>%
   write(file.path(stats_global_dir, "n_obs_changes_villages.txt"))
 
 #### N Countries
 survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
   pull(country_code) %>%
   unique() %>%
   length() %>%
@@ -193,9 +193,9 @@ survey_chn_df %>%
 
 #### Overall r2
 survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
   group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2) %>%
   ungroup() %>%
   pull(r2) %>%
   mean() %>%
@@ -205,9 +205,9 @@ survey_chn_df %>%
   write(file.path(stats_global_dir, "changes_village_r2.txt")) 
 
 survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
   group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2) %>%
   ungroup() %>%
   pull(r2) %>%
   median() %>%
@@ -215,9 +215,9 @@ survey_chn_df %>%
   write(file.path(stats_global_dir, "changes_village_r2_median_no_perc.txt")) 
 
 survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best)) %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
   group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best, pca_allvars)^2) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2) %>%
   ungroup() %>%
   pull(r2) %>%
   max() %>%
@@ -312,7 +312,8 @@ head(fb_df)
 head(wdi_df)
 
 # District changes results -----------------------------------------------------
-dist_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
+dist_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+                             "accuracy_changes_district_appended.Rds"))
 
 dist_r2_df <- dist_df %>%
   distinct(country_code, income, r2)
@@ -362,13 +363,13 @@ dist_r2_df$r2[dist_r2_df$income %in% "Upper middle income"] %>% mean()
 acc_df %>%
   dplyr::filter(feature_type %in% "all",
                 estimation_type %in% "global_country_pred",
-                target_var %in% "pca_allvars_mr",
+                target_var_dep %in% "pca_allvars_mr",
                 level_change %in% "levels") %>%
   pull(r2) %>%
   mean()
 
 survey_df_af <- survey_df[survey_df$continent_adj == "Africa",]
-cor.test(survey_df$predict_pca_allvars_mr_best,
+cor.test(survey_df$predict_pca_allvars_mr_best_all,
          survey_df$pca_allvars_mr)
 
 cor.test(survey_df_af$predict_pca_allvars_mr_global_country_pred_all,

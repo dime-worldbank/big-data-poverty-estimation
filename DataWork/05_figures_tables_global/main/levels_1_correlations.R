@@ -113,29 +113,6 @@ cor_topvars_df <- cor_df[cor_df$variable %in% cor_median_topvars_df$variable,]
 cor_topvars_clean_df <- cor_topvars_df %>%
   arrange(-cor) %>%
   clean_varnames()
-# dplyr::mutate(variable_clean = case_when(
-#   is.na(variable_clean) ~ variable,
-#   TRUE ~ variable_clean
-# )) %>%
-# dplyr::mutate(variable_clean = case_when(
-#   variable_clean %in% "viirs_avg_rad" ~ "[VIIRS] Nighttime Lights",
-#   variable_clean %in% "gc_190" ~ "[Globcover] Urban Land",
-#   variable_clean %in% "globalmod_mean" ~ "[Global Human Modification Index]",
-#   variable_clean %in% "osm_length_residential_5000m" ~ "[OSM] Residential Road Length",
-#   variable_clean %in% "cnn_s2_rgb_pc11" ~ "[Daytime Imagery, CNN: RGB] Feature 1",
-#   variable_clean %in% "cnn_s2_ndvi_pc7" ~ "[Daytime Imagery, CNN: NDVI] Feature 1",
-#   variable_clean %in% "cnn_s2_bu_pc16"  ~ "[Daytime Imagery, CNN: Built-Up Index] Feature 1",
-#   variable_clean %in% "worldpop_10km" ~ "[World Pop] Population",
-#   variable_clean %in% "pollution_s5p_tropospheric_NO2_column_number_density" ~ 
-#     "[Pollution, Sentinel-5P] Tropospheric NO2",
-#   variable_clean %in% "l8_B2" ~ "[Landsat 8] Blue Surface Reflectance (B2)",
-#   variable_clean %in% "Interests: Restaurants" ~ "[Facebook] Interests: Restaurants",
-#   variable_clean %in% "weather_q4_minimum_2m_air_temperature" ~ "[Weather] Quarter 4 Min. Temperature",
-#   variable_clean %in% "pollution_aod_047" ~ "[Pollution, MODIS] AOD",
-#   variable_clean %in% "worldclim_bio_6" ~ "[WorldClim] Bio 6",
-#   variable_clean %in% "elevslope_slope" ~ "[Elevation/Slope] Slope",
-#   TRUE ~ variable_clean
-# ))
 
 ### Figure
 p_topvar <- cor_topvars_clean_df %>%
@@ -378,16 +355,6 @@ cor_median_topvars_clean_df <- cor_median_topvars_df %>%
 cor_var_sumstat_df <- cor_var_sumstat_df %>%
   merge(cor_median_topvars_clean_df, by.x = "Var1", by.y = "variable") %>%
   merge(cor_median_topvars_clean_df, by.x = "Var2", by.y = "variable")
-
-#cor_var_sumstat_df <- cor_var_sumstat_df %>%
-#  dplyr::mutate(cor_mean = case_when(
-#    Var1 == Var2 ~ NA_real_,
-#    TRUE ~ cor_mean
-#  )) %>%
-#  dplyr::mutate(cor_sd = case_when(
-#    Var1 == Var2 ~ NA_real_,
-#    TRUE ~ cor_sd
-#  ))
 
 #### Mean Figure
 p_cor_mean <- cor_var_sumstat_df %>%

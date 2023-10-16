@@ -11,8 +11,6 @@ accu_df <- accu_df %>%
 cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-#district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
-#                                 "survey_alldata_clean_changes_cluster_predictions_district.Rds"))
 district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
                                  "predictions_changes_district_appended.Rds"))
 district_df <- district_df %>%
@@ -91,9 +89,6 @@ p_bar <- cor_df %>%
              y = income,
              fill = unit)) +
   geom_boxplot() +
-  # geom_half_boxplot(color = "black") +
-  # geom_half_point(pch = 21,
-  #                 color = "black") +
   labs(x = expression(r^2),
        y = NULL,
        fill = "Unit",

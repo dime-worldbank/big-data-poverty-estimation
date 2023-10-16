@@ -3,9 +3,6 @@
 # Load data --------------------------------------------------------------------
 df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
 
-# df <- df %>%
-#   dplyr::filter(year_diff_max %in% T)
-
 # Make title -------------------------------------------------------------------
 # Title: "[iso2]; Cor = [cor]"
 df <- df %>%
@@ -14,7 +11,6 @@ df <- df %>%
                           pca_allvars)) %>%
   ungroup() %>% 
   dplyr::mutate(title = country_name)
-#dplyr::mutate(title = paste0(iso2, "; Cor = ", round(cor, 2)))
 
 # Figure: Scatterplots ---------------------------------------------------------
 p <- df %>%

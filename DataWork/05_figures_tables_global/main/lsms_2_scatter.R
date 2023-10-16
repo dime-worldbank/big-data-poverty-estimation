@@ -17,7 +17,8 @@ pred_df <- pred_df %>%
     country_code == "ET" ~ "Ethiopia",
     country_code == "MW" ~ "Malawi",
     country_code == "TG" ~ "Togo"
-  ))
+  )) %>%
+  dplyr::rename(truth = target_var)
 
 pred_df <- pred_df %>%
   filter(estimation_type %in% "within_country_cv") # global_country_pred, within_country_cv
@@ -26,7 +27,7 @@ pred_df <- pred_df %>%
 #### PCA
 pred_sub_df <- pred_df %>%
   filter(feature_type %in% "all_lsms",
-         target_var %in% "pca_allvars_mr")
+         target_var_dep %in% "pca_allvars_mr")
 
 v_min <- c(pred_sub_df$prediction, pred_sub_df$truth) %>% min()
 v_max <- c(pred_sub_df$prediction, pred_sub_df$truth) %>% max() 
@@ -70,7 +71,7 @@ p_pca <- pred_sub_df %>%
 #### Consumption
 pred_sub_df <- pred_df %>%
   filter(feature_type %in% "all_lsms",
-         target_var %in% "poverty_measure") 
+         target_var_dep %in% "poverty_measure") 
 
 v_min <- c(pred_sub_df$prediction, pred_sub_df$truth) %>% min() 
 v_max <- c(pred_sub_df$prediction, pred_sub_df$truth) %>% max()

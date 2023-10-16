@@ -11,7 +11,8 @@ for(model_type in c("xgboost", "glmnet", "svm")){
     str_subset(model_type) %>%
     map_df(readRDS) %>%
     dplyr::filter(!is.na(prediction),
-                  !is.na(target_var))
+                  !is.na(target_var),
+                  level_change != "nigeriaapplication")
   
   #### Aggregate data
   sum_df <- df %>%

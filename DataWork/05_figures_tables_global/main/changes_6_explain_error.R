@@ -4,22 +4,15 @@
 changes_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-wdi_df <- readRDS(file.path(data_dir, "WDI", "FinalData", "wdi.Rds"))
-
 y_max <- 7
 bb_step <- 0.22
 in_plot_txt_size <- 3
 in_plot_text_color <- "red"
 
 # Prep data --------------------------------------------------------------------
-#### WDI
-wdi_df <- wdi_df %>%
-  dplyr::select(iso2, wdi_population, wdi_gdp_pc, wdi_agric_per_gdp, income) %>%
-  dplyr::rename(wdi_income = income)
-
 #### Changes
 changes_df <- changes_df %>%
-  left_join(wdi_df, by = "iso2") %>%
+  dplyr::rename(wdi_income = income) %>%
   mutate(error = abs(pca_allvars - predict_pca_allvars_best_all_changes),
          error_log = log(error+1),
          error_a2 = error >= 2) %>%
@@ -79,11 +72,6 @@ med_df <- changes_df %>%
   summarise(error = median(error) %>% round(2))
 
 p_income <- changes_df %>%
-  # mutate(wdi_income = case_when(
-  #   wdi_income == "Low income" ~ "Low\nincome",
-  #   wdi_income == "Lower middle income" ~ "Lower middle\nincome",
-  #   wdi_income == "Upper middle income" ~ "Upper middle\nincome"
-  # ))
   ggplot(aes(x = wdi_income,
              y = error)) +
   geom_boxplot(size = 0.2,

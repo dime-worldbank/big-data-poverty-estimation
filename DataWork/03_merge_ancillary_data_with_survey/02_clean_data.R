@@ -1,7 +1,7 @@
 # Clean survey data
 
 # Load Data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata.Rds"))
 
 # Add Continent/Region ---------------------------------------------------------
 df <- df %>%
@@ -12,10 +12,6 @@ df <- df %>%
     continent %in% c("Asia", "Europe", "Oceania") ~ "Eurasia",
     TRUE ~ continent
   ))
-
-# Remove Guyana (no OSM data)
-# df <- df %>%
-#   dplyr::filter(country_code != "GY")
 
 # Facebook - Cleanup -----------------------------------------------------------
 # For all Facebook variables except total users, if 1000, make 0
@@ -153,36 +149,13 @@ df <- df %>%
   dplyr::select(-c(fb_prop_radius))
 
 # Remove Observations ----------------------------------------------------------
-#TODO: Do later? Or just for most_recent?
 
 df <- df %>%
   dplyr::filter(!is.na(s1_sar_vh_mean))
 
-# df <- df %>%
-#   dplyr::filter(!is.na(cnn_s2_bu_pc1),
-#                 !is.na(fb_prop_estimate_mau_upper_bound_2),
-#                 !is.na(fb_prop_estimate_mau_upper_bound_2),
-#                 !is.na(worldclim_bio_1))
-
-## Check NAs
-if(F){
-  df_long <- df %>%
-    dplyr::filter(!is.na(cnn_s2_bu_pc1),
-                  !is.na(fb_prop_estimate_mau_upper_bound_2),
-                  !is.na(worldclim_bio_1)) %>%
-    pivot_longer(cols = -c("uid", "year", "country_code", "country_name", "continent_adj")) %>%
-    dplyr::mutate(is_na = is.na(value)) %>%
-    group_by(name) %>%
-    dplyr::summarise(n_na = sum(is_na))
-  
-  df_long %>%
-    dplyr::filter(n_na > 0) %>%
-    View()
-}
-
 # Export Data ------------------------------------------------------------------
 df$fb_prop_radius <- NULL
-saveRDS(df, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+saveRDS(df, file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 
 

@@ -10,7 +10,7 @@ set.seed(42)
 R2_SCATTER_TEXT_SIZE <- 3
 
 # Load data --------------------------------------------------------------------
-results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+results_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                                 "accuracy_appended.Rds"))
 
 results_df <- results_df %>%

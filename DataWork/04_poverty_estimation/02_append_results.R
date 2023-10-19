@@ -126,10 +126,10 @@ for(model_type in c("xgboost", "glmnet", "svm")){
                                   "Individual Datasets",
                                   "country_level_mau.Rds"))
   
-  survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+  survey_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                                  "survey_alldata_clean.Rds"))
   
-  survey_changes_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+  survey_changes_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                                          "survey_alldata_clean_changes_cluster.Rds"))
   
   #### Prep data for merging
@@ -199,11 +199,11 @@ for(model_type in c("xgboost", "glmnet", "svm")){
   sum_df$model_type <- model_type
   
   saveRDS(df, 
-          file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+          file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                     paste0("predictions_appended",suffix,".Rds")))
   
   saveRDS(sum_df, 
-          file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+          file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                     paste0("accuracy_appended",suffix,".Rds")))
 }
 

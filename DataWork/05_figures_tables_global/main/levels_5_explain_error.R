@@ -21,7 +21,7 @@ wdi_df <- wdi_df %>%
 level_df <- level_df %>%
   dplyr::filter(most_recent_survey %in% T) %>%
   left_join(wdi_df, by = "iso2") %>%
-  mutate(error = abs(pca_allvars_mr - predict_pca_allvars_mr_best_all),
+  mutate(error = abs(pca_allvars_mr - predict_pca_allvars_mr_global_country_pred_all),
          error_log = log(error+1),
          error_a2 = error >= 2) %>%
   mutate(urban_rural = case_when(

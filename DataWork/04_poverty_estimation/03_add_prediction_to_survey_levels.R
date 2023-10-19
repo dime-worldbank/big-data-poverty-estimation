@@ -1,10 +1,10 @@
 # Add select predictions to survey
 
 # Load Data --------------------------------------------------------------------
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+survey_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                                "survey_alldata_clean.Rds"))
 
-pred_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+pred_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                              "predictions_appended.Rds"))
 
 # Cleanup prediction data ------------------------------------------------------
@@ -20,5 +20,5 @@ survey_df <- survey_df %>%
 
 # Export -----------------------------------------------------------------------
 saveRDS(survey_df,
-        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
+        file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
 

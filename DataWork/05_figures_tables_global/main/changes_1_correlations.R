@@ -1,7 +1,7 @@
 # Correlations: Changes
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
 
 # Calc Correlations ------------------------------------------------------------
 df_cor <- df %>%
@@ -32,7 +32,6 @@ vars_to_use <- df_cor %>%
   group_by(variable,
            variable_cat) %>%
   dplyr::summarise(cor = abs(mean(cor))) %>%
-  #arrange(cor) %>%
   ungroup() %>%
   group_by(variable_cat) %>%
   slice_max(cor, n = 2) %>%

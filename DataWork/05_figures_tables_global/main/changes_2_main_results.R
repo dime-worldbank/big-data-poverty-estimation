@@ -6,19 +6,20 @@ FILL_COLOR <- "gray80"
 p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 
 # Load/prep survey data --------------------------------------------------------
-cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+cluster_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+district_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                  "predictions_changes_district_appended.Rds"))
 district_df <- district_df %>%
-  dplyr::filter(estimation_type %in% "best")
+  dplyr::filter(estimation_type %in% "global_country_pred",
+                feature_type %in% "all_changes")
 
 ## Add correlation
 cluster_df <- cluster_df %>%
   ungroup() %>%
   group_by(country_name) %>%
-  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_best_all_changes)^2) %>%
+  dplyr::mutate(r2 = cor(pca_allvars, predict_pca_allvars_global_country_pred_all_changes)^2) %>%
   ungroup() %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2)) 
 
@@ -30,7 +31,7 @@ district_df <- district_df %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2))
 
 # Load/prep accuracy data ------------------------------------------------------
-acc_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+acc_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                             "accuracy_appended.Rds"))
 
 acc_df <- acc_df %>%
@@ -42,7 +43,8 @@ acc_df <- acc_df %>%
 # Boxplots: By Training Sample -------------------------------------------------
 p_boxplot_tsample <- acc_df %>%
   dplyr::filter(feature_type %in% "all_changes",
-                target_var_dep %in% "pca_allvars") %>%
+                target_var_dep %in% "pca_allvars",
+                estimation_type != "best") %>%
   ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = mean, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE,

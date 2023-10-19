@@ -6,13 +6,14 @@ FILL_COLOR <- "gray80"
 p75 <- function(x) quantile(x, probs = 0.75) %>% as.numeric()
 
 # Load/prep survey data --------------------------------------------------------
-cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+cluster_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                  "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+district_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                  "predictions_changes_district_appended.Rds"))
 district_df <- district_df %>%
-  dplyr::filter(estimation_type %in% "best")
+  dplyr::filter(estimation_type %in% "global_country_pred",
+                feature_type %in% "all_changes")
 
 cluster_df <- cluster_df %>%
   dplyr::mutate(country_name = case_when(
@@ -40,14 +41,14 @@ district_df <- district_df %>%
 cluster_df <- cluster_df %>%
   group_by(country_name) %>%
   
-  mutate(r2 = cor(pca_allvars, predict_pca_allvars_best_all_changes)^2,
+  mutate(r2 = cor(pca_allvars, predict_pca_allvars_global_country_pred_all_changes)^2,
          r2_round = round(r2, 2) %>% as.character() %>% paste0("r2 = ",.),
          r2_round = case_when(
            r2_round == "r2=0" ~ "r2<0.01",
            TRUE ~ r2_round
          )) %>%
   
-  mutate(R2 = R2(pred = predict_pca_allvars_best_all_changes, obs = pca_allvars, form = "traditional"),
+  mutate(R2 = R2(pred = predict_pca_allvars_global_country_pred_all_changes, obs = pca_allvars, form = "traditional"),
          R2_round = round(R2, 2) %>% as.character() %>% paste0("R2 = ",.),
          R2_round = case_when(
            R2_round == "R2=0" ~ "R2<0.01",
@@ -81,7 +82,7 @@ district_df <- district_df %>%
 
 # All countries ----------------------------------------------------------------
 p_scatter_cluster <- cluster_df %>%
-  ggplot(aes(x = predict_pca_allvars_best_all_changes,
+  ggplot(aes(x = predict_pca_allvars_global_country_pred_all_changes,
              y = pca_allvars)) +
   geom_point(size = 0.5) +
   #stat_poly_eq(color = "red") +
@@ -139,7 +140,7 @@ district_countries <- district_df %>%
 ## Figures
 p_scatter_cluster_ex <- cluster_df %>%
   filter(country_name %in% cluster_countries) %>%
-  ggplot(aes(x = predict_pca_allvars_best_all_changes,
+  ggplot(aes(x = predict_pca_allvars_global_country_pred_all_changes,
              y = pca_allvars)) +
   geom_point(size = 1) +
   stat_poly_eq(color = "red", small.r=T) +

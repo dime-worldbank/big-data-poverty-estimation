@@ -81,13 +81,6 @@ pca_allvars <- c("has_electricity",
 
 lsms_df$pca_allvars_mr <- compute_pca_impute_missing(pca_allvars, lsms_df, T, "~/Desktop/lsms_pca.Rds")
 
-lsms_df %>%
-  group_by(country) %>%
-  dplyr::summarise_at(vars(all_of(pca_allvars)), mean, na.rm = T) %>%
-  t()
-
-lsms_df$has_motorbike[lsms_df$country == "BFA"] %>% table()
-
 # Aggregate --------------------------------------------------------------------
 cluster_df <- lsms_df %>%
   group_by(country, LAT, LON, year) %>%

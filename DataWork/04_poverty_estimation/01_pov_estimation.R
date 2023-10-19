@@ -25,7 +25,7 @@ if(REPLACE_IF_EXTRACTED){
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
   
-  files_to_rm <- files_to_rm %>% str_subset("nigeriaapplication")
+  files_to_rm <- files_to_rm %>% str_subset("xgboost")
   
   for(file_i in files_to_rm){
     file.remove(file_i)
@@ -35,27 +35,27 @@ if(REPLACE_IF_EXTRACTED){
 }
 
 # Make parameter grid ----------------------------------------------------------
+xgb_grid = expand.grid(
+  model = "xgboost",
+  nrounds = c(50, 100), ## 50
+  max_depth = c(6,2), ## 6
+  eta = c(0.3), ## 0.3
+  gamma = c(0), ##
+  colsample_bytree = 1, ##
+  min_child_weight = c(1), ## 1
+  subsample = c(1, 0.5) ## 1
+)
+
 # xgb_grid = expand.grid(
 #   model = "xgboost",
 #   nrounds = c(50, 100), ## 50
-#   max_depth = c(6,2), ## 6
+#   max_depth = c(1,3,5,9), ## 6
 #   eta = c(0.3), ## 0.3
-#   gamma = c(0), ##
-#   colsample_bytree = 1, ##
+#   gamma = c(0, 5), ##
+#   colsample_bytree = c(0.9, 0.5), ##
 #   min_child_weight = c(1), ## 1
-#   subsample = c(1, 0.5) ## 1
+#   subsample = c(0.9, 0.5) ## 1
 # )
-
-xgb_grid = expand.grid(
-  model = "xgboost",
-  nrounds = c(100, 500), ## 50
-  max_depth = c(1,3,5,7,9), ## 6
-  eta = c(0.3), ## 0.3
-  gamma = c(0, 1), ##
-  colsample_bytree = 1, ##
-  min_child_weight = c(1, 10), ## 1
-  subsample = c(1, 0.5) ## 1
-)
 
 lambda_max <- 5
 lambda_min <- 0.000001
@@ -95,7 +95,6 @@ run_model <- function(param_i,
                      tree_method = "hist",
                      max_bin = 256,
                      min_child_weight = param_i$min_child_weight,
-                     early_stopping_rounds = 50,
                      print_every_n = 10)
     
     pred <- predict(model, X_test)
@@ -391,7 +390,7 @@ for(level_change in c("levels", "changes", "nigeriaapplication", "lsms")){
     target_vars_vec <- c("pca_allvars") 
   } 
   
-  for(estimation_type_i in estimation_type_vec){
+  for(estimation_type_i in rev(estimation_type_vec)){
     
     if(estimation_type_i %in% c("global_country_pred", 
                                 "within_country_cv", 

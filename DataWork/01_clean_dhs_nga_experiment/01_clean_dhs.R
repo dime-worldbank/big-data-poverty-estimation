@@ -1,21 +1,8 @@
-# Clean DHS Data
+# Clean DHS Data for Nigeria 
+# Use all Nigeria rounds
 
-# Clean DHS survey data. Create Household Level 
-# dataframe with relevant socioeconomic variables.
-
-# Don't contain hv216 (n rooms for sleeping). These are earlier DHS rounds,
-# and likely just too early to be included in this paper.
-#countries_to_remove <- c("MA_2003-04_DHS_09092021_1726_82518",
-#                         "MB_2005_DHS_09092021_1725_82518") %>%
-#  paste0(collapse = "|")
-
-# Example data
-#df_tmp <- read_dta("/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/Data/DHS/RawData/ZW/ZW_2015_DHS_09092021_1734_82518/ZWHR72DT/ZWHR72FL.DTA")   
-#df_tmp$hv247 %>% head()
-
-# hv204
-# 996 --> 0
-# 998 --> NA
+# Clean DHS survey data. Create Household Level dataframe with relevant
+# socioeconomic variables.
 
 # Functions to Clean Data ------------------------------------------------------
 clean_hh <- function(df, 

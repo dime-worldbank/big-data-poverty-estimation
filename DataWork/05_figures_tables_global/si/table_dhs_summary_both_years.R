@@ -1,7 +1,7 @@
 # DHS Summary Table
 
 # Load Data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 df_sum <- df %>%
   group_by(country_name) %>%

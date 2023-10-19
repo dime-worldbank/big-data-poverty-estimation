@@ -3,7 +3,7 @@
 pad0 <- function(x) ifelse(x <= 9, paste0("0", x), paste0(x))
 
 # Load data --------------------------------------------------------------------
-results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+results_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                                 "accuracy_appended.Rds"))
 
 # Prep data --------------------------------------------------------------------

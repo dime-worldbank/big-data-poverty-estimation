@@ -5,7 +5,7 @@
 # Within country; show distribution. (color by continent?)
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 fb_param_df <- readRDS(file.path(data_dir, "Facebook Marketing", "FinalData", "facebook_marketing_parameters_clean.Rds"))
 gc_param_df <- read_csv(file.path(data_dir, "Globcover", "RawData", "gc_classes.csv"))

@@ -1,20 +1,19 @@
 # DHS Index vs Global Asset Index
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(dhs_dir, "FinalData", "Individual Datasets", "survey_socioeconomic.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+
 df <- df[df$most_recent_survey %in% T,]
 
 # Make title -------------------------------------------------------------------
 # Title: "[iso2]; Cor = [cor]"
 df <- df %>%
-  #dplyr::mutate(wealth_index_score = wealth_index_score / 1000000) %>%
   group_by(iso2) %>%
   dplyr::mutate(wealth_index_score = rescale(wealth_index_score, to = c(1,5))) %>%
   dplyr::mutate(cor = cor(wealth_index_score,
                           pca_allvars_mr)) %>%
   ungroup() %>% 
   dplyr::mutate(title = country_name)
-  #dplyr::mutate(title = paste0(iso2, "; Cor = ", round(cor, 2)))
 
 # Figure: Scatterplots ---------------------------------------------------------
 p <- df %>%

@@ -13,7 +13,7 @@ in_plot_text_color <- "red"
 #### Changes
 changes_df <- changes_df %>%
   dplyr::rename(wdi_income = income) %>%
-  mutate(error = abs(pca_allvars - predict_pca_allvars_best_all_changes),
+  mutate(error = abs(pca_allvars - predict_pca_allvars_global_country_pred_all_changes),
          error_log = log(error+1),
          error_a2 = error >= 2) %>%
   mutate(urban_rural_yr1 = case_when(

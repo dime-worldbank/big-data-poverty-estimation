@@ -3,14 +3,14 @@
 FILL_COLOR <- "gray80"
 
 # Load data --------------------------------------------------------------------
-results_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+results_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                                 "accuracy_appended.Rds"))
 
 results_df <- results_df %>%
   dplyr::filter(level_change %in% "levels")
 
 # Load/prep survey data --------------------------------------------------------
-cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+cluster_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_predictions.Rds"))
 
 cluster_df <- cluster_df %>%
@@ -19,26 +19,27 @@ cluster_df <- cluster_df %>%
 district_df <- cluster_df %>%
   group_by(continent_adj, country_code, country_name, gadm_uid) %>%
   dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
-                   predict_pca_allvars_mr_best_all = mean(predict_pca_allvars_mr_best_all)) %>%
+                   predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all)) %>%
   ungroup()
 
 ## Add correlation
 cluster_df <- cluster_df %>%
   group_by(country_name) %>%
-  mutate(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_best_all)^2) %>%
+  mutate(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2) %>%
   ungroup() %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2)) 
 
 district_df <- district_df %>%
   group_by(country_name) %>%
-  mutate(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_best_all)^2) %>%
+  mutate(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2) %>%
   ungroup() %>%
   dplyr::mutate(country_name = fct_reorder(country_name, -r2)) 
 
 # 1. All features, best estimation type ----------------------------------------
 p_trainsample <- results_df %>%
   dplyr::filter(feature_type %in% "all",
-                target_var_dep %in% "pca_allvars_mr") %>%
+                target_var_dep %in% "pca_allvars_mr",
+                estimation_type != "best") %>%
   ggplot(aes(x = reorder(estimation_type_clean, r2, FUN = median, .desc =TRUE),
              y = r2)) +
   geom_half_boxplot(errorbar.draw = FALSE, center = TRUE, 

@@ -1,5 +1,3 @@
-# Followed from: https://www.youtube.com/watch?v=oZjau-aUk0U
-
 # Everything should be done in the i386 terminal
 
 # INSTALLATION ---------------------------------------------

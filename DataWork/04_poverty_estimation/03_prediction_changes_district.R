@@ -1,10 +1,10 @@
 # District Level Changes
 
 # Load data --------------------------------------------------------------------
-survey_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", 
+survey_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
                                "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                              "predictions_appended.Rds")) %>%
   dplyr::filter(level_change %in% "changes",
                 estimation_type != "best")
@@ -75,9 +75,9 @@ df <- df %>%
 
 # Export -----------------------------------------------------------------------
 saveRDS(df, 
-        file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+        file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                   "predictions_changes_district_appended.Rds"))
 
 saveRDS(sum_df, 
-        file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+        file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                   "accuracy_changes_district_appended.Rds"))

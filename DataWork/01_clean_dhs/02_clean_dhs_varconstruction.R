@@ -172,35 +172,7 @@ pca_allvars <- c("has_electricity",
                  "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 #"educ_years_hh_max_scale",
                  "n_sleeping_rooms_pp_cat")
-
-# dhs_all_df %>%
-#   ungroup() %>%
-#   dplyr::select_at(vars(pca_allvars)) %>%
-#   dplyr::summarise_all( . %>% min(na.rm = T)) %>%
-#   t %>%
-#   as.data.frame()
-# 
-# dhs_all_df %>%
-#   ungroup() %>%
-#   dplyr::select_at(vars(pca_allvars)) %>%
-#   dplyr::summarise_all( . %>% max(na.rm = T)) %>%
-#   t %>%
-#   as.data.frame() 
-# 
-# dhs_all_df_sub <- dhs_all_df %>%
-#   dplyr::filter(year < 2000,
-#                 !is.na(has_radio))
-# 
-# N <- nrow(dhs_all_df_sub)
-# dhs_all_df_sub %>%
-#   ungroup() %>%
-#   dplyr::select_at(vars(pca_allvars)) %>%
-#   dplyr::summarise_all( . %>% is.na %>% sum) %>%
-#   t %>%
-#   as.data.frame() %>%
-#   dplyr::mutate(prop = V1/N)
 
 # Variable sets for PCA --------------------------------------------------------
 
@@ -209,11 +181,10 @@ pca_allvars_alltime <- c("has_electricity",
                          "has_radio",
                          "has_tv",
                          "has_fridge",
-                         "has_motorbike", # a lot missing
-                         "has_car", # a lot missing
+                         "has_motorbike", 
+                         "has_car", 
                          "floor_material_cat",
                          "water_source_piped_dwelling",
-                        # "educ_years_hh_max_scale",
                          "flush_toilet_sewer")
 
 # Version without roof_material due to high number of missing values
@@ -241,7 +212,6 @@ pca_allvars_noroof <- c("has_electricity",
                         "water_time_to_get_cat",
                         "water_source_piped_dwelling",
                         "flush_toilet_sewer",
-                        #"educ_years_hh_max_scale",
                         "n_sleeping_rooms_pp_cat")
 
 pca_physicalvars <- c("has_electricity",
@@ -260,7 +230,6 @@ pca_nonphysicalvars <- c("has_tv",
                          "water_time_to_get_cat",
                          "water_source_piped_dwelling",
                          "flush_toilet_sewer",
-                         #"educ_years_hh_max_scale",
                          "n_sleeping_rooms_pp_cat")
 
 # Compute PCAs -----------------------------------------------------------------
@@ -319,19 +288,6 @@ compute_pca_rm_na <- function(pca_vars, var_name, dhs_all_df){
 }
 
 #### Most Recent Data
-
-## PCA - Removing NAs
-# dhs_all_df <- dhs_all_df %>%
-#   left_join(compute_pca_rm_na(pca_allvars, "pca_allvars_rmna", dhs_all_df), 
-#             by = "ind_id") %>%
-#   left_join(compute_pca_rm_na(pca_allvars_noroof, "pca_allvars_noroof_rmna", dhs_all_df), 
-#             by = "ind_id") %>%
-#   left_join(compute_pca_rm_na(pca_physicalvars, "pca_physicalvars_rmna", dhs_all_df), 
-#             by = "ind_id") %>%
-#   left_join(compute_pca_rm_na(pca_physicalvars_noroof, "pca_physicalvars_noroof_rmna", dhs_all_df), 
-#             by = "ind_id") %>%
-#   left_join(compute_pca_rm_na(pca_nonphysicalvars, "pca_nonphysicalvars_rmna", dhs_all_df), 
-#             by = "ind_id")
 
 #### PCA - Imputing Missing NAs
 # Subset to most recent

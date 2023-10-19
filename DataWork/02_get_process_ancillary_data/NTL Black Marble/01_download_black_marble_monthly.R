@@ -1,6 +1,6 @@
 # Download Monthly Black Marble
 
-BEARER <- "cmFtYXJ0eTpjbUZ0WVhKMGVVQmxiV0ZwYkM1M2JTNWxaSFU9OjE2NjQ4MzU4NjE6MDNiODgwZGE0ZDllNDA1MWMxYWJlOGM3NTE4N2Q1YWU0OWUxNTQ4Mg"
+BEARER <- "BEARER-HERE"
 
 # Load data --------------------------------------------------------------------
 

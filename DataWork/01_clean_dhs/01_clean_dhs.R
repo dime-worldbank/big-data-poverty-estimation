@@ -3,20 +3,6 @@
 # Clean DHS survey data. Create Household Level 
 # dataframe with relevant socioeconomic variables.
 
-# Don't contain hv216 (n rooms for sleeping). These are earlier DHS rounds,
-# and likely just too early to be included in this paper.
-#countries_to_remove <- c("MA_2003-04_DHS_09092021_1726_82518",
-#                         "MB_2005_DHS_09092021_1725_82518") %>%
-#  paste0(collapse = "|")
-
-# Example data
-#df_tmp <- read_dta("/Users/robmarty/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites/Data/DHS/RawData/ZW/ZW_2015_DHS_09092021_1734_82518/ZWHR72DT/ZWHR72FL.DTA")   
-#df_tmp$hv247 %>% head()
-
-# hv204
-# 996 --> 0
-# 998 --> NA
-
 # Functions to Clean Data ------------------------------------------------------
 clean_hh <- function(df, 
                      hh_vars){
@@ -119,8 +105,6 @@ clean_hh <- function(df,
   df$educ_levels_hh_n3  <- apply(educ_levels, 1, count_3)
   df$educ_levels_hh_n3g <- apply(educ_levels, 1, count_3g)
   
-  #df$educ_years_hh_mean <- apply(educ_years, 1, mean_ig_na)
-  
   # Make sure has all variables, which is needed for renaming
   for(var_i in hh_vars){
     if(is.null(df[[var_i]])){
@@ -182,7 +166,6 @@ clean_hh <- function(df,
            roof_material = roof_material %>% as_factor() %>% as.character(),
            water_source = water_source %>% as_factor() %>% as.character(),
            toilet_type = toilet_type %>% as_factor() %>% as.character(),
-           #has_bank_account = has_bank_account %>% as_factor() %>% as.character(),
            water_time_to_get = water_time_to_get %>% as.numeric()) %>%
     dplyr::mutate(cluster_id = cluster_id %>% as.character())
   

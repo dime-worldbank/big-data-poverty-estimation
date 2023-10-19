@@ -1,1 +1,0 @@
-# Pakistan-Poverty-from-Sky

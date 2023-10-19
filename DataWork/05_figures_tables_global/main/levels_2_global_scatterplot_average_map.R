@@ -15,22 +15,22 @@ for(aggregate_district in c(F, T)){
   if(aggregate_district){
     survey_df <- survey_df %>%
       
-      dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
+      #dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
       dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
       
       dplyr::mutate(gadm_uid = paste(gadm_uid, country_code)) %>%
       group_by(gadm_uid, country_code, country_name, continent_adj) %>%
       dplyr::summarise(pca_allvars_mr = mean(pca_allvars_mr),
-                       predict_pca_allvars_mr_best_all = mean(predict_pca_allvars_mr_best_all),
+                       #predict_pca_allvars_mr_best_all = mean(predict_pca_allvars_mr_best_all),
                        predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all)) %>%
       ungroup()
     
   }
   
   # One dataset per estimation type --------------------------------------------
-  pred_best_df <- survey_df %>%
-    dplyr::rename(truth = pca_allvars_mr,
-                  prediction = predict_pca_allvars_mr_best_all)
+  #pred_best_df <- survey_df %>%
+  # dplyr::rename(truth = pca_allvars_mr,
+  #               prediction = predict_pca_allvars_mr_best_all)
   
   pred_global_df <- survey_df %>%
     dplyr::rename(truth = pca_allvars_mr,
@@ -157,7 +157,7 @@ for(aggregate_district in c(F, T)){
   p_list_i <- p_list_i + 1
   
   # To Long (for map) ------------------------------------------------------------
-  cor_df <- pred_best_df %>%
+  cor_df <- pred_global_df %>%
     group_by(country_code, country_name, continent_adj) %>%
     dplyr::summarise(cor = cor(prediction, truth),
                      R2 = R2(prediction, truth, form = "traditional")) %>%
@@ -360,9 +360,9 @@ for(aggregate_district in c(F, T)){
   # Country Scatterplot ----------------------------------------------------------
   if(aggregate_district){
     
-    p_scatter_country <- pred_best_df %>%
+    p_scatter_country <- pred_global_df %>%
       group_by(country_name) %>%
-
+      
       dplyr::mutate(cor_val = cor(truth, prediction)^2,
                     coef_det_val = R2(prediction, truth, form = "traditional")) %>%
       dplyr::mutate(country_name = paste0(country_name, 
@@ -399,8 +399,8 @@ for(aggregate_district in c(F, T)){
     
     
   } else{
-
-    p_scatter_country <- pred_best_df %>%
+    
+    p_scatter_country <- pred_global_df %>%
       group_by(country_name) %>%
       dplyr::mutate(cor_val = cor(truth, prediction)^2,
                     coef_det_val = R2(prediction, truth, form = "traditional")) %>%

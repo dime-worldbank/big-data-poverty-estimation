@@ -2,26 +2,27 @@
 # Explain Variation
 
 # Load data --------------------------------------------------------------------
-accu_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "pov_estimation_results",
+accu_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                         "accuracy_appended.Rds"))
 
 accu_df <- accu_df %>%
   dplyr::filter(level_change %in% "changes")
 
-cluster_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+cluster_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                 "survey_alldata_clean_changes_cluster_predictions.Rds"))
 
-district_df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets",
+district_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets",
                                  "predictions_changes_district_appended.Rds"))
 district_df <- district_df %>%
-  dplyr::filter(estimation_type %in% "best")
+  dplyr::filter(estimation_type %in% "global_country_pred",
+                feature_type %in% "all_changes")
 
 # Explain variation: scatter plots ---------------------------------------------
 line_color <- "darkorange"
 accu_sum_df <- accu_df %>%
   ungroup() %>%
   dplyr::filter(feature_type %in% "all_changes",
-                estimation_type %in% "best", # best "within_country_cv", global_country_pred,
+                estimation_type %in% "global_country_pred", # best "within_country_cv", global_country_pred,
                 target_var_dep %in% "pca_allvars")
 
 p_scatter <- accu_sum_df %>%
@@ -70,7 +71,7 @@ p_scatter <- accu_sum_df %>%
 # Boxplot by income and unit ---------------------------------------------------
 cluster_sum_df <- cluster_df %>%
   group_by(country_code, income) %>%
-  dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_best_all_changes)) %>%
+  dplyr::summarise(cor = cor(pca_allvars, predict_pca_allvars_global_country_pred_all_changes)) %>%
   ungroup() %>%
   mutate(unit = "Cluster") %>%
   mutate(r2 = cor^2)

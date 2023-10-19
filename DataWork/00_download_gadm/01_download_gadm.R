@@ -1,7 +1,5 @@
 # Download GADM
 
-setwd(file.path(data_dir, "GADM", "RawData"))
-
 only_adm1_avail <- c("ARM", "COM", "LSO", "MDA")
 
 for(country_i in c("ALB", "ARM", "AGO", "BFA", "BEN", "BOL", "BDI", "COD", "CAF",
@@ -14,9 +12,9 @@ for(country_i in c("ALB", "ARM", "AGO", "BFA", "BEN", "BOL", "BDI", "COD", "CAF"
                    "BGD", "IND", "KHM", "KGZ", "MMR", "NGA", "NPL", "PHL", "PAK", "TJK", "TLS", "UGA")){
   
   if(country_i %in% only_adm1_avail){
-    for(i in 0:1) getData('GADM', country=country_i, level=i)
+    for(i in 0:1) getData('GADM', country=country_i, level=i, path = file.path(data_dir, "GADM", "RawData"))
   } else{
-    for(i in 0:2) getData('GADM', country=country_i, level=i)
+    for(i in 0:2) getData('GADM', country=country_i, level=i, path = file.path(data_dir, "GADM", "RawData"))
   }
 }
 

@@ -1,31 +1,19 @@
 # Poverty Estimation Using XGBoost
 
-### TODO
-# 1. For OUT_MODEL, has "prediction" instead of "model"
-
-### Parameters
-
-# For each model / time xgBoost is run, implement a grid search to determine the
-# optimal parameters. Otherwise, use same set of parameters across all settings.
-# Implementing the grid search adds significant time to code but improves model
-# performance
-grid_search <- F
-
-# Check if model has already been implemented. If TRUE, replace; if FALSE, skip.
-REPLACE_IF_EXTRACTED <- F
+if(exists("DELETE_ML_RESULTS") %in% F){
+  DELETE_ML_RESULTS <- F
+}
 
 # Define out path --------------------------------------------------------------
 OUT_PATH <- file.path(data_dir, "DHS", "FinalData", "pov_estimation_results")
 
 # Delete existing files --------------------------------------------------------
-if(REPLACE_IF_EXTRACTED){
+if(DELETE_ML_RESULTS){
   print("Removing files!!!")
   Sys.sleep(10)
   
   files_to_rm <- file.path(OUT_PATH) %>% 
     list.files(full.names = T, pattern = "*.Rds", recursive = T)
-  
-  files_to_rm <- files_to_rm %>% str_subset("xgboost")
   
   for(file_i in files_to_rm){
     file.remove(file_i)
@@ -35,15 +23,26 @@ if(REPLACE_IF_EXTRACTED){
 }
 
 # Make parameter grid ----------------------------------------------------------
+# xgb_grid = expand.grid(
+#   model = "xgboost",
+#   nrounds = c(50, 100), ## 50
+#   max_depth = c(6,2), ## 6
+#   eta = c(0.3), ## 0.3
+#   gamma = c(0), ##
+#   colsample_bytree = 1, ##
+#   min_child_weight = c(1), ## 1
+#   subsample = c(1, 0.5) ## 1
+# )
+
 xgb_grid = expand.grid(
   model = "xgboost",
   nrounds = c(50, 100), ## 50
-  max_depth = c(6,2), ## 6
+  max_depth = c(2,4), ## 6
   eta = c(0.3), ## 0.3
   gamma = c(0), ##
-  colsample_bytree = 1, ##
+  colsample_bytree = c(0.9, 0.5), ##
   min_child_weight = c(1), ## 1
-  subsample = c(1, 0.5) ## 1
+  subsample = c(0.9, 0.5) ## 1
 )
 
 # xgb_grid = expand.grid(

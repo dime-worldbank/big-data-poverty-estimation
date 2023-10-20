@@ -4,7 +4,7 @@
 # if within 10km.
 
 # Load data --------------------------------------------------------------------
-df <- readRDS(file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
+df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 # Select variables -------------------------------------------------------------
 # Select relevant ID variables and variables that change over time
@@ -125,5 +125,5 @@ df_change <- df_pairs %>%
 #dplyr::filter(!is.na(year_diff))
 
 # Export -----------------------------------------------------------------------
-saveRDS(df_change, file.path(data_dir, SURVEY_NAME, "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
+saveRDS(df_change, file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster.Rds"))
 

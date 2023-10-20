@@ -1,7 +1,18 @@
 # Global poverty estimation using private and public sector big data sources
 # Main Script
 
-RUN_CODE <- F
+#### PARAMETERS
+# Whether to run code for analysis and producing tables, figures & stats
+RUN_CODE <- T
+
+# It takes >1 day to run the ML models. The code checks which models have not 
+# been run, and only runs those that have not been run. Consequently, deleting
+# all models means the code will start from scratch.
+DELETE_ML_RESULTS <- F
+
+# Export a text file that summarizes how long the code took to run
+EXPORT_TXT_REPORT_CODE_DURATION <- T
+START_TIME <- Sys.time() # To track time for running code
 
 # Root Directories -------------------------------------------------------------
 #### Root Paths
@@ -9,6 +20,7 @@ RUN_CODE <- F
 # * Github [github_dir]: Github Repo
 # * Tables/Figures [overleaf_global_dir]: Path for tables and figures for paper
 
+#dropbox_dir          <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 dropbox_dir          <- "~/Dropbox/World Bank/IEs/Big Data Poverty Estimation"
 github_dir           <- "~/Documents/Github/big-data-poverty-estimation"
 overleaf_global_dir  <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
@@ -358,6 +370,8 @@ if(F){
 
 if(RUN_CODE){
   
+  set.seed(42)
+  
   # 4. Poverty Estimation ------------------------------------------------------
   # Machine learning models for estimating poverty and creating datasets with
   # results.
@@ -383,10 +397,9 @@ if(RUN_CODE){
   
   source(file.path(figures_tables_global_dir, "main", "changes_1_correlations.R"))
   source(file.path(figures_tables_global_dir, "main", "changes_2_main_results.R"))
-  source(file.path(figures_tables_global_dir, "main", "changes_3_global_scatter.R"))
-  source(file.path(figures_tables_global_dir, "main", "changes_4_scatter_countries.R"))
-  source(file.path(figures_tables_global_dir, "main", "changes_5_explain_variation.R"))
-  source(file.path(figures_tables_global_dir, "main", "changes_6_explain_error.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_3_scatter_countries.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_4_explain_variation.R"))
+  source(file.path(figures_tables_global_dir, "main", "changes_5_explain_error.R"))
   
   source(file.path(figures_tables_global_dir, "main", "policy_exp_nigeria.R"))
   
@@ -407,5 +420,26 @@ if(RUN_CODE){
   source(file.path(figures_tables_global_dir, "si", "table_wealth_sd_within_across.R"))
 }
 
+#### Export: info on last code run
+if(EXPORT_TXT_REPORT_CODE_DURATION){
+  END_TIME <- Sys.time()
+  
+  sink(file.path(github_dir, "last_code_run_time.txt"))
+  cat("Details from latest time script was run \n")
+  cat("\n")
+  cat("START TIME: ", as.character(START_TIME), "\n", sep = "")
+  cat("END TIME: ", as.character(END_TIME), "\n", sep = "")
+  cat("DURATION: ",
+      difftime(END_TIME, START_TIME, units = "mins") %>%
+        as.numeric() %>%
+        round(2),
+      " minutes \n", sep = "")
+  cat("\n")
+  cat("PARAMETERS\n")
+  cat("RUN_CODE: ", RUN_CODE, "\n", sep = "")
+  cat("DELETE_ML_RESULTS: ", DELETE_ML_RESULTS, "\n", sep = "")
+
+  sink()
+}
 
 

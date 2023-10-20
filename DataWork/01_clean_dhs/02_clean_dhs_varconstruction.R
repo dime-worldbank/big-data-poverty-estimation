@@ -199,7 +199,6 @@ pca_allvars <- c("has_electricity",
                  "water_time_to_get_cat",
                  "water_source_piped_dwelling",
                  "flush_toilet_sewer",
-                 #"educ_years_hh_max_scale",
                  "n_sleeping_rooms_pp_cat")
 
 pca_allvars_noroof <- c("has_electricity",

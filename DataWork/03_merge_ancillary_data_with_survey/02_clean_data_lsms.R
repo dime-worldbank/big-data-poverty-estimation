@@ -165,8 +165,11 @@ if(F){
     View()
 }
 
+# Remove Observations/Variables ------------------------------------------------
+df <- df %>%
+  dplyr::select(-c(fb_prop_radius, latitude, longitude))
+
 # Export Data ------------------------------------------------------------------
-df$fb_prop_radius <- NULL
 saveRDS(df, file.path(data_dir, "LSMS", "FinalData", "Merged Datasets", "survey_alldata_clean.Rds"))
 
 

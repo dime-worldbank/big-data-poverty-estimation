@@ -148,10 +148,16 @@ df <- df %>%
   ) %>%
   dplyr::select(-c(fb_prop_radius))
 
-# Remove Observations ----------------------------------------------------------
+# Remove Observations/Variables ------------------------------------------------
 
 df <- df %>%
   dplyr::filter(!is.na(s1_sar_vh_mean))
+
+df <- df %>%
+  dplyr::select(-c(pca_allvars_noroof_mr,
+                   pca_physicalvars_mr,
+                   pca_physicalvars_noroof_mr,
+                   pca_nonphysicalvars_mr))
 
 # Export Data ------------------------------------------------------------------
 df$fb_prop_radius <- NULL

@@ -196,7 +196,7 @@ for(aggregate_district in c(F, T)){
     R2_mean_eurasia <- mean(cor_df$R2[cor_df$continent_adj %in% "Eurasia"])
   }
   
-  cor_df$r2[cor_df$r2 <= 0.3] <- 0.3
+  #cor_df$r2[cor_df$r2 <= 0.3] <- 0.3
   
   # Map --------------------------------------------------------------------------
   world_sp <- ne_countries(type = "countries", scale=50)
@@ -274,9 +274,9 @@ for(aggregate_district in c(F, T)){
                     size = FONT_SIZE) +
       scale_fill_distiller(palette = "Spectral",
                            direction = 0,
-                           limits = c(0.3, 0.949),
-                           #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
-                           labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
+                           limits = c(0, 1)) +
+                           #labels = c("0.1", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")
+                           #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8)) +
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
                           "D. r2 of estimated vs true wealth index within countries [district]",
@@ -284,7 +284,7 @@ for(aggregate_district in c(F, T)){
            caption = "") +
       theme_void() +
       coord_quickmap() +
-      coord_cartesian(xlim=c(-85,135),
+      coord_cartesian(xlim=c(-90,135),
                       ylim=c(-34, 45)) +
       theme(plot.title = element_text(face = "bold", size = 16),
             legend.position = c(0.05,0.18)) 
@@ -339,9 +339,10 @@ for(aggregate_district in c(F, T)){
                     size = FONT_SIZE) +
       scale_fill_distiller(palette = "Spectral",
                            direction = 0,
-                           limits = c(0.3, 0.949),
+                           limits = c(0,1)) +
+                           #limits = c(0.3, 0.949), # 0.3, 0.949
                            #values = c(0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
-                           labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
+                           #labels = c("<0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9")) +
       labs(fill = expression(r^2),
            title = ifelse(aggregate_district,
                           "D. r2 of estimated vs true wealth index within countries [district]",
@@ -349,7 +350,7 @@ for(aggregate_district in c(F, T)){
            caption = "") +
       theme_void() +
       coord_quickmap() +
-      coord_cartesian(xlim=c(-85,135),
+      coord_cartesian(xlim=c(-90,135),
                       ylim=c(-34, 45)) +
       theme(plot.title = element_text(face = "bold", size = 16),
             legend.position = c(0.05,0.18)) 

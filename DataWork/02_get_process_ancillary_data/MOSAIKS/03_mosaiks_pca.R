@@ -30,7 +30,7 @@ pca <- prcomp(mosaik_noid_df, scale = TRUE)
 # Get the cumulative explained variance
 cum_var <- cumsum(pca$sdev^2 / sum(pca$sdev^2))
 
-# Find the number of principal components that explain 90% of the variation
+# Find the number of principal components that explain 99.9% of the variation
 n_components <- min(which(cum_var >= 0.999))
 
 # Print the variables that correspond to the selected principal components

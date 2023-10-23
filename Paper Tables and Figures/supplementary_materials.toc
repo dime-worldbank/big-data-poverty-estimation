@@ -1,0 +1,16 @@
+\select@language {english}
+\contentsline {section}{\numberline {S1}DHS summary statistics}{S3}{section.1}
+\contentsline {section}{\numberline {S2}Comparing DHS wealth index and global wealth index}{S5}{section.2}
+\contentsline {section}{\numberline {S3}Correlation of Facebook features with wealth index for each country}{S6}{section.3}
+\contentsline {section}{\numberline {S4}Within country correlation of top features}{S7}{section.4}
+\contentsline {section}{\numberline {S5}Scatterplots of true and estimated levels wealth for each country}{S8}{section.5}
+\contentsline {section}{\numberline {S6}Estimating levels of wealth: pooled results by continent}{S10}{section.6}
+\contentsline {section}{\numberline {S7}Model performance estimating levels of wealth for each country and feature set}{S12}{section.7}
+\contentsline {section}{\numberline {S8}Scatterplots of true and estimated levels changes in wealth for each country}{S13}{section.8}
+\contentsline {section}{\numberline {S9}Explain variation in error}{S15}{section.9}
+\contentsline {section}{\numberline {S10}Application: Estimating Wealth in Different Years using First Administrative Division}{S18}{section.10}
+\contentsline {section}{\numberline {S11}Comparing results across machine learning algorithms}{S19}{section.11}
+\contentsline {section}{\numberline {S12}Variation in wealth: within and across districts}{S21}{section.12}
+\contentsline {section}{\numberline {S13}Comparison of results to other papers}{S22}{section.13}
+\contentsline {section}{\numberline {S14}Wealth asset index and consumption comparison}{S23}{section.14}
+\contentsline {section}{\numberline {S15}Comparing DHS and Facebook education variables}{S25}{section.15}

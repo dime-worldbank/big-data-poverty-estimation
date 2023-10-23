@@ -1,0 +1,390 @@
+\documentclass{article}
+
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=2.9cm,right=2.9cm,marginparwidth=1.75cm]{geometry}
+
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{import}
+\usepackage{float}
+\usepackage{xcite}
+\usepackage[hidelinks]{hyperref}
+%\usepackage{xr}
+\usepackage{xcolor}
+\usepackage[font=footnotesize, labelfont=bf]{caption}
+
+\setcounter{page}{0}
+
+\usepackage{tocloft}
+\setlength{\cftsecnumwidth}{3em}
+\setlength{\cftsubsecnumwidth}{3em}
+\setlength{\cftsubsubsecnumwidth}{4em}
+
+\begin{document}
+
+\renewcommand{\thepage}{S\arabic{page}} 
+\renewcommand{\thesection}{S\arabic{section}}  
+\renewcommand{\thetable}{S\arabic{table}}  
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+% --------------------------
+\thispagestyle{empty}
+\begin{center}
+~~ \\ 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+\bigskip 
+    \Huge Appendices: Global poverty estimation using private and public sector big data sources \\
+    \bigskip
+    \bigskip
+    \bigskip
+    \Huge 
+\end{center}
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+    \bigskip
+
+% --------------------------
+\newpage
+\tableofcontents
+
+% --------------------------
+\newpage
+\doublespacing
+\section{DHS summary statistics}
+
+\singlespacing
+\begin{table}[H]
+\small
+\caption{DHS summary statistics of countries used for estimating levels of wealth}
+\label{tab:dhs_summary_table}
+\centering
+\input{tables/dhs_summary_table.tex}
+\end{table}
+\normalsize
+\doublespacing
+
+\singlespacing
+\begin{table}[H]
+\small
+\caption{DHS summary statistics of countries used for estimating changes in wealth}
+\label{tab:dhs_summary_table_changes}
+\centering
+\input{tables/dhs_summary_table_changes.tex}
+\end{table}
+\normalsize
+\doublespacing
+
+% --------------------------
+\newpage
+\section{Comparing DHS wealth index and global wealth index}
+\label{si:comparing_dhs_global_wi}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/dhsindex_globalindex_cor.png}
+    \caption{Association between DHS wealth index and global wealth index for each country}
+     \label{fig:dhsindex_globalindex_cor}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Correlation of Facebook features with wealth index for each country}
+\label{si:cor_fb_wi}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/fb_features_cor_each_country.png}
+    \caption{Correlation of Facebook features with wealth index}
+     \label{fig:fb_features_cor_each_country}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Within country correlation of top features}
+\label{si:within_cor_top_features}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/cor_between_vars.png}
+    \caption{Correlation of variables between each other. We use the variable with the highest correlation to the wealth score in each dataset. {\bf Panel A} shows the average correlation across countries and {\bf panel B} shows the standard deviation in correlations across countries. The variables are ordered top to bottom and right to left according to their correlation with the wealth score.}
+     \label{fig:cor_between_vars}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Scatterplots of true and estimated levels wealth for each country}
+\label{si:scatter_levels}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/r2_scatter_eachcountry.png}
+    \caption{Scatterplot between true and estimated levels of wealth for each country using survey clusters as the unit analysis. $r^2$ is the squared Pearson correlation coefficient, and $R^2$ is the coefficient of determination.}
+     \label{fig:r2_scatter_eachcountry}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/r2_scatter_eachcountry_districtagg.png}
+    \caption{Scatterplot between true and estimated levels of wealth for each country when aggregating to districts. The $r^2$ is the squared Pearson correlation coefficient, and $R^2$ is the coefficient of determination.}
+     \label{fig:r2_scatter_eachcountry_districtagg}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Estimating levels of wealth: pooled results by continent}
+\label{si:r2_scatter_pooled_by_continent}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/r2_scatter_pooled_by_continent.png}
+    \caption{Scatterplot between true and estimated levels of wealth for each country when aggregating to districts. The $r^2$ is the squared Pearson correlation coefficient, and $R^2$ is the coefficient of determination.}
+     \label{fig:r2_scatter_pooled_by_continent}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Model performance estimating levels of wealth for each country and feature set}
+\label{si:model_perf_fs}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/country_featureset_r2.png}
+    \caption{Model performance estimating levels of wealth for each country and feature set}
+     \label{fig:country_featureset_r2}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Scatterplots of true and estimated levels changes in wealth for each country}
+\label{si:scatter_changes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/changes_scatter_cluster.png}
+    \caption{Scatterplots of changes in true and estimated changes in the wealth index at the cluster level.  $r^2$ is the squared Pearson correlation coefficient, and $R^2$ is the coefficient of determination.}
+     \label{fig:changes_scatter_cluster}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/changes_scatter_adm2.png}
+    \caption{Scatterplots of changes in true and estimated changes in the wealth index at the district level. \color{black} $r^2$ is the squared Pearson correlation coefficient, and $R^2$ is the coefficient of determination.}
+     \label{fig:changes_scatter_adm2}
+\end{figure}
+
+% --------------------------
+
+\newpage
+\section{Explain variation in error}
+\label{si:expl_error_var}
+
+\singlespacing
+\begin{table}[H]
+\small
+\caption{Explaining error (absolute value of true minus predicted wealth) based on select factors}
+\label{tab:explain_error_levels_lm}
+\centering
+\input{tables/explain_error_levels_lm.tex}
+\end{table}
+\normalsize
+\doublespacing
+
+\singlespacing
+\begin{table}[H]
+\small
+\caption{Explaining error (absolute value of true minus predicted wealth) based on select factors}
+\label{tab:explain_error_changes_lm}
+\centering
+\input{tables/explain_error_changes_lm.tex}
+\end{table}
+\normalsize
+\doublespacing
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/explain_error_levels.png}
+    \caption{Explain error: levels. The boxplots include: center line, median; box limits, upper and lower quartiles; whiskers, 1.5x interquartile range; points beyond whiskers, outliers. {$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01}}
+     \label{fig:explain_error_levels}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/explain_error_changes.png}
+    \caption{Explain error: changes. The boxplots include: center line, median; box limits, upper and lower quartiles; whiskers, 1.5x interquartile range; points beyond whiskers, outliers. {$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01}}
+     \label{fig:explain_error_changes}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Application: Estimating Wealth in Different Years using First Administrative Division}
+\label{si:policy_exp_nigeria_gadm_1}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/policy_exp_nigeria_gadm_1.png}
+    \caption{Comparison of true wealth estimates versus estimates from machine learning model and using DHS data to interpolate and extrapolate wealth estimates; data is extrapolated for 2003 and 2018 data, and interpolated for 2008 and 2013. For each year, the two closest DHS rounds are used to estimate wealth; for example, the data in 2003 and 2013 is used to interpolate wealth for 2008. Wealth estimates are at the first administrative division level.}
+     \label{fig:policy_exp_nigeria_gadm_1}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Comparing results across machine learning algorithms}
+\label{si:ml_results_type}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/ml_results_type.png}
+    \caption{Comparison of model performance by machine learning algorithm. The boxplots include: center line, median; box limits, upper and lower quartiles; whiskers, 1.5x interquartile range; points beyond whiskers, outliers.}
+     \label{fig:ml_results_type}
+\end{figure}
+
+% --------------------------
+\newpage
+\section{Variation in wealth: within and across districts}\label{si:within_across_pca_sd}
+
+\singlespacing
+\begin{table}[H]
+\small
+\caption{Comparing standard deviation in wealth within and across districts}
+\label{tab:within_across_pca_sd}
+\centering
+\input{tables/within_across_pca_sd.tex}
+\end{table}
+\normalsize
+\doublespacing
+
+% --------------------------
+\newpage
+
+\section{Comparison of results to other papers}
+\label{si:compare_other_papers}
+
+
+\singlespacing
+\begin{table}[H]
+\caption{Comparison of results to other papers. Yeh et al. (2020) and Chi et al. (2022) use models trained on other countries to estimate wealth in each country of interest; consequently, when comparing our results to these paper, we show results from models using a similar approach---where models are trained on all other countries. For each country, Jean et al. (2016) trains models using only data for each country; consequently, when comparing our results to this paper, we show results from models using a similar approach---where models are trained on data within each country.}
+\label{fig:compare_other_papers}
+\centering 
+\begin{tabular}{lllllll}
+\hline
+Unit & Level/Change & Aggregation & Location & Paper & Other       & This \\
+     &              &             &          &       & Paper $r^2$ & Paper $r^2$ \\
+
+\hline
+Village  & Levels  & Pooled                   & Africa         & Yeh et al. (2020) & 0.67 & 0.75 \\
+Village  & Levels  & Average across countries & Africa         & Yeh et al. (2020) & 0.7 & 0.60 \\
+Village  & Levels  & Pooled                   & Africa - Urban & Yeh et al. (2020) & 0.4 & 0.61 \\
+Village  & Levels  & Pooled                   & Africa - Rural & Yeh et al. (2020) & 0.32 & 0.65 \\
+District & Levels  & Pooled                   & Africa         & Yeh et al. (2020) & 0.75 & 0.78 \\
+District & Levels  & Average across countries & Africa         & Yeh et al. (2020) & 0.83 & 0.66 \\
+Village  & Changes & Pooled                   & Africa         & Yeh et al. (2020) & 0.35 & 0.04  \\
+District & Changes & Pooled                   & Africa         & Yeh et al. (2020) & 0.43 & 0.05  \\
+\hline
+Village & Levels   & Average across countries & All DHS countries & Chi et al. (2022) & 0.59 & 0.55 \\
+\hline 
+Village & Levels   & Not applicable           & Malawi            & Jean et al. (2016) & 0.55 & 0.48 \\
+Village & Levels   & Not applicable           & Nigeria           & Jean et al. (2016) & 0.68 & 0.70 \\
+Village & Levels   & Not applicable           & Rwanda            & Jean et al. (2016) & 0.75 & 0.58 \\
+Village & Levels   & Not applicable           & Tanzania          & Jean et al. (2016) & 0.57 & 0.69 \\
+Village & Levels   & Not applicable           & Uganda            & Jean et al. (2016) & 0.69 & 0.76 \\
+\hline 
+\end{tabular}
+\end{table}
+\doublespacing
+
+% --------------------------
+\newpage
+\section{Wealth asset index and consumption comparison}
+\label{si:asset_vs_consumption}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/lsms_pov_measure_cor.png}
+    \caption{Comparison of wealth asset index and consumption}
+     \label{fig:lsms_pov_measure_cor}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/lsms_r2.png}
+    \caption{Comparison of model performance estimating wealth asset index and consumption}
+     \label{fig:lsms_r2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/lsms_feature_type.png}
+    \caption{Comparison of model performance estimating wealth asset index and consumption by set of features used to train the model. The median $r^2$ is reported.}
+     \label{fig:lsms_feature_type}
+\end{figure}
+
+\color{black}
+
+% --------------------------
+\newpage
+\section{Comparing DHS and Facebook education variables}
+\label{si:wi_and_fb_edu}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figures/educ_fb_dhs_boxplot.png}
+    \caption{Distribution of within-country correlation between the proportion of the population with above high school education as measured by DHS and Facebook. The boxplots include: center line, median; box limits, upper and lower quartiles; whiskers, 1.5x interquartile range; points beyond whiskers, outliers.}
+     \label{fig:educ_fb_dhs_boxplot}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/educ_fb_dhs_scatter_cluster.png}
+    \caption{Cluster-level scatterplot between proportion with above high school education as measured by Facebook and DHS}
+     \label{fig:educ_fb_dhs_scatter_cluster}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/educ_fb_dhs_scatter_adm2.png}
+    \caption{District-level scatterplot between proportion with above high school education as measured by Facebook and DHS}
+     \label{fig:educ_fb_dhs_scatter_adm2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/educ_fb_dhs_explain.png}
+    \caption{Scatterplot between (1) within country correlation of the proportion with above high school education as measured by Facebook and DHS, and (2) country-level features}
+     \label{fig:educ_fb_dhs_explain}
+\end{figure}
+
+
+\end{document}

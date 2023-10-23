@@ -156,7 +156,7 @@ stargazer(lm1,
                                "Americas",
                                "Eurasia"),
           omit.stat = c("f", "ser"),
-          dep.var.labels = "Absolute value of difference in change in true and predicted wealth",
+          dep.var.labels = "Absolute value of difference in change in true and estimated wealth",
           float = F,
           out = file.path(tables_global_dir, "explain_error_changes_lm.tex"))
 

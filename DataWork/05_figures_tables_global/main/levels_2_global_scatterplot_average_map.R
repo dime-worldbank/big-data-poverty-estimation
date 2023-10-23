@@ -106,8 +106,8 @@ for(aggregate_district in c(F, T)){
     
     p_list[[p_list_i]] <- ggplot() +
       geom_point(aes(color = urban_rural,
-                     y = truth,
-                     x = prediction),
+                     x = truth,
+                     y = prediction),
                  data = pred_global_df,
                  size = 0.25,
                  alpha = 0.3) +
@@ -380,9 +380,9 @@ for(aggregate_district in c(F, T)){
                  alpha = 0.7) + # 0.3
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +
       labs(color = NULL,
-           title = "Predicted vs. True Wealth Scores",
-           y = "True Asset Index",
-           x = "Predicted Asset Index") +
+           title = "Estimated vs. True Wealth Scores",
+           y = "True Wealth Asset Index",
+           x = "Estimated Wealth Asset Index") +
       theme_minimal() +
       theme(legend.position = "top",
             legend.box.background = element_rect(colour = "black"),
@@ -418,9 +418,9 @@ for(aggregate_district in c(F, T)){
                  alpha = 0.7) + # 0.3
       scale_color_manual(values = c("chartreuse4", "chocolate1")) +
       labs(color = NULL,
-           title = "Predicted vs. True Wealth Scores",
-           y = "True Asset Index",
-           x = "Predicted Asset Index") +
+           title = "Estimated vs. True Wealth Scores",
+           y = "True Wealth Asset Index",
+           x = "Estimated Wealth Asset Index") +
       theme_minimal() +
       theme(legend.position = "top",
             legend.box.background = element_rect(colour = "black"),

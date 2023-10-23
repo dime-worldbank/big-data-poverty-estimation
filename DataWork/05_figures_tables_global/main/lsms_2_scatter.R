@@ -57,7 +57,7 @@ p_pca <- pred_sub_df %>%
   #          label.x.npc = "left",
   #          color = "firebrick3") +
   facet_wrap(~country_name, nrow = 1) +
-  labs(x = "Predicted Asset Wealth",
+  labs(x = "Estimated Asset Wealth",
        y = "True Asset Wealth",
        title = "A. Asset Wealth") +
   scale_x_continuous(limits = c(v_min, v_max)) +

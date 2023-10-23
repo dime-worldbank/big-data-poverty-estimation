@@ -1,10 +1,432 @@
 # Main Paper Stats
 
 # Load data --------------------------------------------------------------------
-survey_chn_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean_changes_cluster_predictions.Rds"))
-survey_df     <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", "survey_alldata_clean_predictions.Rds"))
+survey_chn_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
+                                   "survey_alldata_clean_changes_cluster_predictions.Rds"))
+survey_df     <- readRDS(file.path(data_dir, "DHS", "FinalData", "Merged Datasets", 
+                                   "survey_alldata_clean_predictions.Rds"))
 acc_df        <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
                                    "accuracy_appended.Rds"))
+acc_chng_dist_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
+                                      "accuracy_changes_district_appended.Rds"))
+
+# N ----------------------------------------------------------------------------
+
+#### N Clusters
+survey_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  nrow() %>%
+  prettyNum(big.mark=",",scientific=FALSE) %>%
+  write(file.path(stats_global_dir, "n_villages_levels.txt"))
+
+#### N Countries
+survey_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  pull(country_code) %>%
+  unique() %>%
+  length() %>%
+  write(file.path(stats_global_dir, "n_countries_levels.txt"))
+
+#### N Countries
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
+  pull(country_code) %>%
+  unique() %>%
+  length() %>%
+  write(file.path(stats_global_dir, "n_countries_changes.txt"))
+
+#### N Features
+survey_df %>%
+  dplyr::select_at(vars(starts_with("viirs_"),
+                        starts_with("s1_sar_"),
+                        starts_with("cnn_viirs_s2_"),
+                        starts_with("fb_prop_"),
+                        starts_with("fb_wp_prop"),
+                        starts_with("osm_"),
+                        starts_with("gc_"),
+                        starts_with("l7_"),
+                        starts_with("elevslope_"),
+                        starts_with("weather_"),
+                        starts_with("worldclim_"),
+                        starts_with("pollution_"),
+                        starts_with("mosaik_"))) %>%
+  ncol() %>%
+  write(file.path(stats_global_dir, "n_features_levels.txt"))
+
+# Main Results: Average, Min, Max ----------------------------------------------
+
+##### * Cluster, Levels * #####
+
+#### Overall r2
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                !is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "levels_village_r2.txt")) 
+
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                !is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  min() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%;") %>%
+  write(file.path(stats_global_dir, "levels_village_r2_min.txt")) 
+
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                !is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%)") %>%
+  write(file.path(stats_global_dir, "levels_village_r2_max.txt")) 
+
+##### * District, Levels * #####
+
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                !is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "levels_district_r2_avg.txt"))
+
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                !is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  min() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%;") %>%
+  write(file.path(stats_global_dir, "levels_district_r2_min.txt"))
+
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                !is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%)") %>%
+  write(file.path(stats_global_dir, "levels_district_r2_max.txt"))
+
+##### * Cluster, Changes * #####
+
+#### Overall r2
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_global_country_pred_all_changes)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_global_country_pred_all_changes, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_village_r2.txt")) 
+
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_global_country_pred_all_changes)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_global_country_pred_all_changes, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  min() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%;") %>%
+  write(file.path(stats_global_dir, "changes_village_r2_min.txt")) 
+
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_global_country_pred_all_changes)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_global_country_pred_all_changes, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  median() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%;") %>%
+  write(file.path(stats_global_dir, "changes_village_r2_median.txt")) 
+
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_global_country_pred_all_changes)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_global_country_pred_all_changes, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%)") %>%
+  write(file.path(stats_global_dir, "changes_village_r2_max.txt")) 
+
+survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_global_country_pred_all_changes)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_global_country_pred_all_changes, pca_allvars)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_village_r2_max_no_paren.txt")) 
+
+##### * District, Changes * #####
+
+acc_chng_dist_r2_df <- acc_chng_dist_df %>%
+  dplyr::filter(feature_type %in% "all_changes",
+                estimation_type %in% "global_country_pred") 
+
+acc_chng_dist_r2_df %>% 
+  dplyr::filter() %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2.txt"))
+
+acc_chng_dist_r2_df %>% 
+  dplyr::filter() %>%
+  pull(r2) %>%
+  min() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%;") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_min.txt"))
+
+acc_chng_dist_r2_df %>% 
+  dplyr::filter() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%)") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_max.txt"))
+
+acc_chng_dist_r2_df %>% 
+  dplyr::filter() %>%
+  pull(r2) %>%
+  max() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_max_no_paren.txt"))
+
+acc_chng_dist_r2_df %>% 
+  dplyr::filter() %>%
+  pull(r2) %>%
+  median() %>%
+  round(2) %>%
+  "*"(100) %>%
+  paste0("\\%") %>%
+  write(file.path(stats_global_dir, "changes_district_r2_median.txt"))
+
+# Model type that works best ---------------------------------------------------
+est_type_best_df <- acc_df %>%
+  dplyr::filter(feature_type == "all",
+                estimation_type != "best") %>%
+  group_by(country) %>%
+  slice_max(order_by = r2, n = 1) %>%
+  ungroup() %>%
+  dplyr::mutate(within_country_best = estimation_type == "within_country_cv",
+                within_country_best_num = as.numeric(within_country_best))
+
+## Prop
+est_type_best_vec <- est_type_best_df$estimation_type
+
+est_type_best_vec %>% table()
+round((est_type_best_vec %>% table()) / length(est_type_best_vec),2)
+(est_type_best_vec %>% table()) / length(est_type_best_vec)
+
+## N Cluster Comparison
+est_type_best_df %>%
+  dplyr::filter(estimation_type == "within_country_cv") %>%
+  pull(n) %>% 
+  quantile(c(0.5, 0.75))
+
+est_type_best_df %>%
+  dplyr::filter(estimation_type != "within_country_cv") %>%
+  pull(n) %>% 
+  quantile(c(0.5, 0.75))
+
+# Compare results other papers -------------------------------------------------
+
+##### * Yeh et al * #####
+
+survey_af_df <- survey_df %>%
+  dplyr::filter(most_recent_survey %in% T,
+                continent_adj == "Africa")
+
+# Pooled
+survey_af_df %>%
+  summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2) %>%
+  round(2)
+
+# Average Across Countries
+survey_af_df %>%
+  group_by(country_code) %>%
+  summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2) %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2)
+
+# Pooled - Urban
+survey_af_df %>%
+  dplyr::filter(urban_rural %in% "U") %>%
+  summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2) %>%
+  round(2)
+
+# Pooled - Rural
+survey_af_df %>%
+  dplyr::filter(urban_rural %in% "R") %>%
+  summarise(r2 = cor(pca_allvars_mr, predict_pca_allvars_mr_global_country_pred_all)^2) %>%
+  round(2)
+
+## District, Pooled
+survey_af_df %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  ungroup() %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  round(2)
+
+## District, Average Across Countries
+survey_af_df %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_mr_global_country_pred_all = mean(predict_pca_allvars_mr_global_country_pred_all),
+                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
+  ungroup() %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2)
+
+## Changes, pooled
+survey_chn_df %>%
+  dplyr::filter(continent_adj %in% "Africa") %>%
+  dplyr::summarise(r2 = cor(pca_allvars, predict_pca_allvars_global_country_pred_all_changes)^2) %>%
+  round(2)
+
+## Changes, district, pooled
+survey_chn_df %>%
+  dplyr::filter(continent_adj %in% "Africa") %>%
+  
+  group_by(gadm_uid, country_code) %>%
+  dplyr::summarise(pca_allvars = mean(pca_allvars),
+                   predict_pca_allvars_global_country_pred_all_changes = mean(predict_pca_allvars_global_country_pred_all_changes)) %>%
+  ungroup() %>%
+  
+  dplyr::summarise(r2 = cor(pca_allvars, predict_pca_allvars_global_country_pred_all_changes)^2) %>%
+  round(2)
+
+##### * Chi et al * #####
+
+survey_df %>%
+  dplyr::filter(most_recent_survey %in% T) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_global_country_pred_all, pca_allvars_mr)^2) %>%
+  ungroup() %>%
+  pull(r2) %>%
+  mean() %>%
+  round(2)
+
+##### * Jean et al * #####
+
+acc_df %>%
+  dplyr::filter(feature_type %in% "all",
+                level_change %in% "levels",
+                estimation_type %in% "global_country_pred",
+                country_name %in% c("Uganda",
+                                    "Tanzania",
+                                    "Nigeria",
+                                    "Rwanda",
+                                    "Malawi")) %>%
+  mutate(r2 = round(r2, 2)) %>%
+  dplyr::select(country_name, r2)
+
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+# OLD ==========================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+survey_chn_dist_df <- survey_chn_df %>%
+  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
+  group_by(country_code, gadm_uid) %>%
+  dplyr::summarise(predict_pca_allvars_best_all_changes = mean(predict_pca_allvars_best_all_changes),
+                   pca_allvars = mean(pca_allvars)) %>%
+  group_by(country_code) %>%
+  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2)
+
+
+
+
+
+
+
 
 acc_levels_best_df <- acc_df %>%
   dplyr::filter(feature_type %in% "all",
@@ -19,60 +441,10 @@ acc_changes_best_df <- acc_df %>%
                 level_change %in% "changes")
 
 # Create datasets --------------------------------------------------------------
-survey_chn_dist_df <- survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
-  group_by(country_code, gadm_uid) %>%
-  dplyr::summarise(predict_pca_allvars_best_all_changes = mean(predict_pca_allvars_best_all_changes),
-                   pca_allvars = mean(pca_allvars)) %>%
-  group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2)
+
 
 # Stats: Levels Results --------------------------------------------------------
-#### N Clusters
-survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
-  nrow() %>%
-  prettyNum(big.mark=",",scientific=FALSE) %>%
-  write(file.path(stats_global_dir, "n_villages_levels.txt"))
 
-#### N Countries
-survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
-  pull(country_code) %>%
-  unique() %>%
-  length() %>%
-  write(file.path(stats_global_dir, "n_countries_levels.txt"))
-
-#### Income Groups
-#acc_levels_df$income %>% table()
-
-#### Overall r2
-survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
-  group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_best_all, pca_allvars_mr)^2) %>%
-  ungroup() %>%
-  pull(r2) %>%
-  mean() %>%
-  round(2) %>%
-  "*"(100) %>%
-  paste0("\\%") %>%
-  write(file.path(stats_global_dir, "levels_village_r2.txt")) 
-
-survey_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_mr_best_all)) %>%
-  group_by(country_code, gadm_uid) %>%
-  dplyr::summarise(predict_pca_allvars_mr_best_all = mean(predict_pca_allvars_mr_best_all),
-                   pca_allvars_mr = mean(pca_allvars_mr)) %>%
-  group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_mr_best_all, pca_allvars_mr)^2) %>%
-  ungroup() %>%
-  pull(r2) %>%
-  mean() %>%
-  round(2) %>%
-  "*"(100) %>%
-  paste0("\\%") %>%
-  write(file.path(stats_global_dir, "levels_district_r2_avg.txt"))
 
 survey_df %>%
   dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%
@@ -109,37 +481,9 @@ acc_levels_best_df %>%
   paste0("\\%") %>%
   write(file.path(stats_global_dir, "levels_uppermiddle_income_r2.txt"))
 
-#### N Features
-survey_df %>%
-  dplyr::select_at(vars(starts_with("viirs_"),
-                        starts_with("cnn_viirs_s2_"),
-                        starts_with("fb_prop_"),
-                        starts_with("fb_wp_prop"),
-                        starts_with("osm_"),
-                        starts_with("gc_"),
-                        starts_with("l7_"),
-                        starts_with("elevslope_"),
-                        starts_with("weather_"),
-                        starts_with("worldclim_"),
-                        starts_with("pollution_"))) %>%
-  ncol() %>%
-  write(file.path(stats_global_dir, "n_features_levels.txt"))
 
-#### Model type that works best
-est_type_best_df <- acc_df %>%
-  dplyr::filter(feature_type == "all",
-                estimation_type != "best") %>%
-  group_by(country) %>%
-  slice_max(order_by = r2, n = 1) %>%
-  ungroup() %>%
-  dplyr::mutate(within_country_best = estimation_type == "within_country_cv",
-                within_country_best_num = as.numeric(within_country_best))
 
-## Prop
-est_type_best_vec <- est_type_best_df$estimation_type
 
-est_type_best_vec %>% table()
-(est_type_best_vec %>% table()) / length(est_type_best_vec)
 
 ## When within country doesn't work best
 est_type_best_df_within <- est_type_best_df %>%
@@ -183,26 +527,8 @@ survey_chn_df %>%
   nrow() %>%
   write(file.path(stats_global_dir, "n_obs_changes_villages.txt"))
 
-#### N Countries
-survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
-  pull(country_code) %>%
-  unique() %>%
-  length() %>%
-  write(file.path(stats_global_dir, "n_countries_changes.txt"))
 
-#### Overall r2
-survey_chn_df %>%
-  dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
-  group_by(country_code) %>%
-  dplyr::summarise(r2 = cor(predict_pca_allvars_best_all_changes, pca_allvars)^2) %>%
-  ungroup() %>%
-  pull(r2) %>%
-  mean() %>%
-  round(2) %>%
-  "*"(100) %>%
-  paste0("\\%") %>%
-  write(file.path(stats_global_dir, "changes_village_r2.txt")) 
+
 
 survey_chn_df %>%
   dplyr::filter(!is.na(predict_pca_allvars_best_all_changes)) %>%
@@ -223,7 +549,7 @@ survey_chn_df %>%
   max() %>%
   round(2) %>%
   "*"(100) %>%
-  paste0("\\%") %>%
+  paste0("\\%)") %>%
   write(file.path(stats_global_dir, "changes_village_r2_max.txt")) 
 
 
@@ -312,19 +638,6 @@ head(fb_df)
 head(wdi_df)
 
 # District changes results -----------------------------------------------------
-dist_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimation_results",
-                             "accuracy_changes_district_appended.Rds"))
-
-dist_r2_df <- dist_df %>%
-  distinct(country_code, income, r2)
-
-dist_r2_df %>% 
-  pull(r2) %>%
-  mean() %>%
-  round(2) %>%
-  "*"(100) %>%
-  paste0("\\%") %>%
-  write(file.path(stats_global_dir, "changes_district_r2.txt"))
 
 dist_r2_df %>%
   dplyr::filter(income %in% "Low income") %>%

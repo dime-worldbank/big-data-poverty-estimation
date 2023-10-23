@@ -56,7 +56,7 @@ p_scatter <- accu_sum_df %>%
            label.x.npc = "left",
            color = "firebrick3") +
   labs(x = NULL,
-       y = "r2:\nTrue vs.\nPredicted\nAsset Index" ) +
+       y = "r2:\nTrue vs.\nEstimated\nWealth\nAsset Index" ) +
   theme_classic() +
   theme(axis.title.y = element_text(angle = 0,
                                     vjust = 0.5),

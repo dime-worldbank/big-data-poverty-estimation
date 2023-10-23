@@ -23,27 +23,27 @@ if(DELETE_ML_RESULTS){
 }
 
 # Make parameter grid ----------------------------------------------------------
-# xgb_grid = expand.grid(
-#   model = "xgboost",
-#   nrounds = c(50, 100), ## 50
-#   max_depth = c(6,2), ## 6
-#   eta = c(0.3), ## 0.3
-#   gamma = c(0), ##
-#   colsample_bytree = 1, ##
-#   min_child_weight = c(1), ## 1
-#   subsample = c(1, 0.5) ## 1
-# )
-
 xgb_grid = expand.grid(
   model = "xgboost",
   nrounds = c(50, 100), ## 50
-  max_depth = c(2,4), ## 6
+  max_depth = c(6,2), ## 6
   eta = c(0.3), ## 0.3
   gamma = c(0), ##
-  colsample_bytree = c(0.9, 0.5), ##
+  colsample_bytree = 1, ##
   min_child_weight = c(1), ## 1
-  subsample = c(0.9, 0.5) ## 1
+  subsample = c(1, 0.5) ## 1
 )
+
+# xgb_grid = expand.grid(
+#   model = "xgboost",
+#   nrounds = c(50, 100), ## 50
+#   max_depth = c(2,4), ## 6
+#   eta = c(0.3), ## 0.3
+#   gamma = c(0), ##
+#   colsample_bytree = c(0.9, 0.5), ##
+#   min_child_weight = c(1), ## 1
+#   subsample = c(0.9, 0.5) ## 1
+# )
 
 # xgb_grid = expand.grid(
 #   model = "xgboost",
@@ -406,8 +406,8 @@ for(level_change in c("levels", "changes", "nigeriaapplication", "lsms")){
     }
     
     for(model_type in c("xgboost", "glmnet", "svm")){ 
-      for(target_var_i in rev(target_vars_vec)){
-        for(feature_type_i in feature_types){
+      for(target_var_i in target_vars_vec){
+        for(feature_type_i in rev(feature_types)){
           for(country_i in rev(countries_vec)){
             
             # Skips ------------------------------------------------------------
@@ -415,6 +415,14 @@ for(level_change in c("levels", "changes", "nigeriaapplication", "lsms")){
             # If not global and not "all" features, skip.
             if(level_change %in% c("levels", "changes")){
               if( (estimation_type_i != "global_country_pred") & (!(feature_type_i %in% c("all", "all_changes"))) ){
+                next
+              }
+            }
+            
+            # Only train on individual feature types for xgboost So:
+            # If not global and not "all" features, skip.
+            if(model_type %in% c("glmnet", "svm")){
+              if(  (!(feature_type_i %in% c("all", "all_changes"))) ){
                 next
               }
             }

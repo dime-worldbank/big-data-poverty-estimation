@@ -78,12 +78,6 @@ df_cor %>%
   arrange(-cor) %>%
   head()
 
-df %>%
-  filter(country_code == "MZ") %>%
-  ggplot() +
-  geom_point(aes(x = pca_allvars,
-                 y = ntlharmon_avg))
-
 
 
 

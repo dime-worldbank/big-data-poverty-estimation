@@ -3,7 +3,7 @@
 
 #### PARAMETERS
 # Whether to run code for analysis and producing tables, figures & stats
-RUN_CODE <- T
+RUN_CODE <- F
 
 # It takes >1 day to run the ML models. The code checks which models have not 
 # been run, and only runs those that have not been run. Consequently, deleting
@@ -11,7 +11,7 @@ RUN_CODE <- T
 DELETE_ML_RESULTS <- F
 
 # Export a text file that summarizes how long the code took to run
-EXPORT_TXT_REPORT_CODE_DURATION <- T
+EXPORT_TXT_REPORT_CODE_DURATION <- F
 START_TIME <- Sys.time() # To track time for running code
 
 # Root Directories -------------------------------------------------------------
@@ -20,7 +20,6 @@ START_TIME <- Sys.time() # To track time for running code
 # * Github [github_dir]: Github Repo
 # * Tables/Figures [overleaf_global_dir]: Path for tables and figures for paper
 
-#dropbox_dir          <- "~/Dropbox/World Bank/IEs/Pakistan Poverty Estimation from Satellites"
 dropbox_dir          <- "~/Dropbox/World Bank/IEs/Big Data Poverty Estimation"
 github_dir           <- "~/Documents/Github/big-data-poverty-estimation"
 overleaf_global_dir  <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
@@ -51,12 +50,6 @@ tables_global_dir  <- file.path(overleaf_global_dir, "tables")
 figures_global_dir <- file.path(overleaf_global_dir, "figures")
 stats_global_dir   <- file.path(overleaf_global_dir, "stats")
 
-#### API Key Paths (For Facebook)
-#api_key_dir <- file.path(dropbox_dir, "API Keys")
-
-#### Google Drive Paths
-#gdrive_cnn_file_path <- file.path(gdrive_dir, "Data", "CNN")
-
 # Create Directory Structure for Survey Data -----------------------------------
 for(survey_name_i in c("DHS", "LSMS", "DHS_nga_policy_experiment")){
   
@@ -84,31 +77,10 @@ for(survey_name_i in c("DHS", "LSMS", "DHS_nga_policy_experiment")){
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "roads_density") %>% dir.create()
   file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", "osm", "roads_distance") %>% dir.create()
   
-  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "predictions") %>% dir.create()
-  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "feature_importance") %>% dir.create()
-  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "accuracy") %>% dir.create()
-  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "grid_search") %>% dir.create()
-  
+  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "prediction") %>% dir.create()
+  file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "model") %>% dir.create()
+
   file.path(data_dir, survey_name_i, "FinalData", "cnn_features", "split_into_data_subsets") %>% dir.create()
-  
-  # ### GOOGLE DRIVE
-  # file.path(gdrive_dir, "Data", survey_name_i) %>% dir.create()
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData") %>% dir.create()
-  # 
-  # # FinalData/
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "cnn_features") %>% dir.create()
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "cnn_models") %>% dir.create()
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "cnn_predictions") %>% dir.create()
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "Individual Datasets") %>% dir.create()
-  # 
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "cnn_features", "split_into_data_subsets") %>% dir.create()
-  # 
-  # # FinalData/Individual Datasets/
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "Individual Datasets", 
-  #           paste0("satellite_data_from_gee_", tolower(survey_name_i))) %>% dir.create()
-  # 
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "Individual Datasets", "cnn_l8") %>% dir.create()
-  # file.path(gdrive_dir, "Data", survey_name_i, "FinalData", "Individual Datasets", "cnn_l8", "tfrecords") %>% dir.create()
 }
 
 # Parameters -------------------------------------------------------------------
@@ -415,12 +387,13 @@ if(RUN_CODE){
   source(file.path(figures_tables_global_dir, "si", "figure_educ_fb_dhs.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_fb_features_cor_each_country.R"))
   source(file.path(figures_tables_global_dir, "si", "figure_ml_type_comparison.R"))
+  source(file.path(figures_tables_global_dir, "si", "figure_scatter_continent.R"))
   source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_both_years.R"))
   source(file.path(figures_tables_global_dir, "si", "table_dhs_summary_most_recent.R"))
   source(file.path(figures_tables_global_dir, "si", "table_wealth_sd_within_across.R"))
 }
 
-#### Export: info on last code run
+# Export time code took to run -------------------------------------------------
 if(EXPORT_TXT_REPORT_CODE_DURATION){
   END_TIME <- Sys.time()
   

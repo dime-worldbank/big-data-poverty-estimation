@@ -157,7 +157,7 @@ stargazer(lm1,
                                "Upper middle income",
                                "Americas",
                                "Eurasia"),
-          dep.var.labels = "Absolute value of difference in true and predicted wealth",
+          dep.var.labels = "Absolute value of difference in true and estimated wealth",
           omit.stat = c("f", "ser"),
           float = F,
           out = file.path(tables_global_dir, "explain_error_levels_lm.tex"))

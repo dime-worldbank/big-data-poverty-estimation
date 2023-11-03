@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2020.5.9)  23 OCT 2023 15:57
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2020.5.9)  3 NOV 2023 13:54
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -354,7 +354,7 @@ Package caption3 Info: TeX engine: e-TeX on input line 67.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 )
-No file main.aux.
+(./main.aux)
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 33.
@@ -371,6 +371,7 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 33.
 LaTeX Font Info:    ... okay on input line 33.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 33.
 LaTeX Font Info:    ... okay on input line 33.
+
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
@@ -449,170 +450,162 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 33.
 LaTeX Info: Redefining \pageref on input line 33.
 LaTeX Info: Redefining \nameref on input line 33.
+
+(./main.out) (./main.out)
 \@outlinefile=\write3
 \openout3 = `main.out'.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 
-Underfull \hbox (badness 10000) in paragraph at lines 53--53
+Underfull \hbox (badness 10000) in paragraph at lines 51--51
 []\OT1/cmr/m/n/9 Harmonized
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 53--53
+Underfull \hbox (badness 10000) in paragraph at lines 51--51
 \OT1/cmr/m/n/9 DMSP-OLS
  []
 
 
-Overfull \hbox (1.66954pt too wide) in paragraph at lines 76--76
+Overfull \hbox (1.66954pt too wide) in paragraph at lines 74--74
 []\OT1/cmr/m/n/9 OpenStreetMap| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 80--80
+Underfull \hbox (badness 10000) in paragraph at lines 78--78
 []\OT1/cmr/m/n/9 ESA-
  []
 
 
-Underfull \hbox (badness 4940) in paragraph at lines 83--83
+Underfull \hbox (badness 4940) in paragraph at lines 81--81
 []\OT1/cmr/m/n/9 Shuttle Radar
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 83--83
+Underfull \hbox (badness 10000) in paragraph at lines 81--81
 \OT1/cmr/m/n/9 To-pog-ra-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 83--83
+Underfull \hbox (badness 10000) in paragraph at lines 81--81
 \OT1/cmr/m/n/9 phy Mis-sion
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 92--92
+Underfull \hbox (badness 10000) in paragraph at lines 90--90
 []\OT1/cmr/m/n/9 European
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 92--92
+Underfull \hbox (badness 10000) in paragraph at lines 90--90
 \OT1/cmr/m/n/9 Cen-tre for
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 92--92
+Underfull \hbox (badness 10000) in paragraph at lines 90--90
 \OT1/cmr/m/n/9 Medium-Range
  []
 
 
-Underfull \hbox (badness 3128) in paragraph at lines 92--92
+Underfull \hbox (badness 3128) in paragraph at lines 90--90
 \OT1/cmr/m/n/9 Weather Fore-
  []
 
 
-Overfull \hbox (8.69759pt too wide) in paragraph at lines 45--103
+Overfull \hbox (8.69759pt too wide) in paragraph at lines 43--101
  [][] 
  []
 
 
-LaTeX Warning: Float too large for page by 6.19083pt on input line 105.
+LaTeX Warning: Float too large for page by 6.19083pt on input line 103.
 
 <figures/cor_all_fb_osm.png, id=4, 650.43pt x 794.97pt>
 File: figures/cor_all_fb_osm.png Graphic file (type png)
 
 <use figures/cor_all_fb_osm.png>
-Package pdftex.def Info: figures/cor_all_fb_osm.png used on input line 109.
+Package pdftex.def Info: figures/cor_all_fb_osm.png used on input line 107.
 (pdftex.def)             Requested size: 443.57848pt x 542.16151pt.
  [1
 
 {/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2]
-<figures/cor_changes.png, id=25, 686.565pt x 216.81pt>
+<figures/cor_changes.png, id=24, 686.565pt x 216.81pt>
 File: figures/cor_changes.png Graphic file (type png)
 
 <use figures/cor_changes.png>
-Package pdftex.def Info: figures/cor_changes.png used on input line 116.
+Package pdftex.def Info: figures/cor_changes.png used on input line 114.
 (pdftex.def)             Requested size: 443.57848pt x 140.0746pt.
  [3 <./figures/cor_all_fb_osm.png>]
-<figures/performence_country_avg_types.png, id=32, 722.7pt x 433.62pt>
+<figures/performence_country_avg_types.png, id=31, 722.7pt x 433.62pt>
 File: figures/performence_country_avg_types.png Graphic file (type png)
 
 <use figures/performence_country_avg_types.png>
 Package pdftex.def Info: figures/performence_country_avg_types.png used on inpu
-t line 123.
+t line 121.
 (pdftex.def)             Requested size: 443.57848pt x 266.1487pt.
 
-<figures/global_scatter_map.png, id=33, 1084.05pt x 650.43pt>
+<figures/global_scatter_map.png, id=32, 1084.05pt x 650.43pt>
 File: figures/global_scatter_map.png Graphic file (type png)
 
 <use figures/global_scatter_map.png>
-Package pdftex.def Info: figures/global_scatter_map.png used on input line 130.
+Package pdftex.def Info: figures/global_scatter_map.png used on input line 128.
 
 (pdftex.def)             Requested size: 443.57848pt x 266.14209pt.
  [4 <./figures/cor_changes.png> <./figures/performence_country_avg_types.png>]
-<figures/explain_var_in_r2.png, id=47, 657.657pt x 578.16pt>
+<figures/explain_var_in_r2.png, id=46, 657.657pt x 578.16pt>
 File: figures/explain_var_in_r2.png Graphic file (type png)
 
 <use figures/explain_var_in_r2.png>
-Package pdftex.def Info: figures/explain_var_in_r2.png used on input line 137.
+Package pdftex.def Info: figures/explain_var_in_r2.png used on input line 135.
 (pdftex.def)             Requested size: 443.57848pt x 389.9765pt.
  [5 <./figures/global_scatter_map.png>]
-<figures/changes_results.png, id=55, 867.24pt x 433.62pt>
+<figures/changes_results.png, id=54, 867.24pt x 433.62pt>
 File: figures/changes_results.png Graphic file (type png)
 
 <use figures/changes_results.png>
-Package pdftex.def Info: figures/changes_results.png used on input line 144.
+Package pdftex.def Info: figures/changes_results.png used on input line 142.
 (pdftex.def)             Requested size: 443.57848pt x 221.79169pt.
  [6 <./figures/explain_var_in_r2.png>]
-<figures/ml_changes_explain.png, id=62, 1011.78pt x 433.62pt>
+<figures/ml_changes_explain.png, id=61, 1011.78pt x 433.62pt>
 File: figures/ml_changes_explain.png Graphic file (type png)
 
 <use figures/ml_changes_explain.png>
-Package pdftex.def Info: figures/ml_changes_explain.png used on input line 151.
+Package pdftex.def Info: figures/ml_changes_explain.png used on input line 149.
 
 (pdftex.def)             Requested size: 443.57848pt x 190.10527pt.
 
-<figures/policy_exp_nigeria_gadm_2.png, id=63, 289.08pt x 361.35pt>
+<figures/policy_exp_nigeria_gadm_2.png, id=62, 289.08pt x 361.35pt>
 File: figures/policy_exp_nigeria_gadm_2.png Graphic file (type png)
 
 <use figures/policy_exp_nigeria_gadm_2.png>
 Package pdftex.def Info: figures/policy_exp_nigeria_gadm_2.png used on input li
-ne 158.
+ne 156.
 (pdftex.def)             Requested size: 399.21791pt x 499.0495pt.
  [7 <./figures/changes_results.png> <./figures/ml_changes_explain.png>]
-<figures/example_daytime_images.png, id=73, 437.37804pt x 589.57866pt>
+<figures/example_daytime_images.png, id=72, 437.37804pt x 589.57866pt>
 File: figures/example_daytime_images.png Graphic file (type png)
 
 <use figures/example_daytime_images.png>
 Package pdftex.def Info: figures/example_daytime_images.png used on input line 
-166.
+164.
 (pdftex.def)             Requested size: 443.57848pt x 597.93472pt.
  [8 <./figures/policy_exp_nigeria_gadm_2.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 171.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 169.
  [9 <./figures/example_daytime_images.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 171.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 169.
  (./main.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 171.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 171.
-
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  D41D8CD98F00B204E9800998ECF8427E;0.
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 171.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 169.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 169.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 169.
  ) 
 Here is how much of TeX's memory you used:
- 8645 strings out of 492995
- 127940 string characters out of 6132705
- 244423 words of memory out of 5000000
- 12072 multiletter control sequences out of 15000+600000
- 9725 words of font info for 36 fonts, out of 8000000 for 9000
+ 8650 strings out of 492995
+ 127980 string characters out of 6132705
+ 251011 words of memory out of 5000000
+ 12071 multiletter control sequences out of 15000+600000
+ 9498 words of font info for 35 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  36i,10n,39p,1221b,501s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb>
@@ -624,13 +617,12 @@ cal/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/loca
 l/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/t
 exlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texl
 ive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive
-/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/
-2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/20
-17/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on main.pdf (9 pages, 18952399 bytes).
+/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2
+017/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
+Output written on main.pdf (9 pages, 18940141 bytes).
 PDF statistics:
- 132 PDF objects out of 1000 (max. 8388607)
- 89 compressed objects within 1 object stream
+ 128 PDF objects out of 1000 (max. 8388607)
+ 86 compressed objects within 1 object stream
  20 named destinations out of 1000 (max. 500000)
  46 words of extra memory for PDF output out of 10000 (max. 10000000)
 

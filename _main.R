@@ -22,6 +22,7 @@ START_TIME <- Sys.time() # To track time for running code
 
 dropbox_dir          <- "~/Dropbox/World Bank/IEs/Big Data Poverty Estimation"
 github_dir           <- "~/Documents/Github/big-data-poverty-estimation"
+
 #overleaf_global_dir  <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
 overleaf_global_dir  <- file.path(github_dir, "Paper Tables and Figures")
 

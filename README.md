@@ -34,6 +34,6 @@ The [`DataWork`](https://github.com/dime-worldbank/big-data-poverty-estimation/t
 * `02_get_process_ancillary_data`: Extracts and process data around survey locations, such as from satellites, OpenStreetMaps, and Facebook Marketing data.
 * `03_merge_ancillary_data_with_survey`: Merge ancillary data (satellite, OSM, Facebook data) extracted in previous step to survey data; creates cleaned, analysis-ready datasets.
 * `04_poverty_estimation`: Implements poverty estimation models and appends results.
-* `05_figures_tables_global`: Produces figures and tables for paper.
+* `05_figures_tables_global`: Produces figures and tables for paper. Figures and tables are exported to [`Paper Tables and Figures`](https://github.com/dime-worldbank/big-data-poverty-estimation/tree/master/Paper%20Tables%20and%20Figures); where [`Paper Tables and Figures/main.tex`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/Paper%20Tables%20and%20Figures/main.tex) compiles all the tables and figures for the main text together, and [`Paper Tables and Figures/supplementary_materials.tex`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/Paper%20Tables%20and%20Figures/supplementary_materials.tex) compiles all the tables and figures for the supplementary information/appendix document.
 
 

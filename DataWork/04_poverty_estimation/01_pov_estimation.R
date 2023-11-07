@@ -34,28 +34,6 @@ xgb_grid = expand.grid(
   subsample = c(1, 0.5) ## 1
 )
 
-# xgb_grid = expand.grid(
-#   model = "xgboost",
-#   nrounds = c(50, 100), ## 50
-#   max_depth = c(2,4), ## 6
-#   eta = c(0.3), ## 0.3
-#   gamma = c(0), ##
-#   colsample_bytree = c(0.9, 0.5), ##
-#   min_child_weight = c(1), ## 1
-#   subsample = c(0.9, 0.5) ## 1
-# )
-
-# xgb_grid = expand.grid(
-#   model = "xgboost",
-#   nrounds = c(50, 100), ## 50
-#   max_depth = c(1,3,5,9), ## 6
-#   eta = c(0.3), ## 0.3
-#   gamma = c(0, 5), ##
-#   colsample_bytree = c(0.9, 0.5), ##
-#   min_child_weight = c(1), ## 1
-#   subsample = c(0.9, 0.5) ## 1
-# )
-
 lambda_max <- 5
 lambda_min <- 0.000001
 K = 10

@@ -3,7 +3,7 @@
 ## To replicate analysis
 
 1. Clone this repository
-2. Download data from [here](LINKHERE)
+2. Download data from [TO SPECIFY]
 3. In [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R), change `dropbox_dir` to point to the data folder and `github_dir` to point to the github repo.
 4. Run [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R).
 
@@ -19,13 +19,13 @@ At the beginning of the `_main.R` script, three parameters are set at the beginn
 2. `DELETE_ML_RESULTS`: A large number of machine learning models are implemented for the analysis (ie, a separate model for each country for each set of features, etc). After each model is implemented, results are exported (eg, predicted values from the model). [The script](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/DataWork/04_poverty_estimation/01_pov_estimation.R) that implements the machine learning analysis checks which models have already been implemented by checking the results files. Only models that have not yet been implemented are implemented. Consequently, by default, the code will see all machine learning results and skip running machine learning models. By setting `DELETE_ML_RESULTS` to `TRUE`, machine learning results will be deleted, and machine learning models will be re-implemented. _NOTE:_ All machine learning models can take over 15 hours to run.
 3. `EXPORT_TXT_REPORT_CODE_DURATION`: If set to `TRUE`, a .txt file will be exported that indicates how long the code took to run. 
 
-The main script is set up to run code starting from cleaned data; specifically, it starts from a dataset of survey locations, with (1) wealth variables from survey data and (2) variables from other datasets (satellite, Facebook, OpenStreetMaps, etc) extracted to the survey location. Scripts are provided that clean the survey data and extract these variables; however, this repository and main script are set up to start from the cleaned data. The main script calls scripts to run machine learning models, clean these results, and produce figures and tables. 
+The main script is set up to run code starting from cleaned data; specifically, it starts from a dataset of survey locations, with (1) wealth variables from survey data and (2) variables from other datasets (satellite, Facebook, OpenStreetMaps, etc) extracted to the survey location. Scripts are provided that clean the survey data and extracts variables from other datasets to survey locations. However, this repository and main script are set up to start from the cleaned data; the main script calls scripts to run machine learning models, clean these results, and produce figures and tables. 
 
 The main script produces all figures and tables for the paper, with one minor exception; the main script does not produce the [figure with example daytime satellite images](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/Paper%20Tables%20and%20Figures/figures/example_daytime_images.png). [This script](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/33cbed1be65afcc50b373f88c0835df8078bac22/DataWork/02_get_process_ancillary_data/CNN%20Features%20Predict%20NTL/example_images.ipynb#L599) produces the figure, but the figure requires satellite data to be downloaded, which can be done using [this script](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/33cbed1be65afcc50b373f88c0835df8078bac22/DataWork/02_get_process_ancillary_data/CNN%20Features%20Predict%20NTL/01_create_ntlgroup_tfrecord_name_ntlharmon.R). All other figures and tables are generated based on the cleaned datasets and subsequent analysis.  
 
 #### Organization
 
-The [`DataWork`](https://github.com/dime-worldbank/big-data-poverty-estimation/tree/master/DataWork) contains code for data cleaning and analysis. Within `DataWork`, directories are organized as follows:
+The [`DataWork`](https://github.com/dime-worldbank/big-data-poverty-estimation/tree/master/DataWork) contains code for data cleaning and analysis. Within `DataWork`, directories are organized as described below. The main script runs code starting in `04_poverty_estimation` and `05_figures_tables_global`.
 
 * `00_download_gadm`: Downloads [GADM](https://gadm.org/) data that is used in cleaning survey data.
 * `01_clean_dhs`: Cleans [DHS](https://www.usaid.gov/global-health/demographic-and-health-surveys-program) survey data.

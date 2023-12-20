@@ -3,7 +3,7 @@
 ## To replicate analysis
 
 1. Clone this repository
-2. Download data from [TO SPECIFY]
+2. Download data from [here](https://www.dropbox.com/scl/fo/1luod4j82jbyooejaaorm/h?rlkey=zohapjaph445bdya9ipwaeve2&dl=0)
 3. In [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R), change `dropbox_dir` to point to the data folder and `github_dir` to point to the github repo.
 4. Run [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R).
 

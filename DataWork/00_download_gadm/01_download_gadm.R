@@ -18,7 +18,4 @@ for(country_i in c("ALB", "ARM", "AGO", "BFA", "BEN", "BOL", "BDI", "COD", "CAF"
   }
 }
 
-# Get higher level ADMs for select countries
-getData('GADM', country="PAK", level=3)
-
 

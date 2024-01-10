@@ -40,9 +40,8 @@ extract_ntl_harmon <- function(df_country,
   ## Crop globcover
   ntl_crop <- crop(ntl, bbox(df_country))
   
-  ntl_crop_vx <- velox(ntl_crop)
-  df_country[[paste0("ntlharmon_avg")]] <- ntl_crop_vx$extract(sp = df_country, fun = mean)[,1] %>% as.numeric()
-  df_country[[paste0("ntlharmon_sd")]] <- ntl_crop_vx$extract(sp = df_country, fun = sd)[,1] %>% as.numeric()
+  df_country[[paste0("ntlharmon_avg")]] <- exact_extract(ntl_crop, df_country, "mean")
+  df_country[[paste0("ntlharmon_sd")]]  <- exact_extract(ntl_crop, df_country, "stdev")
   
   df_out <- df_country@data %>%
     dplyr::select(uid, year, contains("ntlharmon_"))

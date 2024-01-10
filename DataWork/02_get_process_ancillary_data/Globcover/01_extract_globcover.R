@@ -68,8 +68,9 @@ extract_globcover <- function(df_country,
     gc_crop_i <- gc_crop
     gc_crop_i[] <- as.numeric(gc_crop_i[] == gc_id_i)
     
-    gc_crop_i_vx <- velox(gc_crop_i)
-    df_country[[paste0("gc_", gc_id_i)]] <- gc_crop_i_vx$extract(sp = df_country, fun = mean)[,1] %>% as.numeric()
+    df_country[[paste0("gc_", gc_id_i)]] <- exact_extract(gc_crop_i,
+                                                          df_country,
+                                                          "mean")
   }
   
   df_out <- df_country@data %>%

@@ -1,7 +1,7 @@
 # Download GADM
 
-# Some countries have no ADM2. In these cases, use ADM1, but create an ADM2 variable
-# that just uses ADM1. 
+# Some countries have no ADM2. In these cases, use ADM1, but create an ADM2 
+# variable that just uses ADM1. 
 
 only_adm1_avail <- c("ARM", "COM", "LSO", "MDA")
 

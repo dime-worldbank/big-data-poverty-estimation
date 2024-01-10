@@ -23,8 +23,8 @@ START_TIME <- Sys.time() # To track time for running code
 dropbox_dir          <- "~/Dropbox/World Bank/IEs/Big Data Poverty Estimation"
 github_dir           <- "~/Documents/Github/big-data-poverty-estimation"
 
-overleaf_global_dir  <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
-#overleaf_global_dir  <- file.path(github_dir, "Paper Tables and Figures")
+#overleaf_global_dir  <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
+overleaf_global_dir  <- file.path(github_dir, "Paper Tables and Figures")
 
 # Paths from Root --------------------------------------------------------------
 
@@ -69,7 +69,6 @@ pacman::p_load(tidyverse,
                rgeos,
                haven,
                ggmap,
-               velox,
                sf,
                sp,
                glmnet,
@@ -174,7 +173,7 @@ anc_cnn_features_dir <- file.path(anc_dir, "CNN Features Predict NTL")
 anc_s5p_dir          <- file.path(anc_dir, "Sentinel 5P Pollution")
 anc_dmspharmon_dir   <- file.path(anc_dir, "DMSPOLS_VIIRS_HARMONIZED")
 
-#### RUN CODE
+#### * RUN CODE: Clean data ----------------------------------------------------
 if(F){
   
   # Default to DHS
@@ -342,6 +341,7 @@ if(F){
   source(file.path(datawork_dir, "03_merge_ancillary_data_with_survey", "02_clean_data.R"))
 }
 
+#### * RUN CODE: Poverty Estimation --------------------------------------------
 if(RUN_CODE){
   
   set.seed(42)

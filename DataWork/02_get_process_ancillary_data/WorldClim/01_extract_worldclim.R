@@ -28,10 +28,10 @@ extract_worldclim <- function(df_country, year_i, buffer_m){
     
     r <- raster(file.path(worldclim_dir, "RawData", "wc2.1_2.5m_bio", paste0("wc2.1_2.5m_bio_",bio_i,".tif")))
     r_crop <- crop(r, bbox(df_country))
-    r_crop_vx <- velox(r_crop)
-    df_country[[paste0("worldclim_bio_", bio_i)]] <- r_crop_vx$extract(sp = df_country, 
-                                                                       fun = function(x) mean(x, na.rm=T),
-                                                                       small = TRUE)[,1] %>% as.numeric()
+    
+    df_country[[paste0("worldclim_bio_", bio_i)]] <- exact_extract(r_crop,
+                                                                   df_country,
+                                                                   "mean")
   }
   
   df_out <- df_country@data %>%

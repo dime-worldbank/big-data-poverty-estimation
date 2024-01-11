@@ -1,10 +1,8 @@
 # Replication Package for: Global poverty estimation using private and public sector big data sources
 
-This repository contains code to replicate analysis and includes a link to download processed, analysis-ready datasets. The [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) script runs or points to all code that needs to be run for the analysis. 
+This repository contains code to replicate analysis and includes a link to download processed, analysis-ready datasets. The [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) script runs or points to all code that needs to be run for the analysis. [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) is initially set up so that it loads the analysis-ready datasets, runs analysis, and creates all figures and tables; it skips creating the analysis-ready datasets from the raw data, which is a more cumbersome processed.
 
-[`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) is initially set up so that it loads the analysis-ready datasets, runs analysis, and creates all figures and tables; it skips creating the analysis-ready datasets from the raw data, which is a more cumbersome processed.
-
-Interested users may also be interested in re-creating the analysis-ready datasets. By changing a parameter, `_main.R` will also run scripts to process raw data to create the analysis-ready datasets. However, (1) raw data from a number of sources must be manually downloaded and (2) a few scripts are run in Stata and Python; `_main.R` points to these scripts, but they must be manually opened and run.
+However, interested users may also be interested in re-creating the analysis-ready datasets. By changing a parameter, `_main.R` will also run scripts to process raw data to create the analysis-ready datasets. However, (1) raw data from a number of sources must be manually downloaded and (2) a few scripts are run in Stata and Python; `_main.R` points to these scripts, but they must be manually opened and run.
 
 This replication package is divided into two parts:
 

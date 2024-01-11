@@ -1,11 +1,15 @@
 # Replication Package for: Global poverty estimation using private and public sector big data sources
 
-This repository contains code to replicate analysis. The analysis-ready datasets are provided and code is provided that starts from the analysis-ready datasets to run analysis and produce tables and figures. For interested users, we also include code that starts from raw data and constructs the analysis-ready datasets; this process requires some manual steps, such as downloading raw datasets from their original source, and requires running some computationally intensive code (eg, running CNN models).
+This repository contains code to replicate analysis and includes a link to download processed, analysis-ready datasets. The [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) script runs or points to all code that needs to be run for the analysis. 
 
-This replication package is divided into three parts:
+[`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) is initially set up so that it loads the analysis-ready datasets, runs analysis, and creates all figures and tables; it skips creating the analysis-ready datasets from the raw data, which is a more cumbersome processed.
 
-1. [Create Analysis-Ready Datasets from Raw Data](#replicate-data)
-2. [Replicating analysis, starting from analysis-ready datasets](#replicate-analysis)
+Interested users may also be interested in re-creating the analysis-ready datasets. By changing a parameter, `_main.R` will also run scripts to process raw data to create the analysis-ready datasets. However, (1) raw data from a number of sources must be manually downloaded and (2) a few scripts are run in Stata and Python; `_main.R` points to these scripts, but they must be manually opened and run.
+
+This replication package is divided into two parts:
+
+1. [Create Analysis-Ready Datasets from Raw Data](#replicate-data). Contains instructions for manually downloading raw data, and steps for running code. While the `_main.R` script helps to automate running relevant scripts, code from other software (Stata and Python) must be manually run.
+2. [Replicating analysis, starting from analysis-ready datasets](#replicate-analysis). Analysis-ready datasets are provided, and the `_main.R` script can be set to easily run all analysis code.
 
 ## Create Analysis-Ready Datasets from Raw Data <a name="replicate-data"></a>
 

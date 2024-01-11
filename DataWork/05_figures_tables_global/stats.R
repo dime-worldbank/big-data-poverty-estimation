@@ -12,6 +12,19 @@ acc_chng_dist_df <- readRDS(file.path(data_dir, "DHS", "FinalData", "pov_estimat
 
 # N ----------------------------------------------------------------------------
 
+#### Continents
+survey_df %>%
+  distinct(country_code, .keep_all = T) %>%
+  pull(country_name) %>%
+  countrycode(origin = "country.name",
+              destination = "continent") %>%
+  table()
+
+survey_df %>%
+  distinct(country_code, .keep_all = T) %>%
+  pull(continent_adj) %>% 
+  table()
+
 #### N Clusters
 survey_df %>%
   dplyr::filter(!is.na(predict_pca_allvars_mr_global_country_pred_all)) %>%

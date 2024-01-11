@@ -60,7 +60,9 @@ figures_global_dir <- file.path(overleaf_global_dir, "figures")
 stats_global_dir   <- file.path(overleaf_global_dir, "stats")
 
 # Packages ---------------------------------------------------------------------
+#renv::init(project = github_dir)
 if (!require("pacman")) install.packages("pacman")
+
 pacman::p_load(tidyverse,
                rgdal,
                viridis,

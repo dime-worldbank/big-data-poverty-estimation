@@ -3,7 +3,8 @@
 
 #### PARAMETERS
 # Whether to run code for analysis and producing tables, figures & stats
-RUN_CODE <- F
+RUN_DATA_CREATION_CODE <- F 
+RUN_ANALYSIS_CODE      <- T
 
 # It takes >1 day to run the ML models. The code checks which models have not 
 # been run, and only runs those that have not been run. Consequently, deleting
@@ -20,8 +21,14 @@ START_TIME <- Sys.time() # To track time for running code
 # * Github [github_dir]: Github Repo
 # * Tables/Figures [overleaf_global_dir]: Path for tables and figures for paper
 
-dropbox_dir          <- "~/Dropbox/World Bank/IEs/Big Data Poverty Estimation"
-github_dir           <- "~/Documents/Github/big-data-poverty-estimation"
+dropbox_dir <- "~/Dropbox/World Bank/IEs/Big Data Poverty Estimation"
+github_dir  <- "~/Documents/Github/big-data-poverty-estimation"
+
+# Create a folder in your Google Drive called "Big Data Poverty Estimation", and
+# assign the below parameter the path to that folder.
+if(RUN_DATA_CREATION_CODE == T){
+  gdrive_dir <- "/Users/robmarty/Library/CloudStorage/GoogleDrive-robmarty3@gmail.com/My Drive/Big Data Poverty Estimation"
+}
 
 #overleaf_global_dir  <- "~/Dropbox/Apps/Overleaf/Poverty Estimation - Global Paper"
 overleaf_global_dir  <- file.path(github_dir, "Paper Tables and Figures")
@@ -151,6 +158,31 @@ for(survey_name_i in c("DHS", "LSMS", "DHS_nga_policy_experiment")){
   file.path(data_dir, survey_name_i, "FinalData", "pov_estimation_results", "model") %>% dir.create()
 
   file.path(data_dir, survey_name_i, "FinalData", "cnn_features", "split_into_data_subsets") %>% dir.create()
+  
+  # CNN paths
+  for(SATELLITE in c("s2", "landsat")){
+    for(OUTCOME_VAR in c("viirs", "ntlharmon")){
+      for(UNDERSAMPLE_INDIA in c("True", "False")){
+        file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", 
+                  paste0("cnn_", SATELLITE, "_", OUTCOME_VAR, "_underia", UNDERSAMPLE_INDIA)) %>% dir.create()
+        
+        file.path(data_dir, survey_name_i, "FinalData", "Individual Datasets", 
+                  paste0("cnn_", SATELLITE, "_", OUTCOME_VAR, "_underia", UNDERSAMPLE_INDIA),
+                  "tfrecords") %>% dir.create()
+      }
+    }
+  }
+  
+  ### GOOGLE DRIVE
+  if(RUN_DATA_CREATION_CODE){
+
+    file.path(gdrive_dir, survey_name_i) %>% dir.create()
+    file.path(gdrive_dir, survey_name_i, "FinalData") %>% dir.create()
+    file.path(gdrive_dir, survey_name_i, "FinalData", "Individual Datasets") %>% dir.create()
+    file.path(gdrive_dir, survey_name_i, "FinalData", "Individual Datasets",
+              paste0("satellite_data_from_gee_", tolower(survey_name_i))) %>% dir.create()
+    
+  }
 }
 
 # Parameters -------------------------------------------------------------------
@@ -174,9 +206,12 @@ anc_s5p_dir          <- file.path(anc_dir, "Sentinel 5P Pollution")
 anc_dmspharmon_dir   <- file.path(anc_dir, "DMSPOLS_VIIRS_HARMONIZED")
 
 #### * RUN CODE: Clean data ----------------------------------------------------
-if(F){
+if(RUN_DATA_CREATION_CODE){
   
-  # Default to DHS
+  # Options:
+  # -- DHS
+  # -- DHS_nga_policy_experiment
+  # -- LSMS
   SURVEY_NAME <- "DHS"
   
   # 0. Download GADM -----------------------------------------------------------
@@ -207,9 +242,11 @@ if(F){
   source(file.path(datawork_dir, "01_clean_lsms", "03_merge_data_with_folds.R"))
   
   # 1. Clean LSMS Data ----------------------------------------------------------
-  # 1. Clean LSMS Data
+  # 0. Clean individual LSMS datasets and append them
+  # 1. Clean appended LSMS Data
   # 2. Make random folds for cross validation
   # 3. Merge folds with data
+  # *[RUN USING STATA]*: /DataWork/01_clean_lsms/00_merge_and_prep_lsms.do
   source(file.path(datawork_dir, "01_clean_lsms", "01_clean_lsms.R"))
   source(file.path(datawork_dir, "01_clean_lsms", "02_make_within_country_folds.R"))
   source(file.path(datawork_dir, "01_clean_lsms", "03_merge_data_with_folds.R"))
@@ -260,6 +297,8 @@ if(F){
   # -- 04_merge_data.R: Merges all OSM data together. Above, data is saved for
   #    each country. This script appends those files and merges the POI and road
   #    files together.
+  PREP_OSM_FILES <- TRUE
+  
   if(PREP_OSM_FILES){
     source(file.path(anc_osm_dir, "01_osm_to_rds.R"))
     source(file.path(anc_osm_dir, "02_split_india_by_gadm.R"))
@@ -284,6 +323,8 @@ if(F){
   # -- 04_clean_param_df.R: Cleans parameter dataframe, one of the datasets
   #    created above. Makes interpretable categories; for example, instead of
   #    indicating "scraped education levels 1,2,3,4...", say "up to high school"
+  RERUN_FB_CREATE_PARAM_DATASET <- TRUE
+  
   if(RERUN_FB_CREATE_PARAM_DATASET){
     source(file.path(anc_fb_marketing_dir, "01_search_behavior_interests_IDs.R"))
   }
@@ -294,15 +335,14 @@ if(F){
   # Extracts satellite data from Google Earth Engine. For example, extracts
   # nighttime lights, landsat data, etc.
   
-  # RUN THIS USING PYTHON!
-  #source(file.path(anc_fb_marketing_dir, "01_extract_values.ipynb"))
-  source(file.path(anc_fb_marketing_dir, "02_append_data.R"))
+  # *[RUN USING PYTHON]* /DataWork/02_get_process_ancillary_data/Satellite Data/01_extract_values.ipynb 
+  source(file.path(anc_satellite_dir, "02_append_data.R"))
   
   # ** 2.1 Sentinel 5P Pollution -----------------------------------------------
   # Extracts Sentinel 5P Data
   
-  # RUN THIS IN GOOGLE EARTH ENGINE CODE EDITOR
-  #source(file.path(anc_s5p_dir, "01_download_s5p.js"))
+  # *[RUN USING GOOGLE EARTH ENGINE CODE EDITOR]* 
+  # /DataWork/02_get_process_ancillary_data/Sentinel 5P Pollution/01_download_s5p.js
   source(file.path(anc_s5p_dir, "02_extract_s5p.R"))
   
   # ** 2.1 DMSP ----------------------------------------------------------------
@@ -327,8 +367,11 @@ if(F){
   source(file.path(anc_cnn_features_dir, "01_create_ntlgroup_tfrecord_name_ntlharmon.R"))
   source(file.path(anc_cnn_features_dir, "01_create_ntlgroup_tfrecord_name_viirsbm.R"))
   source(file.path(anc_cnn_features_dir, "01_create_ntlgroup_tfrecrod_name_viirs.R"))
-  source(file.path(anc_cnn_features_dir, "02_extract_data_gee_for_cnn.ipynb"))
-  source(file.path(anc_cnn_features_dir, "03_estimate_cnn_and_extract_features.ipynb"))
+  
+  # *[RUN BELOW TWO SCRIPTS IN PYTHON]*
+  # DataWork/02_get_process_ancillary_data/CNN Features Predict NTL/02_extract_data_gee_for_cnn.ipynb
+  # DataWork/02_get_process_ancillary_data/CNN Features Predict NTL/03_estimate_cnn_and_extract_features.ipynb
+  
   source(file.path(anc_cnn_features_dir, "04_pca.R"))
   
   # 3. Merge Ancillary data with Survey ----------------------------------------
@@ -342,7 +385,7 @@ if(F){
 }
 
 #### * RUN CODE: Poverty Estimation --------------------------------------------
-if(RUN_CODE){
+if(RUN_ANALYSIS_CODE){
   
   set.seed(42)
   
@@ -411,7 +454,7 @@ if(EXPORT_TXT_REPORT_CODE_DURATION){
       " minutes \n", sep = "")
   cat("\n")
   cat("PARAMETERS\n")
-  cat("RUN_CODE: ", RUN_CODE, "\n", sep = "")
+  cat("RUN_CODE: ", RUN_ANALYSIS_CODE, "\n", sep = "")
   cat("DELETE_ML_RESULTS: ", DELETE_ML_RESULTS, "\n", sep = "")
 
   sink()

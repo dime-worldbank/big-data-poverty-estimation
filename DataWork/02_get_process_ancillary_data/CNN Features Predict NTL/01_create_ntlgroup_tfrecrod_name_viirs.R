@@ -165,34 +165,7 @@ for(DTL_SATELLITE in c("landsat", "s2")){
                                                 paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
               row.names = F)
     
-    
-    # write.csv(survey_df_clean_append, file.path(gdrive_dir,
-    #                                             "Data", SURVEY_NAME, "FinalData",
-    #                                             "Individual Datasets",
-    #                                             paste0("data_for_cnn_viirs_iaunder",INDIA_UNDER_SAMPLE,"_",DTL_SATELLITE,".csv")),
-    #           row.names = F)
-    
   }
 }
 
 
-survey_df_clean_append$c <- survey_df_clean_append$uid %>% substring(1,2)
-cnn_df <- survey_df_clean_append[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn"),]
-cnn_df$c %>% table()
-
-survey_df_clean_append$ntl_group %>% table()
-survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn")] %>% table()
-survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_train")] %>% table()
-survey_df_clean_append$ntl_group[survey_df_clean_append$tfrecord_name %>% str_detect("forcnn_test")] %>% table()
-
-cnn_all <- survey_df_clean_append$tfrecord_name %>% 
-  str_detect("forcnn") %>% sum()
-cnn_train <- survey_df_clean_append$tfrecord_name %>% 
-  str_detect("forcnn_train") %>% sum()
-cnn_test <- survey_df_clean_append$tfrecord_name %>% 
-  str_detect("forcnn_test") %>% sum()
-
-cnn_train/cnn_all
-cnn_test/cnn_all
-
-survey_df_clean_append$uid %>% table %>% table()

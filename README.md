@@ -42,7 +42,10 @@ Download data directory from [here](https://www.dropbox.com/scl/fo/1luod4j82jbyo
   * `03_merge_ancillary_data_with_survey`: Merges ancillary data (satellite, OSM, Facebook data) extracted in previous step to survey data; creates cleaned, analysis-ready datasets.
   
 5. Run the code. Running the [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) script will run all R files. However, instead of running the `_main.R` script, we recommend running files one-by-one as scripts in Python and Stata need to be run as well; the `_main.R` script notes when these need to be run, but does not call these scripts (eg, indicating `*[RUN USING PYTHON]*`). Within Stata and Python scripts, follow directions for how these should be set up (eg, variables need to be changed to point to the data folder).
+* The script to run convulational neural networks (`03_estimate_cnn_and_extract_features.ipynb`[https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/DataWork/02_get_process_ancillary_data/CNN%20Features%20Predict%20NTL/03_estimate_cnn_and_extract_features.ipynb]) was run by installing tensorflow designed to work with Apple's M1 chip (ie, Apple's hardware-accelerated TensorFlow) which significantly sped up the time to process the code. Instructions for setting up this environment can be found [here](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/DataWork/02_get_process_ancillary_data/CNN%20Features%20Predict%20NTL/_INSTRUCTIONS_TO_INSTALL_TENSORFLOW_M1_MAC.txt).
+
 6. Re-run the code when setting the `SURVEY_NAME` to (1) `DHS_nga_policy_experiment` and (2) `LSMS`. By default, the `SURVEY_NAME` parameter is set to `DHS`, to process data for `DHS` data. However, the `SURVEY_NAME` parameter (set in line 215) needs to be changed and the code re-run.
+
 
 ## Replicating analysis, starting from analysis-ready datasets <a name="replicate-analysis"></a>
 

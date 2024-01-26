@@ -4,7 +4,7 @@
 #### PARAMETERS
 # Whether to run code for analysis and producing tables, figures & stats
 RUN_DATA_CREATION_CODE <- F 
-RUN_ANALYSIS_CODE      <- T
+RUN_ANALYSIS_CODE      <- F
 
 # It takes >1 day to run the ML models. The code checks which models have not 
 # been run, and only runs those that have not been run. Consequently, deleting

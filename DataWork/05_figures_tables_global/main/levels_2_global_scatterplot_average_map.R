@@ -199,7 +199,7 @@ for(aggregate_district in c(F, T)){
   #cor_df$r2[cor_df$r2 <= 0.3] <- 0.3
   
   # Map --------------------------------------------------------------------------
-  world_sp <- ne_countries(type = "countries", scale=50)
+  world_sp <- ne_countries(type = "countries", scale=50) %>% as("Spatial")
   
   world_sp <- world_sp[world_sp$continent != "Antarctica",]
   

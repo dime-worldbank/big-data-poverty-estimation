@@ -1,4 +1,4 @@
-# Replication Package for: Global poverty estimation using private and public sector big data sources
+# Replication Package for: [Global poverty estimation using private and public sector big data sources](https://www.nature.com/articles/s41598-023-49564-6)
 
 This repository contains code to replicate analysis and includes a link to download processed, analysis-ready datasets. The [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R) script runs or points to all code that needs to be run for the analysis. `_main.R` is initially set up so that it loads the analysis-ready datasets, runs analysis, and creates all figures and tables; it skips creating the analysis-ready datasets from the raw data, which is a more cumbersome process.
 

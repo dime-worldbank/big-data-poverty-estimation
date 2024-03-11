@@ -13,7 +13,7 @@ This replication package is divided into two parts:
 
 ### Download raw data
 
-Download data directory from [here](https://www.dropbox.com/scl/fo/1luod4j82jbyooejaaorm/h?rlkey=zohapjaph445bdya9ipwaeve2&dl=0). This directory contains the analysis-ready data files, as well as folders where raw data must be placed. The `Data` folder contains sub-folders for each dataset. The sub-folders generally contain a `RawData` folder for raw data and a `FinalData` folder for data processed by code. In many cases, code is used to automatically download data. However, the following datasets need to be manually downloaded:
+Download data directory from [here](https://reproducibility.worldbank.org/index.php/catalog/110). This directory contains the analysis-ready data files, as well as folders where raw data must be placed. The `Data` folder contains sub-folders for each dataset. The sub-folders generally contain a `RawData` folder for raw data and a `FinalData` folder for data processed by code. In many cases, code is used to automatically download data. However, the following datasets need to be manually downloaded:
 
 1. __Global DHS Data:__ Download data from the [DHS website](https://dhsprogram.com/data/) to be put in `Data/DHS/RawData`; this directory contains folders that indicate which datasets need to be downloaded. For example, 2020 data for Kenya for the "HR" (Household Recode) dataset should be placed here: `/KE/KE_2020_MIS_03292022_2054_82518/KEHR81DT`.
 2. __Nigeria DHS Data:__ The paper includes specific analysis for Nigeria. Following a similar process as above, data should be placed in `Data/DHS_nga_policy_experiment/RawData`.
@@ -52,7 +52,7 @@ Download data directory from [here](https://www.dropbox.com/scl/fo/1luod4j82jbyo
 ### Steps
 
 1. Clone this repository
-2. Download data from [here](https://www.dropbox.com/scl/fo/1luod4j82jbyooejaaorm/h?rlkey=zohapjaph445bdya9ipwaeve2&dl=0). All data needed for code for this section is provided. The downloaded folder contains `data_readme.pdf`, which describes the datasets.
+2. Download data from [here](https://reproducibility.worldbank.org/index.php/catalog/110). All data needed for code for this section is provided. The downloaded folder contains `data_readme.pdf`, which describes the datasets.
 3. In [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R), change `dropbox_dir` to point to the data folder and `github_dir` to point to the github repo.
 4. Run [`_main.R`](https://github.com/dime-worldbank/big-data-poverty-estimation/blob/master/_main.R). Ensure that `RUN_ANALYSIS_CODE` is set to `TRUE`. When `RUN_ANALYSIS_CODE` is set to `TRUE`, the `_main.R` script runs all code in the following sub-folders:
 
